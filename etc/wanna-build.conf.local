@@ -24,6 +24,9 @@ $notforus_maint = "rmurray-wanna-build";
 # where to send wanna-build statistics mails
 $stat_mail = "wb-team\@buildd.debian.org";
 
+# mail domain under which the buildds can be reached
+$buildd_domain = "buildd.debian.org";
+
 # file to publish statistics over WWW (optional)
 #$web_stats = "/var/www/buildd/stats.txt";
 

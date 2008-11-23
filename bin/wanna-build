@@ -45,9 +45,9 @@ our ($verbose, $mail_logs, $list_order, $list_state,
     $curr_date, $op_mode, $user, $real_user, $distribution,
     $fail_reason, $opt_override, $import_from, $export_to, $opt_create_db,
     $transactlog, %db, %otherdb, %otherdb_lock, %prioval, %sectval,
-    $info_all_dists, $hostname, $arch,
+    $info_all_dists, $arch,
     $category, %catval, %short_category,
-    $short_date, $list_min_age, $dbbase, $host_set, @curr_time,
+    $short_date, $list_min_age, $dbbase, @curr_time,
     $build_priority, %new_vers, $binNMUver, %merge_srcvers, %merge_binsrc);
 
 # global vars
@@ -2177,14 +2177,11 @@ sub send_mail {
 	my $text = shift;
 
 	my $from = $conf::db_maint;
+	my $domain = $conf::buildd_domain;
 
-	if ($host_set != 1) {
-		chomp( $hostname = `/bin/hostname -f` );
-		$host_set = 1;
-	}
-	$from .= "\@$hostname" if $from !~ /\@/;
+	$from .= "\@$domain" if $from !~ /\@/;
 
-	$to .= '@' . $hostname if $to !~ /\@/;
+	$to .= '@' . $domain if $to !~ /\@/;
 	$text =~ s/^\.$/../mg;
 	local $SIG{'PIPE'} = 'IGNORE';
 	open( PIPE,  "| $conf::mailprog -oem $to" )
