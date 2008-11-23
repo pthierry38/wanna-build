@@ -1,8 +1,8 @@
-arch <- c("alpha", "amd64", "arm", "armel", "hppa", "i386", "ia64", "m68k", "mips",
+arch <- c("alpha", "amd64", "arm", "armel", "hppa", "i386", "ia64", "mips",
 	"mipsel", "powerpc", "s390", "sparc")
-palette(c("black", "turquoise", "red", "OrangeRed", "green3", "cyan", "magenta", "tomato4",
+palette(c("black", "turquoise", "red", "OrangeRed", "green3", "cyan", "magenta",
 	"violetred2","thistle4", "steelblue2", "springgreen4",
-	"salmon", "gray"))
+	"salmon"))
 
 readdata <- function (file,start) {
 	t <- read.table(file,row.names=1,header=FALSE,

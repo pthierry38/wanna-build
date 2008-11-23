@@ -255,7 +255,5 @@ if (( $last + $interval < $now )); then
 		/srv/wanna-build/bin/wanna-build-statistics --database=$a/build-db --dist=$d >> /srv/buildd.debian.org/web/stats/$a.txt
 	    done
 	done
-	echo Last Updated: `date -u` > /srv/buildd.debian.org/web/stats/amd64.txt
-	/srv/wanna-build/bin/wanna-build-statistics --database=amd64/build-db --dist=unstable >> /srv/buildd.debian.org/web/stats/amd64.txt
         echo "stats ended: `date`"
 fi
