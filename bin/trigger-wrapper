@@ -1,0 +1,20 @@
+#!/bin/bash
+
+[ -n "$SSH_ORIGINAL_COMMAND" ] || exit 1
+
+set -- $SSH_ORIGINAL_COMMAND
+
+bn=$(basename "$1")
+if [ "$bn" = "trigger.daily" ]; then
+	bin=/org/wanna-build/trigger.daily
+elif [ "$bn" = "trigger.often" ]; then
+	bin=/org/wanna-build/trigger.often
+else
+	exit 1
+fi
+
+shift
+
+[ -f "$bin" -a -x "$bin" ] || exit 1
+
+exec $bin

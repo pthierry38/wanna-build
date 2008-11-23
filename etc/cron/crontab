@@ -1,0 +1,12 @@
+# Never change wbadm's crontab with `crontab -e`. Instead, edit
+# ~wbadm/etc/cron/crontab, and run `make` in that directory (or
+# install that file by hand). Also, please `svn commit` any
+# non-temporary changes you make.
+
+#
+# Stats update.
+#
+MAILTO=wb-team@buildd.debian.org
+43 * * * *       /org/buildd.debian.org/bin/wb-export
+
+3  0 * * *       make -sC /org/wanna-build/etc/cron check

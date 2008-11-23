@@ -1,0 +1,45 @@
+#!/bin/sh
+# Meant to be run from the /srv/wanna-build/db dir
+
+set -e
+
+# etch
+ARCHS_stable="m68k arm sparc alpha powerpc i386 mips mipsel ia64 hppa s390"
+ARCHS_testing="arm sparc alpha powerpc i386 amd64 mips mipsel ia64 hppa s390"
+
+#for a in $ALL_ARCHS; do
+#   rm $a/build-db-oldstable
+#   rm $a/build-db-oldstable-security
+#done
+
+for a in $ARCHS_stable; do
+    mv $a/build-db-stable $a/build-db-oldstable
+    mv $a/build-db-stable-security $a/build-db-oldstable-security
+done
+
+for a in $ARCHS_testing; do
+    mv $a/build-db-testing $a/build-db-stable
+    mv $a/build-db-testing-security $a/build-db-stable-security
+done
+
+for a in $ARCHS_testing; do
+    group=wb-$a
+    chmod 400 $a/build-db-stable
+    cp -a $a/build-db-stable $a/build-db-testing
+    wanna-build -b $a/build-db -d testing-security --create-db --list all
+    if [ "$a" = "powerpc" ]; then
+        group=wb-ppc
+    fi
+    if [ "$a" = "mipsel" ]; then
+        group=wb-mips
+    fi
+    if [ "$a" = "amd64" ]; then
+        group=wb-i386
+    fi
+    chgrp $group $a/build-db-testing*
+    chmod 000 $a/build-db-testing
+    chmod 000 $a/build-db-testing-security
+done
+
+# Important!  And rebuild it afterwards, check for sanity.
+#rm ../tmp/*

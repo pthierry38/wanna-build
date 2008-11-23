@@ -1,0 +1,44 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+my $arch = "i386";
+my $suite = "unstable";
+my %dep;
+
+my $in_bd = 0;
+
+open F, "/org/wanna-build/tmp/Sources.$suite-old";
+while (<F>) {
+	if (s/^Build-Depends:// or (/^\s/ and $in_bd)) {
+		foreach my $pkg (split/,|\|/) {
+			$pkg =~ s/\(.+\)//;
+			$pkg =~ s/\[.+\]//;
+			$pkg =~ s/^\s*(\S+)\s*/$1/;
+			$dep{$pkg} = 1 if $pkg ne "\n";
+		}
+		$in_bd = 1;
+	} else {
+		$in_bd = 0;
+	}
+}
+close F;
+
+open F, "/org/wanna-build/tmp/Packages.$suite.$arch-old";
+while (<F>) {
+	if (s/^Package:
+	if (s/^Depends:// or (/^\s/ and $in_bd)) {
+		foreach my $pkg (split/,|\|/) {
+			$pkg =~ s/\(.+\)//;
+			$pkg =~ s/\[.+\]//;
+			$pkg =~ s/^\s*(\S+)\s*/$1/;
+			$dep{$pkg} = 1 if $pkg ne "\n";
+		}
+		$in_bd = 1;
+	} else {
+		$in_bd = 0;
+	}
+}
+
+	
+print join ("\n",sort keys %dep);
