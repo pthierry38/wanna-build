@@ -2449,8 +2449,8 @@ Options:
     -u, --uploaded: Record in the database that the packages build
         correctly and were uploaded.
     -n, --no-build: Record in the database that the packages aren't
-        desired for m68k and shouldn't appear in listings even if
-        they're out of date.
+        desired for this architecture and shouldn't appear in listings even
+	if they're out of date.
     --dep-wait: Record in the database that the packages are waiting
         for some source dependencies to become available
     --merge-quinn: Merge quinn-diff output into database.
