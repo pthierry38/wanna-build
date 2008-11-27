@@ -10,7 +10,8 @@
 LANG=C
 PATH="/bin:/usr/bin"
 #testing must be before unstable so late upld don't build for testing needlessly
-DISTS="oldstable-security stable-security testing-security oldstable stable testing unstable"
+#DISTS="oldstable-security stable-security testing-security oldstable stable testing unstable"
+DISTS="stable-security testing-security stable testing unstable"
 STATS_DISTS="unstable testing stable"
 SECTIONS="main contrib non-free"
 ARCHS_oldstable="m68k arm sparc alpha powerpc i386 mips mipsel ia64 hppa s390"
