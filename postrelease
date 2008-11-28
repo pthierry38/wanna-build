@@ -4,8 +4,8 @@
 set -e
 
 # etch
-ARCHS_stable="m68k arm sparc alpha powerpc i386 mips mipsel ia64 hppa s390"
-ARCHS_testing="arm sparc alpha powerpc i386 amd64 mips mipsel ia64 hppa s390"
+ARCHS_stable="arm sparc alpha powerpc i386 mips mipsel ia64 hppa s390"
+ARCHS_testing="arm sparc alpha powerpc i386 amd64 mips mipsel ia64 hppa s390 armel"
 
 #for a in $ALL_ARCHS; do
 #   rm $a/build-db-oldstable
