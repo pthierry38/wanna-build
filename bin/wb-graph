@@ -19,10 +19,11 @@ while( @ARGV && $ARGV[0] =~ /^-/ ) {
 		else {
 			$dist = shift @ARGV;
 		}
-		$dist = "stable"   if $dist eq "s";
-		$dist = "frozen"   if $dist eq "f";
-		$dist = "unstable" if $dist eq "u";
-		die "Bad distribution\n" if !isin($dist, qw(stable testing unstable));
+		$dist = "oldstable" if $dist eq "o";
+		$dist = "stable"    if $dist eq "s";
+		$dist = "tesing"    if $dist eq "t";
+		$dist = "unstable"  if $dist eq "u";
+		die "Bad distribution\n" if !isin($dist, qw(oldstable stable testing unstable));
 	}
 	elsif (/^--$/) {
 		last;
