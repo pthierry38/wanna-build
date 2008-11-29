@@ -3,8 +3,8 @@
 
 set -e
 
-# etch
-ARCHS_stable="arm sparc alpha powerpc i386 mips mipsel ia64 hppa s390"
+# lenny
+ARCHS_stable="arm sparc alpha powerpc i386 amd64 mips mipsel ia64 hppa s390"
 ARCHS_testing="arm sparc alpha powerpc i386 amd64 mips mipsel ia64 hppa s390 armel"
 
 #for a in $ALL_ARCHS; do
@@ -35,6 +35,9 @@ for a in $ARCHS_testing; do
     fi
     if [ "$a" = "amd64" ]; then
         group=wb-i386
+    fi
+    if [ "$a" = "armel" ]; then
+        group=wb-arm
     fi
     chgrp $group $a/build-db-testing*
     chmod 000 $a/build-db-testing
