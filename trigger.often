@@ -36,15 +36,6 @@ echo "incoming merge triggered: `date`"
 
 cd $TMPDIR
 
-rm -rf srcdep
-umask 022
-cvs -d :pserver:anonymous@cvs.debian.org:/cvs/dak checkout srcdep/Packages-arch-specific >/dev/null
-if [ -f srcdep/Packages-arch-specific ]; then
-	cp -p srcdep/Packages-arch-specific /org/buildd.debian.org/web/quinn-diff/
-fi
-rm -rf srcdep
-umask 027
-
 #
 # Make one big Packages and Sources file from accepted autobuilding.
 #
