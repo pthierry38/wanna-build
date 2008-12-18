@@ -56,14 +56,10 @@ done
 	
 umask 007
 for a in $ARCHS ; do
-	if [ "$a" = "i386" ]; then
-		quinn-diff -i -D 177 -A $a -a /org/buildd.debian.org/web/quinn-diff/Packages-arch-specific -s Sources.unstable -p Packages.unstable.$a >> quinn-unstable.$a 2> /dev/null
+	if [ "$a" = "$NEWARCH" ]; then
+		quinn-diff -i -A $a -a /org/buildd.debian.org/web/quinn-diff/Packages-arch-specific -s Sources.unstable.$NEWARCH -p Packages.unstable.$a >> quinn-unstable.$a 2> /dev/null
 	else
-		if [ "$a" = "$NEWARCH" ]; then
-			quinn-diff -i -A $a -a /org/buildd.debian.org/web/quinn-diff/Packages-arch-specific -s Sources.unstable.$NEWARCH -p Packages.unstable.$a >> quinn-unstable.$a 2> /dev/null
-		else
-			quinn-diff -i -A $a -a /org/buildd.debian.org/web/quinn-diff/Packages-arch-specific -s Sources.unstable -p Packages.unstable.$a >> quinn-unstable.$a 2> /dev/null
-		fi
+		quinn-diff -i -A $a -a /org/buildd.debian.org/web/quinn-diff/Packages-arch-specific -s Sources.unstable -p Packages.unstable.$a >> quinn-unstable.$a 2> /dev/null
 	fi
 	perl -pi -e 's#^(non-free)/.*$##msg' quinn-unstable.$a
 	if [ "$a" = "$NEWARCH" ]; then
