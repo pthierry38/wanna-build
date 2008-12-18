@@ -163,11 +163,11 @@ for d in $DISTS; do
     fi
 
     for a in $ARCHS; do
-	quinn-diff -A $a -a /srv/buildd.debian.org/web/quinn-diff/Packages-arch-specific -s Sources.$d -p Packages.$d.$a >> quinn-$d.$a 2>/dev/null
+	quinn-diff -A $a -a /srv/buildd.debian.org/web/quinn-diff/$dist/Packages-arch-specific -s Sources.$d -p Packages.$d.$a >> quinn-$d.$a 2>/dev/null
 	if echo $d | grep -qv -- -security; then
 	    if [ "$d" != "unstable" ]; then
 		cat "Packages.$d.$a" >> "Packages.$d-p-u.$a"
-		quinn-diff -A $a -a /srv/buildd.debian.org/web/quinn-diff/Packages-arch-specific -s Sources.$d-p-u -p Packages.$d-p-u.$a >> quinn-$d-p-u.$a 2>/dev/null
+		quinn-diff -A $a -a /srv/buildd.debian.org/web/quinn-diff/$dist/Packages-arch-specific -s Sources.$d-p-u -p Packages.$d-p-u.$a >> quinn-$d-p-u.$a 2>/dev/null
 		sed -e 's/\[[-a-z]*:[-a-z]*\]$//' quinn-$d.$a > quinn-$d.$a.grep
 		if [ ! -z quinn-$d.$a.grep ]; then
 		    fgrep -vf quinn-$d.$a.grep quinn-$d-p-u.$a > quinn-$d.$a
