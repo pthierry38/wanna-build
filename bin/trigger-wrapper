@@ -9,6 +9,8 @@ if [ "$bn" = "trigger.daily" ]; then
 	bin=/org/wanna-build/trigger.daily
 elif [ "$bn" = "trigger.often" ]; then
 	bin=/org/wanna-build/trigger.often
+elif [ "$bn" = "trigger.security" ]; then
+	bin=/org/wanna-build/trigger.security
 else
 	exit 1
 fi
