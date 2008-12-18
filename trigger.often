@@ -11,11 +11,13 @@
 
 LANG=C
 PATH="/bin:/usr/bin"
-ARCHS="arm armel sparc alpha powerpc i386 mips mipsel ia64 hppa s390 amd64"
 TMPDIR="/org/wanna-build/tmp"
+LIBTRIGGER="/org/wanna-build/libtrigger.sh"
 WGETOPT="-q -t2 -w0 -T10"
 LOCKFILE="/org/wanna-build/tmp/DB_Maintenance_In_Progress"
 NEWARCH=""
+
+. "$LIBTRIGGER"
 
 if lockfile -! -l 3600 $LOCKFILE; then
 	echo "Cannot lock $LOCKFILE"
@@ -48,14 +50,14 @@ if wget $WGETOPT http://incoming.debian.org/buildd/Packages.gz; then
 fi
 cp Sources.unstable.base Sources.unstable
 zcat Sources-unstable.accepted.gz >> Sources.unstable
-for a in $ARCHS; do
+for a in $ARCHS_unstable; do
 	rm -f Packages.unstable.$a
 	cp Packages.unstable.$a.base Packages.unstable.$a
 	zcat Packages-unstable.accepted.gz >> Packages.unstable.$a
 done
 	
 umask 007
-for a in $ARCHS ; do
+for a in $ARCHS_unstable ; do
 	if [ "$a" = "$NEWARCH" ]; then
 		quinn-diff -i -A $a -a /org/buildd.debian.org/web/quinn-diff/sid/Packages-arch-specific -s Sources.unstable.$NEWARCH -p Packages.unstable.$a >> quinn-unstable.$a 2> /dev/null
 	else
