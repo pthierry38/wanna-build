@@ -56,6 +56,7 @@ while( @ARGV && $ARGV[0] =~ /^-/ ) {
 		else {
 			$dist = shift @ARGV;
 		}
+		$dist = "oldstable"   if $dist eq "o";
 		$dist = "stable"   if $dist eq "s";
 		$dist = "testing"  if $dist eq "t";
 		$dist = "unstable" if $dist eq "u";

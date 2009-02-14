@@ -1,6 +1,6 @@
-#ARCHS_oldstable="m68k arm sparc alpha powerpc i386 mips mipsel ia64 hppa s390"
-ARCHS_stable="arm sparc alpha powerpc i386 amd64 mips mipsel ia64 hppa s390"
-ARCHS_testing="$ARCHS_stable armel"
+ARCHS_oldstable="arm sparc alpha powerpc i386 mips mipsel ia64 hppa s390"
+ARCHS_stable="$ARCHS_oldstable armel"
+ARCHS_testing="armel sparc alpha powerpc i386 mips mipsel ia64 hppa s390"
 ARCHS_unstable="$ARCHS_testing"
 CURLOPT="-q -s -S -R -f -Y 10 -y 120 -K /home/pkern/wanna-build/trigger.curlrc"
 
