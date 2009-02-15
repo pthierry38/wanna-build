@@ -6,7 +6,7 @@ palette(c("black", "turquoise", "red", "OrangeRed", "green3", "cyan", "magenta",
 
 readdata <- function (file,start) {
 	t <- read.table(file,row.names=1,header=FALSE,
-	sep=",",col.names=c("date","alpha","at","hppa","ht","hurd-i386",
+	sep=",",col.names=c("date","alpha","at","arm","art","hppa","ht","hurd-i386",
 	"hit","i386","it","ia64","i6t","m68k","mt","mips","mit","mipsel","mipt",
 	"powerpc","pt","s390","st","amd64","amdt","sparc","spt","armel","aret"))
 	ts(as.matrix(data.frame(t[1]/t[2]*100,t[23]/t[24]*100,
