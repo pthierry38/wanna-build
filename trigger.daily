@@ -158,7 +158,12 @@ echo "fetch and quinn completed: `date -u`"
 echo "fetch and quinn completed: `date -u`" >&3
 
 umask 002
-for a in $ARCHS_unstable ; do
+# Gross hack: we need a list of all architectures, because this loop
+# insists on iterating on arches and then suites, instead of the
+# opposite.
+ALL_ARCHES=$(echo $ARCHS_oldstable $ARCHS_stable $ARCHS_testing $ARCHS_unstable \
+	     | tr ' ' '\n' | sort -u)
+for a in $ALL_ARCHES ; do
 	wanna-build --create-maintenance-lock --database=$a/build-db
 
 	for d in $DISTS ; do
