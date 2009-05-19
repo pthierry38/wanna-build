@@ -441,9 +441,15 @@ sub process {
 	}
 	if (not -t and $user =~ /-/) {
 		my $userinfo = $db{'_userinfo'};
-		my $ui = $userinfo->{$user};
+		$userinfo = {} if (!defined($userinfo));
 
-		$userinfo->{$user}->{'Last-Seen'} = $curr_date;
+		my $ui = $userinfo->{$user};
+		$ui = {} if (!defined($ui));
+
+		$ui->{'Last-Seen'} = $curr_date;
+		$ui->{'User'} = $user;
+
+		$userinfo->{$user} = $ui;
 		$db{'_userinfo'} = $userinfo;
 	}
 }
@@ -1621,36 +1627,55 @@ BEGIN {
 				 'debian-installer'	=> -199,
 				 base			=> -198,
 				 devel			=> -197,
-				 shells			=> -196,
-				 perl			=> -195,
-				 python			=> -194,
-				 graphics		=> -193,
-				 admin			=> -192,
-				 utils			=> -191,
-				 x11			=> -190,
-				 editors		=> -189,
-				 net			=> -188,
-				 mail			=> -187,
-				 news			=> -186,
-				 tex			=> -185,
-				 text			=> -184,
-				 web			=> -183,
-				 doc			=> -182,
-				 interpreters		=> -181,
-				 gnome			=> -180,
-				 kde			=> -179,
-				 games			=> -178,
-				 misc			=> -177,
-				 otherosfs		=> -176,
-				 oldlibs		=> -175,
-				 libdevel		=> -174,
-				 sound			=> -173,
-				 math			=> -172,
-				 science		=> -171,
-				 comm			=> -170,
-				 electronics		=> -169,
-				 hamradio		=> -168,
-				 embedded		=> -166,
+				 kernel			=> -196,
+				 shells			=> -195,
+				 perl			=> -194,
+				 python			=> -193,
+				 graphics		=> -192,
+				 admin			=> -191,
+				 utils			=> -190,
+				 x11			=> -189,
+				 editors		=> -188,
+				 net			=> -187,
+				 httpd			=> -186,
+				 mail			=> -185,
+				 news			=> -184,
+				 tex			=> -183,
+				 text			=> -182,
+				 web			=> -181,
+				 vcs			=> -180,
+				 doc			=> -179,
+				 localizations		=> -178,
+				 interpreters		=> -177,
+				 ruby			=> -176,
+				 java			=> -175,
+				 ocaml			=> -174,
+				 lisp			=> -173,
+				 haskell		=> -172,
+				 'cli-mono'             => -171,
+				 gnome			=> -170,
+				 kde			=> -169,
+				 xfce			=> -168,
+				 gnustep		=> -167,
+				 database		=> -166,
+				 video			=> -165,
+				 debug			=> -164,
+				 games			=> -163,
+				 misc			=> -162,
+				 fonts			=> -161,
+				 otherosfs		=> -160,
+				 oldlibs		=> -159,
+				 libdevel		=> -158,
+				 sound			=> -157,
+				 math			=> -156,
+				 'gnu-r'		=> -155,
+				 science		=> -154,
+				 comm			=> -153,
+				 electronics		=> -152,
+				 hamradio		=> -151,
+				 embedded		=> -150,
+				 php			=> -149,
+				 zope			=> -148,
 	);
 	foreach my $i (keys %sectval) {
 		$sectval{"contrib/$i"} = $sectval{$i}+40;
@@ -2040,8 +2065,19 @@ sub read_db {
 		}
 		check_entry( \%thispkg );
 		# add to db
-		$name = $thispkg{'Package'};
-		$db{$name} = \%thispkg;
+		if (exists($thispkg{'Package'})) {
+			$name = $thispkg{'Package'};
+			$db{$name} = \%thispkg;
+		}
+		elsif(exists($thispkg{'User'})) {
+			my $userinfo = $db{'_userinfo'};
+			$userinfo = {} if (!defined($userinfo));
+
+			$name = $thispkg{'User'};
+			$userinfo->{$name} = \%thispkg;
+
+			$db{'_userinfo'} = $userinfo;
+		 }
 	}
 	close( F );
 	print "done\n" if $verbose >= 1;
@@ -2054,10 +2090,10 @@ sub check_entry {
 	return if $op_mode eq "manual-edit"; # no checks then
 	
 	# check for required fields
-	if (!exists $pkg->{'Package'}) {
+	if (!exists $pkg->{'Package'} || !exists $pkg->{'User'}) {
 		print STDERR "Bad entry: ",
 			  join( "\n", map { "$_: $pkg->{$_}" } keys %$pkg ), "\n";
-		die "Database entry lacks Package: field\n";
+		die "Database entry lacks Package or User: field\n";
 	}
 	if (!exists $pkg->{'Version'}) {
 		die "Database entry for $pkg->{'Package'} lacks Version: field\n";
@@ -2085,13 +2121,29 @@ sub write_db {
 
 	foreach $name (sort keys %db) {
 		my $pkg = $db{$name};
-		foreach $key (keys %{$pkg}) {
-			my $val = $pkg->{$key};
-			chomp( $val );
-			$val =~ s/\n/\n /g;
-			print F "$key: $val\n";
+		if ($name eq '_userinfo') {
+			foreach $user (sort keys %{$pkg}) {
+			    my $ui = $pkg->{$user};
+			    print F "User: $user\n"
+				if (!defined($ui->{'User'}));
+			    foreach $key (keys %{$ui}) {
+				my $val = $ui->{$key};
+				chomp($val);
+				$val =~ s/\n/\n /g;
+				print F "$key: $val\n";
+			    }
+			    print F "\n";
+			}
 		}
-		print F "\n";
+		else {
+			foreach $key (keys %{$pkg}) {
+				my $val = $pkg->{$key};
+				chomp( $val );
+				$val =~ s/\n/\n /g;
+				print F "$key: $val\n";
+			}
+		    	print F "\n";
+		}
 	}
 	close( F );
 	print "done\n" if $verbose >= 1;
