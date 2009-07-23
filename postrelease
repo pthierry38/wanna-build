@@ -3,26 +3,27 @@
 
 set -e
 
-# lenny
-ARCHS_stable="arm sparc alpha powerpc i386 amd64 mips mipsel ia64 hppa s390"
-ARCHS_testing="arm sparc alpha powerpc i386 amd64 mips mipsel ia64 hppa s390 armel"
+# lenny -> squeeze move
+ARCHS_old_stable="alpha amd64 arm hppa i386 ia64 mips mipsel powerpc s390 sparc"
+ARCHS_new_stable="alpha amd64 arm armel hppa i386 ia64 mips mipsel powerpc s390 sparc"
+ARCHS_new_testing="alpha amd64 armel hppa i386 ia64 mips mipsel powerpc s390 sparc"
 
 #for a in $ALL_ARCHS; do
 #   rm $a/build-db-oldstable
 #   rm $a/build-db-oldstable-security
 #done
 
-for a in $ARCHS_stable; do
+for a in $ARCHS_old_stable; do
     mv $a/build-db-stable $a/build-db-oldstable
     mv $a/build-db-stable-security $a/build-db-oldstable-security
 done
 
-for a in $ARCHS_testing; do
+for a in $ARCHS_new_stable; do
     mv $a/build-db-testing $a/build-db-stable
     mv $a/build-db-testing-security $a/build-db-stable-security
 done
 
-for a in $ARCHS_testing; do
+for a in $ARCHS_new_testing; do
     group=wb-$a
     chmod 400 $a/build-db-stable
     cp -a $a/build-db-stable $a/build-db-testing

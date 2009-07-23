@@ -1,5 +1,5 @@
 # Never change wbadm's crontab with `crontab -e`. Instead, edit
-# ~wbadm/etc/cron/crontab, and run `make` in that directory (or
+# /org/wanna-build/etc/cron/crontab, and run `make` in that directory (or
 # install that file by hand). Also, please `git commit` any
 # non-temporary changes you make.
 
@@ -9,4 +9,13 @@
 MAILTO=cron-errors@buildd.debian.org
 43 * * * *       /org/buildd.debian.org/bin/wb-export
 
+MAILTO=adeodato@buildd.debian.org
+# TODO: locking
+30 3,9,15,21 * * *	/home/adeodato/bin/wannab-import -q ftp
+7/30 * * * *		/home/adeodato/bin/wannab-import -q status; /home/adeodato/code/tools/scripts/tt -q genweb
+MAILTO=cron-errors@buildd.debian.org
+
 3  0 * * *       make -sC /org/wanna-build/etc/cron check
+
+4  0 * * *       /org/buildd.debian.org/mbox/fix-up-permissions
+

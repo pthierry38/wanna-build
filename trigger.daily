@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 #
 # Updates wanna-build databases after the archive maintenance
 # finishes
@@ -10,8 +10,9 @@
 LANG=C
 PATH="/bin:/usr/bin"
 #testing must be before unstable so late upld don't build for testing needlessly
-#DISTS="oldstable-security stable-security testing-security oldstable stable testing unstable"
-DISTS="stable-security testing-security stable testing unstable"
+DISTS="oldstable-security stable-security testing-security oldstable stable testing unstable"
+# While oldstable is purged
+#DISTS="stable-security testing-security stable testing unstable"
 STATS_DISTS="unstable testing stable"
 SECTIONS="main contrib non-free"
 TMPDIR="/org/wanna-build/tmp"
@@ -41,7 +42,7 @@ echo Updating wanna-build databases...
 umask 027
 
 if [ "$DAY" = "0" ]; then
-	savelog -c 26 -p /srv/wanna-build/db/merge.log
+	savelog -c 64 -p /srv/wanna-build/db/merge.log
 fi
 
 exec 3<&1 >> /srv/wanna-build/db/merge.log 2>&1
@@ -203,7 +204,7 @@ for a in $ALL_ARCHES ; do
 		mv quinn-$d.$a quinn-$d.$a-old
 	done
 	if [ "$DAY" = "0" ]; then
-		savelog -p -c 26 /srv/wanna-build/db/$a/transactions.log
+		savelog -p -c 128 /srv/wanna-build/db/$a/transactions.log
 	fi
 	wanna-build --remove-maintenance-lock --database=$a/build-db
 done

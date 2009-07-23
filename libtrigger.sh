@@ -1,8 +1,8 @@
-ARCHS_oldstable="arm sparc alpha powerpc i386 mips mipsel ia64 hppa s390"
-ARCHS_stable="$ARCHS_oldstable armel"
-ARCHS_testing="armel sparc alpha powerpc i386 mips mipsel ia64 hppa s390"
-ARCHS_unstable="$ARCHS_testing"
-CURLOPT="-q -s -S -R -f -Y 10 -y 120 -K /home/pkern/wanna-build/trigger.curlrc"
+ARCHS_oldstable="alpha amd64 arm hppa i386 ia64 mips mipsel powerpc s390 sparc"
+ARCHS_stable="alpha amd64 arm armel hppa i386 ia64 mips mipsel powerpc s390 sparc"
+ARCHS_testing="alpha amd64 armel hppa i386 ia64 mips mipsel powerpc s390 sparc"
+ARCHS_unstable="$ARCHS_testing kfreebsd-amd64 kfreebsd-i386"
+CURLOPT="-q -s -S -R -f -Y 10 -y 120 -K /srv/wanna-build/trigger.curlrc"
 
 curl_index () {
     local url tmpname destname appendname curlopt

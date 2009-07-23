@@ -11,8 +11,11 @@ if [ "$bn" != "wanna-build" ]; then
 	exit 1
 fi
 
+logger -i -p user.debug -t ssh-wrapper -- $@
+
 shift
 
 [ -f "$bin" -a -x "$bin" ] || exit 1
 
 exec $bin $@
+

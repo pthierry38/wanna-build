@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 #
 # This is the equivalent of trigger.often for security.
 #
@@ -27,6 +27,7 @@ MERGELOG="$BASEDIR/db/merge.log"
 
 if [ -z "$BASE_DIST" ]; then
     echo "E: no base suite specified."
+    exit 1
 fi
 
 if lockfile -! -l 3600 "$LOCKFILE"; then
@@ -64,10 +65,14 @@ curl_index "$SECMASTERBUILDD/${BASE_DIST}/Packages.gz" "Packages-$d.accepted.gz"
 
 for a in $ARCHS; do
     echo "processing $d/$a..."
-    quinn-diff -i -A $a -a "/srv/buildd.debian.org/web/quinn-diff/${BASE_DIST}/Packages-arch-specific" -s "Sources.$d.accepted" -p "Packages.$d.accepted" >> "quinn-$d.$a.accepted" 2>/dev/null
+    quinn-diff -i -A $a -a "/srv/buildd.debian.org/web/quinn-diff/${BASE_DIST}/Packages-arch-specific" -s "Sources.$d.accepted" -p "Packages.$d.accepted" > "quinn-$d.$a.accepted" 2>/dev/null
     wanna-build -d $d -b $a/build-db --merge-partial-quinn < "quinn-$d.$a.accepted"
     wanna-build -d $d -b $a/build-db -A $a --merge-packages < "Packages.$d.accepted"
+    mv "quinn-$d.$a.accepted" "quinn-$d.$a.accepted-old"
 done
+
+mv "Sources.$d.accepted" "Sources.$d.accepted-old"
+mv "Packages.$d.accepted" "Packages.$d.accepted-old"
 
 echo "security merge for ${BASE_DIST} ended: `date`"
 exit 0
