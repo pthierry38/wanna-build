@@ -2090,7 +2090,10 @@ sub check_entry {
 	return if $op_mode eq "manual-edit"; # no checks then
 	
 	# check for required fields
-	if (!exists $pkg->{'Package'} || !exists $pkg->{'User'}) {
+	if (exists $pkg->{'User'}) {
+		return;
+	}
+	if (!exists $pkg->{'Package'}) {
 		print STDERR "Bad entry: ",
 			  join( "\n", map { "$_: $pkg->{$_}" } keys %$pkg ), "\n";
 		die "Database entry lacks Package or User: field\n";
