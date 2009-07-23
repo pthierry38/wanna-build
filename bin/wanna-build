@@ -48,7 +48,8 @@ our ($verbose, $mail_logs, $list_order, $list_state,
     $info_all_dists, $arch,
     $category, %catval, %short_category,
     $short_date, $list_min_age, $dbbase, @curr_time,
-    $build_priority, %new_vers, $binNMUver, %merge_srcvers, %merge_binsrc);
+    $build_priority, %new_vers, $binNMUver, %merge_srcvers, %merge_binsrc,
+    $lock_for_pid);
 
 # global vars
 $ENV{'PATH'} = "/bin:/usr/bin:/usr/local/bin";
@@ -58,6 +59,7 @@ $mail_logs = "";
 $curr_date = strftime("%Y %b %d %H:%M:%S",@curr_time);
 $short_date = strftime("%m/%d/%y",@curr_time);
 $| = 1;
+$lock_for_pid = -1; # -1 means normal procedure
 
 # map program invocation names to operation modes
 my %prognames = ( "uploaded-build"  => "set-uploaded",
@@ -182,6 +184,9 @@ my %options =
 	 # special actions
 	 import         => { arg => \$import_from, mode => "import" },
 	 export         => { arg => \$export_to, mode => "export" },
+	 "lock-for"     => { arg => \$lock_for_pid, mode => "lock-for" },
+	 "unlock-for"   => { arg => \$lock_for_pid, mode => "unlock-for" },
+	 "act-on-behalve-of" => { arg => \$lock_for_pid },
 	 "manual-edit"  => { mode => "manual-edit" },
 	 "create-maintenance-lock" => { mode => "maintlock-create" },
 	 "remove-maintenance-lock" => { mode => "maintlock-remove" },
@@ -246,7 +251,7 @@ if ($verbose) {
 }
 
 if (!@ARGV && !isin( $op_mode, qw(list merge-quinn merge-partial-quinn import export
-				  merge-packages manual-edit maintlock-create
+				  merge-packages manual-edit maintlock-create lock-for unlock-for
 				  merge-sources maintlock-remove clean-db))) {
 	warn "No packages given.\n";
 	usage();
@@ -300,10 +305,24 @@ waitfor_maintlock() if $op_mode !~ /^(?:merge-|clean-db$)/;
 if (!-f db_filename( $distribution ) && !$opt_create_db) {
 	die "Database for $distribution doesn't exist\n";
 }
+
+# Locking for another process means that a longer running process (most likely
+# wb) wants to do several steps at once, and manages the locks.
+if ($op_mode eq "lock-for") {
+	lock_db( $distribution );
+	exit 0;
+}
+if ($op_mode eq "unlock-for") {
+	unlock_db( $distribution );
+	exit 0;
+}
+
 lock_db( $distribution );
 END {
-    untie %db;
-	unlock_db( $distribution );
+	untie %db;
+	if ($lock_for_pid == -1) {
+		unlock_db( $distribution );
+	}
 	foreach (keys %conf::distributions) {
 		untie %{$otherdb{$_}} if tied(%{$otherdb{$_}});
 		unlock_db( $_ ) if $otherdb_lock{$_};
@@ -1939,6 +1958,10 @@ sub lock_db {
 					unlink( $lockfile );
 					goto repeat;
 				}
+				if ($pid == $lock_for_pid) {
+					# We are allowed to use this lock.
+					return;
+				}
 				warn "Database locked by $usr -- please wait\n" if $try == 0;
 			}
 			if (++$try > 200) {
@@ -1951,7 +1974,8 @@ sub lock_db {
 		}
 		die "Can't create lock file $lockfile: $!\n";
 	}
-	F->print("$$ $real_user\n");
+	my $pid = $lock_for_pid == -1 ? $$ : $lock_for_pid;
+	F->print("$pid $real_user\n");
 	F->close();
 }
 
@@ -2528,6 +2552,9 @@ Options:
         automatically choosen
     --import FILE: Import database from a ASCII file FILE
     --export FILE: Export database to a ASCII file FILE
+    --lock-for PID: Locks the database for the process with this pid
+    --unlock-for PID: Unlocks the database for the process with this pid
+    --act-on-behalve-of PID: Ignores the log (if it is held by this pid)
 The remaining arguments (depending on operation) usually start with
 "name_version", the trailer is ignored. This allows to pass the names
 of .dsc files, for which file name completion can be used.
