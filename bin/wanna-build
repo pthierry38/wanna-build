@@ -2592,6 +2592,9 @@ Options:
         for some source dependencies to become available
     --binNMU num: Schedule a re-build of the package with unchanged source, but
          a new version number (source-version + "+b<num>")
+    --give-back: Mark a package as ready to build that is in state Building,
+	 Built or Build-Attempted. To give back a package in state Failed, use
+	 --override
     --merge-quinn: Merge quinn-diff output into database.
     --merge-packages: Merge Packages files into database.
     --pretend-avail: Pretend that given packages are available now and give
