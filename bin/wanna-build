@@ -45,7 +45,7 @@ use WannaBuild;
 our ($verbose, $mail_logs, $list_order, $list_state,
     $curr_date, $op_mode, $user, $real_user, $distribution,
     $fail_reason, $opt_override, $import_from, $export_to, $opt_create_db,
-    $transactlog, %db, %otherdb, %otherdb_lock, %prioval, %sectval,
+    %db, %otherdb, %otherdb_lock, %prioval, %sectval,
     $info_all_dists, $arch,
     $category, %catval, %short_category,
     $short_date, $list_min_age, $dbbase, @curr_time,
@@ -246,8 +246,6 @@ $list_order = $list_state eq "failed" ? 'fPcpsn' : 'PScpsn'
 $distribution ||= "unstable";
 die "Bad distribution '$distribution'\n"
 	if !isin($distribution, keys %conf::distributions);
-$conf::dbbase =~ m#^([^/]+/)#;
-$transactlog = "$conf::basedir/$1$conf::transactlog";
 
 if ($verbose) {
 	my $version = '$Revision: db181a534e9d $ $Date: 2008/03/26 06:20:22 $ $Author: rmurray $';
@@ -332,12 +330,23 @@ lock_db( $distribution );
 if ($op_mode eq "start-transaction") {
 	copy ( db_filename_master( $distribution ), db_filename_transaction( $distribution ))
 		or die "Copy failed: $!";
+	open LOG, ">", db_transactlog_transaction( $distribution )
+		or die "Could not create logfile for transaction: $!";
+	close LOG;
 	exit 0;
 }
 
 if ($op_mode eq "commit-transaction") {
 	move ( db_filename_transaction( $distribution ), db_filename_master( $distribution ))
-		or die "Copy failed: $!";
+		or die "Move failed: $!";
+	open TLOG, "<", db_transactlog_transaction( $distribution )
+		or die "Could not open logfile from transaction: $!";
+	open LOG, ">>", db_transactlog_master( $distribution )
+		or die "Could not open logfile: $!";
+	while (<TLOG>) { print LOG $_ };
+	close TLOG;
+	close LOG;
+	unlink db_transactlog_transaction( $distribution );
 	exit 0;
 }
 
@@ -2259,6 +2268,7 @@ sub log_ta {
 		   "changed from $prevstate to $pkg->{'State'} ".
 		   "by $real_user as $user";
 	
+	my $transactlog = db_transactlog( $distribution );
 	if (!open( LOG, ">>$transactlog" )) {
 		warn "Can't open log file $transactlog: $!\n";
 		return;
@@ -2300,7 +2310,6 @@ sub db_filename {
 	my $dist = shift;
 	return $transactional ? db_filename_transaction($dist) : db_filename_master($dist);
 }
-
 sub db_filename_master {
 	my $dist = shift;
 	return "$conf::basedir/$conf::dbbase-$dist";
@@ -2308,6 +2317,22 @@ sub db_filename_master {
 sub db_filename_transaction {
 	my $dist = shift;
 	return "$conf::basedir/$conf::dbbase-$dist-transaction";
+}
+
+
+sub db_transactlog {
+	my $dist = shift;
+	return $transactional ? db_transactlog_transaction($dist) : db_transactlog_master($dist);
+}
+sub db_transactlog_master {
+	my $dist = shift;
+	$conf::dbbase =~ m#^([^/]+/)#;
+	return "$conf::basedir/$1$conf::transactlog";
+}
+sub db_transactlog_transaction {
+	my $dist = shift;
+	$conf::dbbase =~ m#^([^/]+/)#;
+	return "$conf::basedir/$1$conf::transactlog-$dist-transaction";
 }
 
 # for parsing input to dep-wait
