@@ -336,8 +336,10 @@ if ($op_mode eq "start-transaction") {
 }
 
 if ($op_mode eq "commit-transaction") {
-	move ( db_filename_transaction( $distribution ), db_filename_master( $distribution ))
-		or die "Move failed: $!";
+	# we need to copy here to preserve the owner and group of the file
+	copy ( db_filename_transaction( $distribution ), db_filename_master( $distribution ))
+		or die "Copy failed: $!";
+	unlink db_filename_transaction( $distribution );
 	open TLOG, "<", db_transactlog_transaction( $distribution )
 		or die "Could not open logfile from transaction: $!";
 	open LOG, ">>", db_transactlog_master( $distribution )
