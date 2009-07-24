@@ -37,6 +37,7 @@ package main;
 use strict;
 use POSIX;
 use FileHandle;
+use File::Copy;
 use GDBM_File;
 use MLDBM qw(GDBM_File Storable);
 use WannaBuild;
@@ -49,7 +50,7 @@ our ($verbose, $mail_logs, $list_order, $list_state,
     $category, %catval, %short_category,
     $short_date, $list_min_age, $dbbase, @curr_time,
     $build_priority, %new_vers, $binNMUver, %merge_srcvers, %merge_binsrc,
-    $lock_for_pid);
+    $lock_for_pid, $transactional);
 
 # global vars
 $ENV{'PATH'} = "/bin:/usr/bin:/usr/local/bin";
@@ -60,6 +61,7 @@ $curr_date = strftime("%Y %b %d %H:%M:%S",@curr_time);
 $short_date = strftime("%m/%d/%y",@curr_time);
 $| = 1;
 $lock_for_pid = -1; # -1 means normal procedure
+$transactional = 0; # 0 means: work on main copy
 
 # map program invocation names to operation modes
 my %prognames = ( "uploaded-build"  => "set-uploaded",
@@ -187,6 +189,9 @@ my %options =
 	 "lock-for"     => { arg => \$lock_for_pid, mode => "lock-for" },
 	 "unlock-for"   => { arg => \$lock_for_pid, mode => "unlock-for" },
 	 "act-on-behalve-of" => { arg => \$lock_for_pid },
+	 "start-transaction" => { mode => "start-transaction" },
+	 "commit-transaction" => { mode => "commit-transaction" },
+	 "transactional" => { flag => \$transactional },
 	 "manual-edit"  => { mode => "manual-edit" },
 	 "create-maintenance-lock" => { mode => "maintlock-create" },
 	 "remove-maintenance-lock" => { mode => "maintlock-remove" },
@@ -252,6 +257,7 @@ if ($verbose) {
 
 if (!@ARGV && !isin( $op_mode, qw(list merge-quinn merge-partial-quinn import export
 				  merge-packages manual-edit maintlock-create lock-for unlock-for
+				  start-transaction commit-transaction
 				  merge-sources maintlock-remove clean-db))) {
 	warn "No packages given.\n";
 	usage();
@@ -303,7 +309,11 @@ if ($op_mode eq "maintlock-remove") {
 waitfor_maintlock() if $op_mode !~ /^(?:merge-|clean-db$)/;
 
 if (!-f db_filename( $distribution ) && !$opt_create_db) {
-	die "Database for $distribution doesn't exist\n";
+	if ($transactional) {
+		die "No running transaction for $distribution\n";
+	} else {
+		die "Database for $distribution doesn't exist\n";
+	}
 }
 
 # Locking for another process means that a longer running process (most likely
@@ -318,6 +328,19 @@ if ($op_mode eq "unlock-for") {
 }
 
 lock_db( $distribution );
+
+if ($op_mode eq "start-transaction") {
+	copy ( db_filename_master( $distribution ), db_filename_transaction( $distribution ))
+		or die "Copy failed: $!";
+	exit 0;
+}
+
+if ($op_mode eq "commit-transaction") {
+	move ( db_filename_transaction( $distribution ), db_filename_master( $distribution ))
+		or die "Copy failed: $!";
+	exit 0;
+}
+
 END {
 	untie %db;
 	if ($lock_for_pid == -1) {
@@ -2275,7 +2298,16 @@ sub send_mail {
 
 sub db_filename {
 	my $dist = shift;
+	return $transactional ? db_filename_transaction($dist) : db_filename_master($dist);
+}
+
+sub db_filename_master {
+	my $dist = shift;
 	return "$conf::basedir/$conf::dbbase-$dist";
+}
+sub db_filename_transaction {
+	my $dist = shift;
+	return "$conf::basedir/$conf::dbbase-$dist-transaction";
 }
 
 # for parsing input to dep-wait
@@ -2555,6 +2587,13 @@ Options:
     --lock-for PID: Locks the database for the process with this pid
     --unlock-for PID: Unlocks the database for the process with this pid
     --act-on-behalve-of PID: Ignores the log (if it is held by this pid)
+    --start-transaction: Creates a copy of the state of the database, for
+	use with --transactional. This overrides any previous uncommited
+	transaction. Should only be used after --lock-for
+    --commit-transaction: Atomically moves the copy back to the main, thus
+    	commiting the changes
+    --transactional: Flag to indicate that we want to work on the copy
+
 The remaining arguments (depending on operation) usually start with
 "name_version", the trailer is ignored. This allows to pass the names
 of .dsc files, for which file name completion can be used.
