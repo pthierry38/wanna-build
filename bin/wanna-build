@@ -2565,6 +2565,8 @@ Options:
 	if they're out of date.
     --dep-wait: Record in the database that the packages are waiting
         for some source dependencies to become available
+    --binNMU num: Schedule a re-build of the package with unchanged source, but
+         a new version number (source-version + "+b<num>")
     --merge-quinn: Merge quinn-diff output into database.
     --merge-packages: Merge Packages files into database.
     --pretend-avail: Pretend that given packages are available now and give
