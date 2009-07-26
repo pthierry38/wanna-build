@@ -1969,7 +1969,7 @@ sub forget_users {
 sub lock_db {
 	my $dist = shift;
 	my $try = 0;
-	my $lockfile = db_filename($dist) . ".lock";
+	my $lockfile = db_lockfilename($dist);
 	local( *F );
 	
 	print "Locking $dist database\n" if $verbose >= 2;
@@ -2014,7 +2014,7 @@ sub lock_db {
 
 sub unlock_db {
 	my $dist = shift;
-	my $lockfile = db_filename($dist) . ".lock";
+	my $lockfile = db_lockfilename($dist);
 
 	if (!$main::keep_lock{$dist}) {
 		print "Unlocking $dist database\n" if $verbose >= 2;
@@ -2023,7 +2023,7 @@ sub unlock_db {
 }
 
 sub create_maintlock {
-	my $lockfile = db_filename("maintenance") . ".lock";
+	my $lockfile = db_lockfilename("maintenance");
 	my $try = 0;
 	local( *F );
 	
@@ -2062,14 +2062,14 @@ sub create_maintlock {
 }
 
 sub remove_maintlock {
-	my $lockfile = db_filename("maintenance") . ".lock";
+	my $lockfile = db_lockfilename("maintenance");
 
 	print "Removing maintenance lock\n" if $verbose >= 2;
 	unlink $lockfile;
 }
 
 sub waitfor_maintlock {
-	my $lockfile = db_filename("maintenance") . ".lock";
+	my $lockfile = db_lockfilename("maintenance");
 	my $try = 0;
 	local( *F );
 	
@@ -2319,6 +2319,11 @@ sub db_filename_master {
 sub db_filename_transaction {
 	my $dist = shift;
 	return "$conf::basedir/$conf::dbbase-$dist-transaction";
+}
+
+sub db_lockfilename {
+	my $dist = shift;
+	return db_filename_master($dist) . ".lock";
 }
 
 
