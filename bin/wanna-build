@@ -2583,9 +2583,11 @@ sub call_edos_depcheck {
 	if ($change) {
 	    if (defined $interesting_packages{$key}) {
 		    $pkg->{'State'} = 'BD-Uninstallable';
+		    $pkg->{'Reason'} = $interesting_packages{$key};
 		    change_state( \$pkg, 'BD-Uninstallable' );
 	    } else {
 		    $pkg->{'State'} = 'Needs-Build';
+		    delete $pkg->{'Reason'};
 		    change_state( \$pkg, 'Needs-Build' );
 	    }
 	    log_ta( $pkg, "--merge-all" );
