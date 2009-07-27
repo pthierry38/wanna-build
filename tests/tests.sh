@@ -92,16 +92,17 @@ function wanna-build {
 wanna-build -A amd64 -b amd64/build-db --create-db --info no-package-1.2.3
 
 echo Load some sources
-wanna-build -A amd64 -b amd64/build-db --merge-all <(cat <<__END__ 
+
+cat > $testdir/Packages <<__END__ 
 Package: bin-a-indep
 Version: 1
 Architecture: all
 Source: src-a
 __END__
-) <( cat <<__END__ 
+cat > $testdir/quinn-diff <<__END__
 misc/src-a_1.dsc [optional:uncompiled]
 __END__
-)  <( cat <<__END__
+cat > $testdir/Sources <<__END__
 Package: src-a
 Version: 1
 Architecture: any
@@ -110,7 +111,7 @@ Priority: standard
 Build-Depends: compiler
 Binary: bin-a-indep,bin-a-1
 __END__
-)
+wanna-build -A amd64 -b amd64/build-db --merge-all $testdir/Packages $testdir/quinn-diff $testdir/Sources
 
 # Test that they exist are in state Needs-Build
 wanna-build -A amd64 -b amd64/build-db --info src-a | assert_grep ' State.*: Needs-Build'
@@ -124,7 +125,7 @@ wanna-build -A amd64 -b amd64/build-db --uploaded src-a_1
 wanna-build -A amd64 -b amd64/build-db --info src-a | assert_grep ' State.*: Uploaded'
 
 echo Load the binaries for the sources
-wanna-build -A amd64 -b amd64/build-db --merge-all <(cat <<__END__ 
+cat > $testdir/Packages <<__END__ 
 Package: bin-a-indep
 Version: 1
 Architecture: all
@@ -135,9 +136,9 @@ Version: 1
 Architecture: amd64
 Source: src-a
 __END__
-) <( cat <<__END__ 
+cat > $testdir/quinn-diff <<__END__
 __END__
-)  <( cat <<__END__
+cat > $testdir/Sources <<__END__
 Package: src-a
 Version: 1
 Architecture: any
@@ -146,13 +147,13 @@ Priority: standard
 Build-Depends: compiler
 Binary: bin-a-indep,bin-a-1
 __END__
-)
+wanna-build -A amd64 -b amd64/build-db --merge-all $testdir/Packages $testdir/quinn-diff $testdir/Sources
 
 # Test that they exist are in state Needs-Build
 wanna-build -A amd64 -b amd64/build-db --info src-a | assert_grep ' State .*: Installed'
 
 echo Upload another source that needs bin-a-1 in Version 2
-wanna-build -A amd64 -b amd64/build-db --merge-all <(cat <<__END__ 
+cat > $testdir/Packages <<__END__ 
 Package: bin-a-indep
 Version: 1
 Architecture: all
@@ -163,10 +164,10 @@ Version: 1
 Architecture: amd64
 Source: src-a
 __END__
-) <( cat <<__END__ 
+cat > $testdir/quinn-diff <<__END__
 misc/src-b_1.dsc [optional:uncompiled]
 __END__
-)  <( cat <<__END__
+cat > $testdir/Sources <<__END__
 Package: src-a
 Version: 1
 Architecture: any
@@ -183,12 +184,12 @@ Priority: standard
 Build-Depends: bin-a-1 (>= 2)
 Binary: bin-b
 __END__
-)
+wanna-build -A amd64 -b amd64/build-db --merge-all $testdir/Packages $testdir/quinn-diff $testdir/Sources
 
 wanna-build -A amd64 -b amd64/build-db --info src-b | assert_grep "bin-a-1 (>= 2)"
 
 echo Uploading the new source with an updated binary package
-wanna-build -A amd64 -b amd64/build-db --merge-all <(cat <<__END__ 
+cat > $testdir/Packages <<__END__ 
 Package: bin-a-indep
 Version: 2
 Architecture: all
@@ -199,18 +200,18 @@ Version: 2
 Architecture: amd64
 Source: src-a
 __END__
-) <( cat <<__END__ 
+cat > $testdir/quinn-diff <<__END__
 misc/src-a_1.dsc [optional:uncompiled]
 misc/src-b_1.dsc [optional:uncompiled]
 __END__
-)  <( cat <<__END__
+cat > $testdir/Sources <<__END__
 Package: src-a
-Version: 1
+Version: 2
 Architecture: any
 Section: misc
 Priority: standard
 Build-Depends: compiler
-Binary: bin-a-indep,bin-a-1,bin-a-2
+Binary: bin-a-indep,bin-a-1
 
 Package: src-b
 Version: 1
@@ -220,7 +221,7 @@ Priority: standard
 Build-Depends: bin-a-1 (>= 2)
 Binary: bin-b
 __END__
-)
+wanna-build -A amd64 -b amd64/build-db --merge-all $testdir/Packages $testdir/quinn-diff $testdir/Sources
 
 wanna-build -A amd64 -b amd64/build-db --info src-b | assert_grep "State.*:.*Needs-Build"
 
