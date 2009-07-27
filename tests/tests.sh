@@ -73,7 +73,7 @@ mkdir $testdir/db/amd64;
 function wanna-build {
 	# Here we make sure that the "require /etc/wanan-build.conf" does not
 	# have effect, and load our own file instead.
-	echo "Executing wanna-build" "$@" >&2
+	#echo "Executing wanna-build" "$@" >&2
 	export PERL5LIB=/home/jojo/debian/wanna-build/testsetup/bin
 	perl -e '
 	  package conf;
