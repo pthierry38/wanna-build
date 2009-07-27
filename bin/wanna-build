@@ -446,7 +446,7 @@ sub process {
 			parse_quinn_diff(0);
 			@ARGV = ( $ARGS[2] );
 			my $build_deps = parse_sources(1);
-			auto_dep_wait( $build_deps, $pkgs );
+			call_edos_depcheck( $ARGS[0], $ARGS[2] );
 			clean_db();
 			last SWITCH;
 		};
@@ -2536,46 +2536,61 @@ sub get_unsatisfied_dep {
     return "";
 }
 
-sub auto_dep_wait {
-    my $bd = shift;
-    my $pkgs = shift;
+sub call_edos_depcheck {
+    my $packagesfile = shift;
+    my $sourcesfile = shift;
     my $key;
     
     return if defined ($conf::distributions{$distribution}{noadw});
 
-    # We need to walk all of needs-build, as any new upload could make
+    # We need to check all of needs-build, as any new upload could make
     # something in needs-build have uninstallable deps
+    # We also check everything in bd-uninstallable, as any new upload could
+    # make that work again
+    my %interesting_packages;
     foreach $key (keys %db) {
 	my $pkg = $db{$key};
-	next
-	    if not defined $pkg or $pkg->{'State'} ne "Needs-Build";
-	my $srcdeps = parse_srcdeplist($key,$bd->{$key}{'dep'},$arch);
-        foreach my $srcdep (@$srcdeps) {
-            next if $srcdep->{'Neg'} != 0; # we ignore conflicts atm
-            my $rc = get_unsatisfied_dep($bd,$pkgs,$srcdep,0);
-            if ($rc ne "") {
-                # set dep-wait
-                my $deplist = parse_deplist( $pkg->{'Depends'} );
-                my $newdeps = parse_deplist( $rc );
-                my $change = 0;
-                foreach (%$newdeps) {
-                    my $dep = $$newdeps{$_};
-                    # ensure we're not waiting on ourselves, or a package that has been removed
-                    next if (not defined($merge_binsrc{$dep->{'Package'}})) or ($merge_binsrc{$dep->{'Package'}} eq $key);
-                    if ($dep->{'Rel'} =~ '^>') {
-                        $deplist->{$dep->{'Package'}} = $dep;
-                        $change++;
-                    }
-                }
-                if ($change) {
-                    $pkg->{'Depends'} = build_deplist($deplist);
-                    change_state( \$pkg, 'Dep-Wait' );
-                    log_ta( $pkg, "--merge-all" );
-                    $db{$key} = $pkg;
-                    print "Auto-Dep-Waiting ${key}_$pkg->{'Version'} to $pkg->{'Depends'}\n" if $verbose;
-                }
-                last;
-            }
+        if (defined $pkg and isin($pkg->{'State'}, qw/Needs-Build BD-Uninstallable/)) {
+		$interesting_packages{$key} = undef;
+	}
+    }
+    
+    #print "I would look at these sources with edos-depcheck:\n";
+    #print join " ", keys %interesting_packages,"\n";
+
+    open(EDOS,"-|","wb-edos-builddebcheck", "-a", $arch, $packagesfile, $sourcesfile)
+	or die "Failed to run wb-edos-builddebcheck: $!\n";
+
+    local($/) = ""; # read in paragraph mode
+    while( <EDOS> ) {
+	    my( $key, $reason ) ;
+	    s/\s*$//m;
+	    /^Package:\s*(\S+)$/mi and $key = $1;
+	    /^Failed-Why:(([^\n]|\n ([^\n]|\.))*)$/msi and $reason = $1;
+	    $reason =~ s/^\s*//mg;
+
+	    if (exists $interesting_packages{$key}) {
+		$interesting_packages{$key} = $reason;
+	    }
+    }
+    close EDOS;
+
+    for my $key (keys %interesting_packages) {
+	my $pkg = $db{$key};
+	my $change = 
+	    (defined $interesting_packages{$key} && $pkg->{'State'} eq 'Needs-Build') ||
+	    (not defined $interesting_packages{$key} && $pkg->{'State'} eq 'BD-Uninstallable');
+	if ($change) {
+	    if (defined $interesting_packages{$key}) {
+		    $pkg->{'State'} = 'BD-Uninstallable';
+		    change_state( \$pkg, 'BD-Uninstallable' );
+	    } else {
+		    $pkg->{'State'} = 'Needs-Build';
+		    change_state( \$pkg, 'Needs-Build' );
+	    }
+	    log_ta( $pkg, "--merge-all" );
+	    $db{$key} = $pkg;
+	    print "edos-builddebchange changed state of ${key}_$pkg->{'Version'} to $pkg->{'State'}\n" if $verbose;
 	}
     }
 }
