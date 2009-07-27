@@ -12,7 +12,7 @@ $sourceprefix="source---";
 
 $architecture="";
 $binexplain=0;
-$edosoptions = "-failures -explain";
+$edosoptions = "-failures -explain -quiet";
 while ( $arg = shift @ARGV ) {
     if ( $arg eq '-a' || $arg eq '--architecture' ) {
 	if ($#ARGV == -1) {
@@ -83,6 +83,8 @@ while (<RESULT>) {
     if (/^\s+/) {
 	if ($sourcestanza) {
 	    s/^(\s*)$sourceprefix(.*)(depends on|conflicts with)/$1$2build-$3/o;
+	    s/&gt;/>/;
+	    s/&lt;/</;
 	    print;
 	    if (/depends on ([^\s]*) .*\{.*\}/) {
 		push(@binqueue,$1);
@@ -91,17 +93,17 @@ while (<RESULT>) {
 	    $explanation .= $_;
 	}
     } else {
+    	if ($sourcestanza) {
+	    print "\n";
+	    $sourcestanza=0;
+	}
 	if ($binpackage ne ""){
 	    $binfailures{$binpackage} = $explanation;
 	    $binpackage="";
 	}
-	if (/^$sourceprefix.*: FAILED/o) {
-	    s/^$sourceprefix//o;
-	    print;
-	    
-	    $_=<RESULT>;
-	    print;
-	    
+	if (/^$sourceprefix(.*) \(.*\): FAILED/o) {
+	    print "Package: $1\n";
+	    print "Failed-Why:\n";
 	    $sourcestanza=1;
 	} elsif (/^([^\s]*) .*: FAILED/) {
 	    $binpackage=$1;
