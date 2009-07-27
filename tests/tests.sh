@@ -59,6 +59,7 @@ cat > $testdir/wanna-build.conf <<__END__
 \$quinn_source = "$testdir/quinn-diff-output";
 \$quinn_source_multi_section = 0;
 @admin_users = qw(wbadm $USER);
+\$mailprog = "/bin/true";
 %distributions = (
         "unstable" => { },
 );
