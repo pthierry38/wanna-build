@@ -108,7 +108,6 @@ Version: 1
 Architecture: any
 Section: misc
 Priority: standard
-Build-Depends: compiler
 Binary: bin-a-indep,bin-a-1
 __END__
 wanna-build -A amd64 -b amd64/build-db --merge-all $testdir/Packages $testdir/quinn-diff $testdir/Sources
@@ -144,7 +143,6 @@ Version: 1
 Architecture: any
 Section: misc
 Priority: standard
-Build-Depends: compiler
 Binary: bin-a-indep,bin-a-1
 __END__
 wanna-build -A amd64 -b amd64/build-db --merge-all $testdir/Packages $testdir/quinn-diff $testdir/Sources
@@ -173,7 +171,6 @@ Version: 1
 Architecture: any
 Section: misc
 Priority: standard
-Build-Depends: compiler
 Binary: bin-a-indep,bin-a-1
 
 Package: src-b
@@ -210,7 +207,6 @@ Version: 2
 Architecture: any
 Section: misc
 Priority: standard
-Build-Depends: compiler
 Binary: bin-a-indep,bin-a-1
 
 Package: src-b
