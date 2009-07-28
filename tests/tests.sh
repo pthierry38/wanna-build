@@ -221,4 +221,18 @@ wanna-build -A amd64 -b amd64/build-db --merge-all $testdir/Packages $testdir/qu
 
 wanna-build -A amd64 -b amd64/build-db --info src-b | assert_grep "State.*:.*Needs-Build"
 
+echo "Exporting database"
+wanna-build -A amd64 -b amd64/build-db --export $testdir/export1
+
+echo "Importing database"
+wanna-build -A amd64 -b amd64/build-db --import $testdir/export1
+
+echo "Exporting database again"
+wanna-build -A amd64 -b amd64/build-db --export $testdir/export2
+
+if ! diff -q $testdir/export1 $testdir/export2
+then
+	echo "Exporting and importing is not idempotent!"
+	exit 1
+fi
 echo "Finished sucessfully"
