@@ -575,6 +575,10 @@ sub add_one_building {
 			$ok = 0;
 			$reason = "not all source dependencies available yet";
 		}
+		elsif ($pkg->{'State'} =~ /^BD-Uninstallable/) {
+			$ok = 0;
+			$reason = "source dependencies are not installable";
+		}
 		elsif ($pkg->{'State'} eq "Uploaded" &&
 			   (version_lesseq($version, $pkg->{'Version'}))) {
 			$ok = 0;
@@ -869,6 +873,10 @@ sub add_one_failed {
 		print "$name: Warning: marked as waiting for dependencies, ".
 			  "but processing anyway.\n";
 	}
+	elsif ($state eq "BD-Uninstallable") {
+		print "$name: Warning: marked as having uninstallable build-dependencies, ".
+			  "but processing anyway.\n";
+	}
 	elsif ($state eq "Failed") {
 		print "$name: already registered as failed; will append new message\n"
 			if $fail_reason;
@@ -966,6 +974,17 @@ sub add_one_needsbuild {
 		}
 		else {
 			print "$name: waiting for source dependencies. Skipping\n",
+				  "  (use --override to clear dependency list and ",
+				  "give back anyway)\n";
+			return;
+		}
+	}
+	if ($state eq "BD-Uninstallable") {
+		if ($opt_override) {
+			print "$name: Forcing uninstallability mark to be removed\n";
+		}
+		else {
+			print "$name: has uninstallable build-dependencies. Skipping\n",
 				  "  (use --override to clear dependency list and ",
 				  "give back anyway)\n";
 			return;
@@ -1122,7 +1141,7 @@ sub add_one_depwait {
 		print "$name: merging with previously registered dependencies\n";
 	}
 	
-	if (isin( $state, qw(Needs-Build Failed))) {
+	if (isin( $state, qw(Needs-Build Failed BD-Uninstallable))) {
 		print "$name: Warning: not registered for building previously, ".
 			  "but processing anyway.\n";
 	}
@@ -1619,7 +1638,8 @@ sub parse_quinn_diff {
 	}
 
 	# Now re-check the DB for packages in states Needs-Build, Failed,
-	# or Dep-Wait and remove them if they're not listed anymore by quinn-diff.
+	# Dep-Wait or BD-Uninstallable and remove them if they're not listed
+	# anymore by quinn-diff.
 	if ( !$partial ) {
 		my $name;
 		foreach $name (keys %db) {
@@ -1627,7 +1647,7 @@ sub parse_quinn_diff {
 			my $pkg = $db{$name};
 			next if defined $pkg->{'Binary-NMU-Version'};
 			next if !isin( $pkg->{'State'},
-						   qw(Needs-Build Building Built Build-Attempted Uploaded Failed Dep-Wait) );
+						   qw(Needs-Build Building Built Build-Attempted Uploaded Failed Dep-Wait BD-Uninstallable) );
 			my $virtual_delete = $pkg->{'State'} eq 'Failed';
 								 
 			if (!$quinn_pkgs{$name}) {
@@ -1851,6 +1871,8 @@ sub list_packages {
 			if $pkg->{'State'} =~ /^Failed/;
 		print "  Dependencies: $pkg->{'Depends'}\n"
 			if $pkg->{'State'} eq "Dep-Wait";
+		print "  Reason: $pkg->{'Reason'}\n"
+			if $pkg->{'State'} eq "BD-Uninstallable";
 		print "  Previous state was $pkg->{'Previous-State'} until ",
 			  "$pkg->{'State-Change'}\n"
 			if $verbose && $pkg->{'Previous-State'};
@@ -2167,7 +2189,7 @@ sub check_entry {
 	die "Bad state $pkg->{'State'} of package $pkg->{Package}\n"
 		if !isin( $pkg->{'State'},
 				  qw(Needs-Build Building Built Build-Attempted Uploaded Installed Dep-Wait
-					 Failed Failed-Removed Not-For-Us
+					 Failed Failed-Removed Not-For-Us BD-Uninstallable
 					 ) );
 }
 
@@ -2238,6 +2260,9 @@ sub change_state {
 			$pkg->{'Old-Failed'};
 		delete $pkg->{'Failed'};
 		delete $pkg->{'Failed-Category'};
+	}
+	if (defined($$state) and $$state eq 'BD-Uninstallable') {
+		delete $pkg->{'Reason'};
 	}
 	$$state = $newstate;
 }
@@ -2589,7 +2614,6 @@ sub call_edos_depcheck {
 		    change_state( \$pkg, 'BD-Uninstallable' );
 	    } else {
 		    $pkg->{'State'} = 'Needs-Build';
-		    delete $pkg->{'Reason'};
 		    change_state( \$pkg, 'Needs-Build' );
 	    }
 	    log_ta( $pkg, "--merge-all" );
