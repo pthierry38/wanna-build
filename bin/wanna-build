@@ -2583,24 +2583,26 @@ sub call_edos_depcheck {
     #print "I would look at these sources with edos-depcheck:\n";
     #print join " ", keys %interesting_packages,"\n";
 
-    open(EDOS,"-|","wb-edos-builddebcheck", "-a", $arch, $packagesfile, $sourcesfile)
-	or die "Failed to run wb-edos-builddebcheck: $!\n";
+    if (open(EDOS,"-|","wb-edos-builddebcheck", "-a", $arch, $packagesfile, $sourcesfile)) {
+	local($/) = ""; # read in paragraph mode
+	while( <EDOS> ) {
+		my( $key, $reason ) ;
+		s/\s*$//m;
+		/^Package:\s*(\S+)$/mi and $key = $1;
+		/^Failed-Why:(([^\n]|\n ([^\n]|\.))*)$/msi and $reason = $1;
+		$reason =~ s/^\s*//mg;
 
-    local($/) = ""; # read in paragraph mode
-    while( <EDOS> ) {
-	    my( $key, $reason ) ;
-	    s/\s*$//m;
-	    /^Package:\s*(\S+)$/mi and $key = $1;
-	    /^Failed-Why:(([^\n]|\n ([^\n]|\.))*)$/msi and $reason = $1;
-	    $reason =~ s/^\s*//mg;
-
-	    if (exists $interesting_packages{$key}) {
-		$interesting_packages{$key} = $reason;
-	    } else {
-	        print "TODO: edos reported a package we do not care about now" if $verbose;
-	    }
+		if (exists $interesting_packages{$key}) {
+		    $interesting_packages{$key} = $reason;
+		} else {
+		    print "TODO: edos reported a package we do not care about now" if $verbose;
+		}
+	}
+	close EDOS;
+    } else {
+	print "ERROR: Could not run wb-edos-builddebcheck. I am continuing, assuming\n" .
+	      "all packages have installable build-dependencies."
     }
-    close EDOS;
 
     for my $key (keys %interesting_packages) {
 	my $pkg = $db{$key};
