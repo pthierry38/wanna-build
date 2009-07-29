@@ -53,7 +53,7 @@ our ($verbose, $mail_logs, $list_order, $list_state,
     $lock_for_pid, $transactional);
 
 # global vars
-$ENV{'PATH'} = "/bin:/usr/bin:/usr/local/bin";
+$ENV{'PATH'} = "/bin:/usr/bin:/usr/local/bin:/org/wanna-build/bin/";
 $verbose = 0;
 $mail_logs = "";
 @curr_time = gmtime;
