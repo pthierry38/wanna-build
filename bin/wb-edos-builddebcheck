@@ -12,7 +12,7 @@ $sourceprefix="source---";
 
 $architecture="";
 $binexplain=0;
-$edosoptions = "-failures -explain -quiet";
+$edosoptions = "-failures -explain";
 while ( $arg = shift @ARGV ) {
     if ( $arg eq '-a' || $arg eq '--architecture' ) {
 	if ($#ARGV == -1) {
