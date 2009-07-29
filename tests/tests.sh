@@ -210,7 +210,6 @@ Architecture: amd64
 Source: src-a
 __END__
 cat > $testdir/quinn-diff <<__END__
-misc/src-a_1.dsc [optional:uncompiled]
 misc/src-b_1.dsc [optional:uncompiled]
 __END__
 cat > $testdir/Sources <<__END__
@@ -232,6 +231,7 @@ __END__
 wanna-build -A amd64 -b amd64/build-db --merge-all $testdir/Packages $testdir/quinn-diff $testdir/Sources
 
 wanna-build -A amd64 -b amd64/build-db --info src-b | assert_grep "State.*:.*Needs-Build"
+wanna-build -A amd64 -b amd64/build-db --info src-b | assert_grep_not "Reason.*:"
 
 echo "Exporting database"
 wanna-build -A amd64 -b amd64/build-db --export $testdir/export1
