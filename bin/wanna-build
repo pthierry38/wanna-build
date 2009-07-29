@@ -2596,7 +2596,7 @@ sub call_edos_depcheck {
 		if (exists $interesting_packages{$key}) {
 		    $interesting_packages{$key} = $reason;
 		} else {
-		    print "TODO: edos reported a package we do not care about now" if $verbose;
+		    #print "TODO: edos reported a package we do not care about now\n" if $verbose;
 		}
 	}
 	close EDOS;
