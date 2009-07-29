@@ -1219,16 +1219,7 @@ sub parse_sources {
 
 		next if (defined $srcver{$name} and version_less( $version, $srcver{$name} ));
 		$srcver{$name} = $version;
-		if ($buildconf) {
-		    $buildconf = join( ", ", map { "!$_" } split( /\s*,\s*/, $buildconf ));
-		    if ($builddep) {
-			$builddep .= "," . $buildconf;
-		    } else {
-			$builddep = $buildconf;
-		    }
-		}
 
-		$pkgs{$name}{'dep'} = defined $builddep ? $builddep : "";
 		$pkgs{$name}{'ver'} = $version;
 		$pkgs{$name}{'bin'} = $binaries;
 		my $pkg = $db{$name};
@@ -1258,6 +1249,13 @@ sub parse_sources {
 
 			$pkg->{'Section'} = $section, $change++
 				if defined $section and (not defined($pkg->{'Section'}) or $pkg->{'Section'} ne $section);
+
+			# Store Build-Deps and Build-Conflicts for edos-debcheck later
+			$pkg->{'Build-Depends'} = $builddep, $change++
+				if ($pkg->{'Build-Depends'} ne $builddep);
+			$pkg->{'Build-Conflicts'} = $builddep, $change++
+				if ($pkg->{'Build-Conflicts'} ne $buildconf);
+
 			$db{$name} = $pkg if $change;
 		}
 	}
