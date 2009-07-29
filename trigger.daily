@@ -227,7 +227,7 @@ if (( $last + $interval < $now )); then
 	rm -f "$LOCKFILE"
 	trap - 0
 	/srv/buildd.debian.org/bin/makegraph
-	for a in $ARCHS_stable; do
+	for a in $ALL_ARCHES; do
 	    echo Last Updated: `date -u` > /srv/buildd.debian.org/web/stats/$a.txt
 	    for d in $STATS_DISTS; do
 		/srv/wanna-build/bin/wanna-build-statistics --database=$a/build-db --dist=$d >> /srv/buildd.debian.org/web/stats/$a.txt

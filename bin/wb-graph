@@ -40,7 +40,7 @@ my $date=`date +%m/%d/%Y`;
 chop($date);
 print "$date";
 
-my @archs = qw(alpha arm hppa hurd-i386 i386 ia64 m68k mips mipsel powerpc s390 amd64 sparc armel);
+my @archs = qw(alpha arm hppa hurd-i386 i386 ia64 m68k mips mipsel powerpc s390 amd64 sparc armel kfreebsd-amd64 kfreebsd-i386);
 my $arch;
 
 foreach $arch (@archs) {
