@@ -9,7 +9,7 @@
 #
 
 LANG=C
-PATH="/bin:/usr/bin"
+PATH="/bin:/usr/bin:/org/wanna-build/bin/"
 TMPDIR="/org/wanna-build/tmp"
 LIBTRIGGER="/org/wanna-build/libtrigger.sh"
 WGETOPT="-q -t2 -w0 -T10"
