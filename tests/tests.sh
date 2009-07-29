@@ -250,4 +250,17 @@ then
 	echo "Exporting and importing is not idempotent!"
 	exit 1
 fi
+
+echo "Taking the build"
+wanna-build -A amd64 -b amd64/build-db --take src-b_1
+wanna-build -A amd64 -b amd64/build-db --info src-b | assert_grep "State.*:.*Building"
+echo "Giving back the build"
+wanna-build -A amd64 -b amd64/build-db --give-back src-b_1
+wanna-build -A amd64 -b amd64/build-db --info src-b | assert_grep "State .*: BD-Uninstallable"
+
+echo "Running --merge-all with no changes"
+wanna-build -A amd64 -b amd64/build-db --merge-all $testdir/Packages $testdir/quinn-diff $testdir/Sources
+wanna-build -A amd64 -b amd64/build-db --info src-b | assert_grep "State.*:.*Needs-Build"
+wanna-build -A amd64 -b amd64/build-db --info src-b | assert_grep_not "Reason.*:"
+
 echo "Finished sucessfully"
