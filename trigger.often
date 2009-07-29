@@ -43,16 +43,18 @@ cd $TMPDIR
 rm -f Sources.unstable Sources.gz Packages.gz
 if wget $WGETOPT http://incoming.debian.org/buildd/Sources.gz; then
 	mv Sources.gz Sources-unstable.accepted.gz
+	rm -f Sources-unstable.accepted
+	gunzip Sources-unstable.accepted.gz
 fi
 if wget $WGETOPT http://incoming.debian.org/buildd/Packages.gz; then
 	mv Packages.gz Packages-unstable.accepted.gz
+	rm -f Packages-unstable.accepted
+	gunzip Packages-unstable.accepted.gz
 fi
-cp Sources.unstable.base Sources.unstable
-zcat Sources-unstable.accepted.gz >> Sources.unstable
+keep-latest Sources.unstable.base Sources-unstable.accepted > Sources.unstable
 for a in $ARCHS_unstable; do
 	rm -f Packages.unstable.$a
-	cp Packages.unstable.$a.base Packages.unstable.$a
-	zcat Packages-unstable.accepted.gz >> Packages.unstable.$a
+	keep-latest Packages.unstable.$a.base Packages-unstable.accepted > Packages.unstable.$a
 done
 	
 umask 007
