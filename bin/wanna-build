@@ -2613,6 +2613,7 @@ sub call_edos_depcheck {
 	    if (defined $interesting_packages{$key}) {
 		    change_state( \$pkg, 'BD-Uninstallable' );
 		    $pkg->{'Reason'} = $interesting_packages{$key};
+		    $pkg->{'Reason'} ||= 'No reason given by edos-debcheck';
 	    } else {
 		    change_state( \$pkg, 'Needs-Build' );
 	    }
