@@ -968,23 +968,23 @@ sub add_one_needsbuild {
 	}
 	$state = $pkg->{'State'};
 
-	if ($state eq "Dep-Wait") {
+	if ($state eq "BD-Uninstallable") {
 		if ($opt_override) {
-			print "$name: Forcing source dependency list to be cleared\n";
+			print "$name: Forcing uninstallability mark to be removed. This is not permanent and might be reset with the next trigger run\n";
 		}
 		else {
-			print "$name: waiting for source dependencies. Skipping\n",
+			print "$name: has uninstallable build-dependencies. Skipping\n",
 				  "  (use --override to clear dependency list and ",
 				  "give back anyway)\n";
 			return;
 		}
 	}
-	if ($state eq "BD-Uninstallable") {
+	elsif ($state eq "Dep-Wait") {
 		if ($opt_override) {
-			print "$name: Forcing uninstallability mark to be removed\n";
+			print "$name: Forcing source dependency list to be cleared\n";
 		}
 		else {
-			print "$name: has uninstallable build-dependencies. Skipping\n",
+			print "$name: waiting for source dependencies. Skipping\n",
 				  "  (use --override to clear dependency list and ",
 				  "give back anyway)\n";
 			return;
