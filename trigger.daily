@@ -8,7 +8,7 @@
 #     Sources.* == uncompressed, concat'd version
 
 LANG=C
-PATH="/bin:/usr/bin"
+PATH="/bin:/usr/bin:/org/wanna-build/bin"
 #testing must be before unstable so late upld don't build for testing needlessly
 DISTS="oldstable-security stable-security testing-security oldstable stable testing unstable"
 # While oldstable is purged
@@ -118,15 +118,20 @@ for d in $DISTS; do
 # double builds.
 #
     if [ "$d" = "unstable" ]; then
-	rm -f "Sources.$d.base"
-	cp "Sources.$d" "Sources.$d.base"
-	curl_index "$MASTERBUILDD/Sources.gz" "Sources-$d.accepted.gz" "Sources.$d"
+	mv "Sources.$d" "Sources.$d.base"
+	curl_index "$MASTERBUILDD/Sources.gz" "Sources-$d.accepted.gz" "/dev/null"
+	rm -f "Sources-$d.accepted"
+	gunzip "Sources-$d.accepted.gz"
+	keep-latest source "Sources.$d.base" "Sources-$d.accepted" > "Sources.$d"
+
 	curl_index "$MASTERBUILDD/Packages.gz" "Packages-$d.accepted.gz" "/dev/null"
+	rm -f "Packages-$d.accepted"
+	gunzip "Packages-$d.accepted.gz"
 
 	for a in $ARCHS; do
-	    rm -f "Packages.$d.$a.base"
-	    cp "Packages.$d.$a" "Packages.$d.$a.base"
+	    mv "Packages.$d.$a" "Packages.$d.$a.base"
 	    gzip -dc "Packages-$d.accepted.gz" >> "Packages.$d.$a"
+	    keep-latest $a "Packages.$d.$a.base" "Packages-$d.accepted" > "Packages.$d.$a"
 	done
     else
 	if [ -e "Sources.$d-p-u" ]; then
