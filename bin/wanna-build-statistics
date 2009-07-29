@@ -102,7 +102,7 @@ print "--------------", "-" x length($dist), "\n";
 
 my $total_width = 78;
 my @state_list = qw(Installed Needs-Build Building Built Build-Attempted Uploaded Failed Dep-Wait
-					Failed-Removed Dep-Wait-Removed
+					Failed-Removed Dep-Wait-Removed BD-Uninstallable
 					Not-For-Us);
 my $statewidth = 0;
 grep { $statewidth = length($_) if length($_) > $statewidth } @state_list;
@@ -148,7 +148,7 @@ print percent(qw(Built Installed Uploaded)), " if also counting built pkgs\n";
 print percent(qw(Needs-Build)), " uncompiled\n";
 print percent(qw(Building)), " currently building (short-term delay)\n";
 print percent(qw(Build-Attempted)), " currently failed building (short-term delay)\n";
-print percent(qw(Failed Dep-Wait)), " failed or waiting (long-term delay)\n";
+print percent(qw(Failed BD-Uninstallable Dep-Wait)), " failed or waiting (long-term delay)\n";
 
 exit 0;
 
