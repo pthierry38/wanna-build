@@ -36,6 +36,18 @@ function assert_grep {
 	fi
 }
 
+function assert_grep_not {
+	cat > $testdir/assert_grep
+	if grep -q "$1" $testdir/assert_grep 
+	then
+	  echo "Could find unexpected \"$1\" in:"
+	  cat $testdir/assert_grep
+	  # We are in a pipe, i.e. a subshell, so kill the parent 
+	  kill -TERM $parent_pid
+	  exit 1
+	fi
+}
+
 cd "$(dirname $0)"/..
 
 assert "[ -e bin/wanna-build ]"
