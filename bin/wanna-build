@@ -2608,8 +2608,8 @@ sub call_edos_depcheck {
     for my $key (keys %interesting_packages) {
 	my $pkg = $db{$key};
 	my $change = 
-	    (defined $interesting_packages{$key} && $pkg->{'State'} eq 'Needs-Build') ||
-	    (not defined $interesting_packages{$key} && $pkg->{'State'} eq 'BD-Uninstallable');
+	    (defined $interesting_packages{$key} and $pkg->{'State'} eq 'Needs-Build') ||
+	    (not defined $interesting_packages{$key} and $pkg->{'State'} eq 'BD-Uninstallable');
 	if ($change) {
 	    if (defined $interesting_packages{$key}) {
 		    change_state( \$pkg, 'BD-Uninstallable' );
