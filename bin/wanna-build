@@ -445,8 +445,8 @@ sub process {
 			@ARGV = ( $ARGS[1] );
 			parse_quinn_diff(0);
 			@ARGV = ( $ARGS[2] );
-			my $build_deps = parse_sources(1);
-			call_edos_depcheck( $ARGS[0] );
+			my $srcs = parse_sources(1);
+			call_edos_depcheck( $ARGS[0], $srcs );
 			clean_db();
 			last SWITCH;
 		};
@@ -1222,6 +1222,8 @@ sub parse_sources {
 
 		$pkgs{$name}{'ver'} = $version;
 		$pkgs{$name}{'bin'} = $binaries;
+		$pkgs{$name}{'dep'} = $builddep;
+		$pkgs{$name}{'conf'} = $buildconf;
 		my $pkg = $db{$name};
 
 		if (defined $pkg) {
@@ -1250,16 +1252,13 @@ sub parse_sources {
 			$pkg->{'Section'} = $section, $change++
 				if defined $section and (not defined($pkg->{'Section'}) or $pkg->{'Section'} ne $section);
 
-			# Store Build-Deps and Build-Conflicts for edos-debcheck later
-			$pkg->{'Build-Depends'} = $builddep, $change++
-				if ($pkg->{'Build-Depends'} ne $builddep);
-			$pkg->{'Build-Conflicts'} = $buildconf, $change++
-				if ($pkg->{'Build-Conflicts'} ne $buildconf);
-
 			# Remove field from previous wanna-build versions
-			delete $pkg->{$_}, $change++
-				if (exists $pkg->{$_})
-					for (qw/Reason/);
+			for (qw/Reason Build-Depends Build-Conflicts/) {
+				if (exists $pkg->{$_}) {
+					delete $pkg->{$_};
+					$change++;
+				}
+			}
 
 			$db{$name} = $pkg if $change;
 		}
@@ -2566,6 +2565,7 @@ sub get_unsatisfied_dep {
 
 sub call_edos_depcheck {
     my $packagesfile = shift;
+    my $srcs = shift;
     my $key;
     
     return if defined ($conf::distributions{$distribution}{noadw});
@@ -2597,8 +2597,8 @@ sub call_edos_depcheck {
 	my $pkg = $db{$key};
 	print SOURCES "Package: $key\n";
 	print SOURCES "Version: $pkg->{'Version'}\n";
-	print SOURCES "Build-Depends: $pkg->{'Build-Depends'}\n" if $pkg->{'Build-Depends'};
-	print SOURCES "Build-Conflicts: $pkg->{'Build-Conflicts'}\n" if $pkg->{'Build-Conflicts'};
+	print SOURCES "Build-Depends: $srcs->{$key}{'dep'}\n" if $srcs->{$key}{'dep'};
+	print SOURCES "Build-Conflicts: $srcs->{$key}{'conf'}\n" if $srcs->{$key}{'conf'};
 	print SOURCES "Architecture: all\n";
 	print SOURCES "\n";
     }
