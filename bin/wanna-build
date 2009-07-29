@@ -1253,7 +1253,7 @@ sub parse_sources {
 			# Store Build-Deps and Build-Conflicts for edos-debcheck later
 			$pkg->{'Build-Depends'} = $builddep, $change++
 				if ($pkg->{'Build-Depends'} ne $builddep);
-			$pkg->{'Build-Conflicts'} = $builddep, $change++
+			$pkg->{'Build-Conflicts'} = $buildconf, $change++
 				if ($pkg->{'Build-Conflicts'} ne $buildconf);
 
 			$db{$name} = $pkg if $change;
