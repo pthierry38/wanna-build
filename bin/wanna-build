@@ -1019,7 +1019,7 @@ sub add_one_needsbuild {
 		return;
 	}
 	change_state( \$pkg, 'BD-Uninstallable' );
-	$pkg->{'BD-Problem'} = "Installability of build dependencies not tested";
+	$pkg->{'BD-Problem'} = "Installability of build dependencies not tested yet";
 	delete $pkg->{'Builder'};
 	delete $pkg->{'Depends'};
 	log_ta( $pkg, "--give-back" );
@@ -1083,7 +1083,8 @@ sub set_one_binnmu {
 		return;
 	}
 
-	change_state( \$pkg, 'Needs-Build' );
+	change_state( \$pkg, 'BD-Uninstallable' );
+	$pkg->{'BD-Problem'} = "Installability of build dependencies not tested yet";
 	delete $pkg->{'Builder'};
 	delete $pkg->{'Depends'};
 	$pkg->{'Binary-NMU-Version'} = $binNMUver;
