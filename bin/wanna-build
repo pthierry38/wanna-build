@@ -138,7 +138,7 @@ my %options =
 			   if !isin( $list_state, qw(needs-build building uploaded
 						 built build-attempted failed installed dep-wait
 						 not-for-us all failed-removed
-						 install-wait reupload-wait));} },
+						 install-wait reupload-wait bd-uninstallable));} },
 	 # options with args
 	 dist           =>
 	 { short => "d", arg => \$distribution,
