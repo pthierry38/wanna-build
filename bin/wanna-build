@@ -446,7 +446,7 @@ sub process {
 			parse_quinn_diff(0);
 			@ARGV = ( $ARGS[2] );
 			my $build_deps = parse_sources(1);
-			call_edos_depcheck( $ARGS[0], $ARGS[2] );
+			call_edos_depcheck( $ARGS[0] );
 			clean_db();
 			last SWITCH;
 		};
@@ -2561,7 +2561,6 @@ sub get_unsatisfied_dep {
 
 sub call_edos_depcheck {
     my $packagesfile = shift;
-    my $sourcesfile = shift;
     my $key;
     
     return if defined ($conf::distributions{$distribution}{noadw});
