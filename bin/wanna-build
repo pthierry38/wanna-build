@@ -2714,7 +2714,7 @@ Options:
     --export FILE: Export database to a ASCII file FILE
     --lock-for PID: Locks the database for the process with this pid
     --unlock-for PID: Unlocks the database for the process with this pid
-    --act-on-behalf-of PID: Ignores the log (if it is held by this pid)
+    --act-on-behalf-of PID: Ignores the lock (if it is held by this pid)
     --start-transaction: Creates a copy of the state of the database, for
 	use with --transactional. This overrides any previous uncommited
 	transaction. Should only be used after --lock-for
