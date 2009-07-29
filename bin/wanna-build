@@ -2581,7 +2581,27 @@ sub call_edos_depcheck {
     #print "I would look at these sources with edos-depcheck:\n";
     #print join " ", keys %interesting_packages,"\n";
 
-    if (open(EDOS,"-|","wb-edos-builddebcheck", "-a", $arch, $packagesfile, $sourcesfile)) {
+    my $tmpfile_pattern = "/tmp/wanna-build-interesting-sources-$distribution.$$-";
+    my ($tmpfile, $i);
+    for( $i = 0;; ++$i ) {
+	    $tmpfile = $tmpfile_pattern . $i;
+	    last if ! -e $tmpfile;
+    }
+
+    open SOURCES, '>', $tmpfile or die "Could not open temporary file $tmpfile\n";
+    for my $key (keys %interesting_packages) {
+	my $pkg = $db{$key};
+	print SOURCES "Package: $key\n";
+	print SOURCES "Version: $pkg->{'Version'}\n";
+	print SOURCES "Build-Depends: $pkg->{'Build-Depends'}\n" if $pkg->{'Build-Depends'};
+	print SOURCES "Build-Conflicts: $pkg->{'Build-Conflicts'}\n" if $pkg->{'Build-Conflicts'};
+	print SOURCES "Architecture: all\n";
+	print SOURCES "\n";
+    }
+    close SOURCES;
+
+    if (open(EDOS,"-|","wb-edos-builddebcheck", "-a", $arch, $packagesfile, $tmpfile))
+    {
 	local($/) = ""; # read in paragraph mode
 	while( <EDOS> ) {
 		my( $key, $reason ) ;
@@ -2602,6 +2622,8 @@ sub call_edos_depcheck {
 	print "ERROR: Could not run wb-edos-builddebcheck. I am continuing, assuming\n" .
 	      "all packages have installable build-dependencies."
     }
+    
+    unlink( $tmpfile );
 
     for my $key (keys %interesting_packages) {
 	my $pkg = $db{$key};
