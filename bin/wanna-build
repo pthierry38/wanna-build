@@ -971,6 +971,13 @@ sub add_one_needsbuild {
 	if ($state eq "BD-Uninstallable") {
 		if ($opt_override) {
 			print "$name: Forcing uninstallability mark to be removed. This is not permanent and might be reset with the next trigger run\n";
+
+			change_state( \$pkg, 'Needs-Build' );
+			delete $pkg->{'Builder'};
+			delete $pkg->{'Depends'};
+			log_ta( $pkg, "--give-back" );
+			$db{$name} = $pkg;
+			print "$name: given back\n" if $verbose;
 		}
 		else {
 			print "$name: has uninstallable build-dependencies. Skipping\n",
@@ -1011,7 +1018,8 @@ sub add_one_needsbuild {
 			  "Skipping.\n";
 		return;
 	}
-	change_state( \$pkg, 'Needs-Build' );
+	change_state( \$pkg, 'BD-Uninstallable' );
+	$pkg->{'BD-Problem'} = "Installability of build dependencies not tested";
 	delete $pkg->{'Builder'};
 	delete $pkg->{'Depends'};
 	log_ta( $pkg, "--give-back" );
