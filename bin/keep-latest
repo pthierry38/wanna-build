@@ -6,19 +6,25 @@ use warnings;
 use WannaBuild; # for version compare
 
 if (!@ARGV) {
-	print STDERR "Usage: $0 Packages1 Packages2 ..\n";
+	print STDERR "Usage: $0 arch Packages1 Packages2 ..\n";
 	print STDERR "\n";
 	print STDERR "This perl scripts reads the Packages files given on the command line and\n";
-	print STDERR "outputs a Packages file which contians each package/architecture pair at most\n";
+	print STDERR "outputs a Packages file which contians each package at most\n";
 	print STDERR "once, using the one with the highest version number.\n";
 	print STDERR "";
 	print STDERR "Since it only looks at Package:, Version: and Architecture:, it works with\n";
 	print STDERR "Sources files as well\n";
+	print STDERR "\n";
+	print STDERR "It throws out any package not arch \"all\" or the given architecture.\n";
+	print STDERR "Pass \"source\" to keep all entries.\n";
+
 	exit 1;
 }
 
 my %version;
 my %data;
+
+my $arch = shift @ARGV;
 
 local($/) = ""; # read in paragraph mode
 while (<>) {
@@ -31,7 +37,10 @@ while (<>) {
 		warn "Stanza without Package or Version\n";
 		next;
 	}
-	my $key = $name."_".$architecture;
+	if ($arch ne "source" && defined $architecture && $architecture ne "all" && $architecture ne $arch) {
+		next;
+	}
+	my $key = $name;
 
 	if ((!exists $version{$key}) or version_less($version{$key},$version)) {
 		$version{$key} = $version;
