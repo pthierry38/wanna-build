@@ -2591,6 +2591,7 @@ sub call_edos_depcheck {
 		/^Package:\s*(\S+)$/mi and $key = $1;
 		/^Failed-Why:(([^\n]|\n ([^\n]|\.))*)$/msi and $reason = $1;
 		$reason =~ s/^\s*//mg;
+		$reason ||= 'No reason given by edos-debcheck';
 
 		if (exists $interesting_packages{$key}) {
 		    $interesting_packages{$key} = $reason;
@@ -2613,7 +2614,6 @@ sub call_edos_depcheck {
 	    if (defined $interesting_packages{$key}) {
 		    change_state( \$pkg, 'BD-Uninstallable' );
 		    $pkg->{'Reason'} = $interesting_packages{$key};
-		    $pkg->{'Reason'} ||= 'No reason given by edos-debcheck';
 	    } else {
 		    change_state( \$pkg, 'Needs-Build' );
 	    }
