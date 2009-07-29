@@ -1256,6 +1256,11 @@ sub parse_sources {
 			$pkg->{'Build-Conflicts'} = $buildconf, $change++
 				if ($pkg->{'Build-Conflicts'} ne $buildconf);
 
+			# Remove field from previous wanna-build versions
+			delete $pkg->{$_}, $change++
+				if (exists $pkg->{$_})
+					for (qw/Reason/);
+
 			$db{$name} = $pkg if $change;
 		}
 	}
@@ -1869,7 +1874,7 @@ sub list_packages {
 			if $pkg->{'State'} =~ /^Failed/;
 		print "  Dependencies: $pkg->{'Depends'}\n"
 			if $pkg->{'State'} eq "Dep-Wait";
-		print "  Reason: $pkg->{'Reason'}\n"
+		print "  Reason: $pkg->{'BD-Problem'}\n"
 			if $pkg->{'State'} eq "BD-Uninstallable";
 		print "  Previous state was $pkg->{'Previous-State'} until ",
 			  "$pkg->{'State-Change'}\n"
@@ -2260,7 +2265,7 @@ sub change_state {
 		delete $pkg->{'Failed-Category'};
 	}
 	if (defined($$state) and $$state eq 'BD-Uninstallable') {
-		delete $pkg->{'Reason'};
+		delete $pkg->{'BD-Problem'};
 	}
 	$$state = $newstate;
 }
@@ -2632,7 +2637,7 @@ sub call_edos_depcheck {
 	if ($change) {
 	    if (defined $interesting_packages{$key}) {
 		    change_state( \$pkg, 'BD-Uninstallable' );
-		    $pkg->{'Reason'} = $interesting_packages{$key};
+		    $pkg->{'BD-Problem'} = $interesting_packages{$key};
 	    } else {
 		    change_state( \$pkg, 'Needs-Build' );
 	    }
