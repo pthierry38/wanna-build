@@ -2643,6 +2643,7 @@ sub call_edos_depcheck {
 	my $change = 
 	    (defined $interesting_packages{$key} and $pkg->{'State'} eq 'Needs-Build') ||
 	    (not defined $interesting_packages{$key} and $pkg->{'State'} eq 'BD-Uninstallable');
+	my $problemchange = $interesting_packages{$key} ne $pkg->{'BD-Problem'};
 	if ($change) {
 	    if (defined $interesting_packages{$key}) {
 		    change_state( \$pkg, 'BD-Uninstallable' );
@@ -2650,9 +2651,18 @@ sub call_edos_depcheck {
 	    } else {
 		    change_state( \$pkg, 'Needs-Build' );
 	    }
+	}
+	if ($problemchange) {
+	    if (defined $interesting_packages{$key}) {
+		    $pkg->{'BD-Problem'} = $interesting_packages{$key};
+	    }	
+	}
+	if ($change) {
 	    log_ta( $pkg, "--merge-all" );
-	    $db{$key} = $pkg;
 	    print "edos-builddebchange changed state of ${key}_$pkg->{'Version'} to $pkg->{'State'}\n" if $verbose;
+	}
+	if ($change || $problemchange) {
+	    $db{$key} = $pkg;
 	}
     }
 }
