@@ -234,7 +234,7 @@ __END__
 wanna-build -A amd64 -b amd64/build-db --merge-all $testdir/Packages $testdir/quinn-diff $testdir/Sources
 
 wanna-build -A amd64 -b amd64/build-db --info src-b | assert_grep " State.*:.*Needs-Build"
-wanna-build -A amd64 -b amd64/build-db --info src-b | assert_grep_not "Reason.*:"
+wanna-build -A amd64 -b amd64/build-db --info src-b | assert_grep_not "BD-Problem.*:"
 
 echo "Exporting database"
 wanna-build -A amd64 -b amd64/build-db --export $testdir/export1
@@ -261,6 +261,16 @@ wanna-build -A amd64 -b amd64/build-db --info src-b | assert_grep " State .*: BD
 echo "Running --merge-all with no changes"
 wanna-build -A amd64 -b amd64/build-db --merge-all $testdir/Packages $testdir/quinn-diff $testdir/Sources
 wanna-build -A amd64 -b amd64/build-db --info src-b | assert_grep " State.*:.*Needs-Build"
-wanna-build -A amd64 -b amd64/build-db --info src-b | assert_grep_not "Reason.*:"
+wanna-build -A amd64 -b amd64/build-db --info src-b | assert_grep_not "BD-Problem.*:"
+
+echo "Doing a binNMU"
+wanna-build -A amd64 -b amd64/build-db -m 'binNMU-Test' --binNMU 1 src-a_2
+wanna-build -A amd64 -b amd64/build-db --info src-a | assert_grep " State.*:.*BD-Uninstallable"
+wanna-build -A amd64 -b amd64/build-db --info src-a | assert_grep "BD-Problem.*:"
+
+echo "Running --merge-all with no changes"
+wanna-build -A amd64 -b amd64/build-db --merge-all $testdir/Packages $testdir/quinn-diff $testdir/Sources
+wanna-build -A amd64 -b amd64/build-db --info src-a | assert_grep " State.*:.*Needs-Build"
+wanna-build -A amd64 -b amd64/build-db --info src-a | assert_grep "Binary-NMU-Version.*1"
 
 echo "Finished sucessfully"
