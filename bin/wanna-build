@@ -2689,7 +2689,10 @@ Options:
          a new version number (source-version + "+b<num>")
     --give-back: Mark a package as ready to build that is in state Building,
 	 Built or Build-Attempted. To give back a package in state Failed, use
-	 --override
+	 --override. This command will actually put the package in state
+	 BD-Uninstallable, until the installability of its Build-Dependencies
+	 were verified. This happens at each call of --merge-all, usually
+	 every 15 minutes.
     --merge-quinn: Merge quinn-diff output into database.
     --merge-packages: Merge Packages files into database.
     --pretend-avail: Pretend that given packages are available now and give
