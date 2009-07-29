@@ -9,11 +9,11 @@ if (!@ARGV) {
 	print STDERR "Usage: $0 Packages1 Packages2 ..\n";
 	print STDERR "\n";
 	print STDERR "This perl scripts reads the Packages files given on the command line and\n";
-	print STDERR "outputs a Packages file which contians each package exactly once, using the\n";
-	print STDERR "one with the highest version number.\n";
+	print STDERR "outputs a Packages file which contians each package/architecture pair at most\n";
+	print STDERR "once, using the one with the highest version number.\n";
 	print STDERR "";
-	print STDERR "Since it only looks at Package: and Version:, it works with Sources files\n";
-	print STDERR "as well\n";
+	print STDERR "Since it only looks at Package:, Version: and Architecture:, it works with\n";
+	print STDERR "Sources files as well\n";
 	exit 1;
 }
 
@@ -22,17 +22,20 @@ my %data;
 
 local($/) = ""; # read in paragraph mode
 while (<>) {
-	my( $version, $name );
+	my( $version, $name, $architecture );
+	$architecture="none"; # better to keep an entry too much than to delete an entry
 	/^Package:\s*(\S+)$/mi and $name = $1;
 	/^Version:\s*(\S+)$/mi and $version = $1;
+	/^Architecture:\s*(\S+)$/mi and $architecture = $1;
 	if (!defined $name or !defined $version) {
 		warn "Stanza without Package or Version\n";
 		next;
 	}
+	my $key = $name."_".$architecture;
 
-	if ((!exists $version{$name}) or version_less($version{name},$version)) {
-		$version{$name} = $version;
-		$data{$name} = $_;
+	if ((!exists $version{$key}) or version_less($version{$key},$version)) {
+		$version{$key} = $version;
+		$data{$key} = $_;
 	}
 }
 
