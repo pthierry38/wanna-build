@@ -80,7 +80,9 @@ $explanation="";
 $binpackage="";
 
 while (<RESULT>) {
-    if (/^\s+/) {
+    if (/^The following constraints cannot be satisfied:/) {
+    	next
+    } elsif (/^\s+/) {
 	if ($sourcestanza) {
 	    s/^(\s*)$sourceprefix(.*)(depends on|conflicts with)/$1$2build-$3/o;
 	    s/&gt;/>/;

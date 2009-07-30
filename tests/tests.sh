@@ -195,8 +195,7 @@ Binary: bin-b
 __END__
 wanna-build -A amd64 -b amd64/build-db --merge-all $testdir/Packages $testdir/quinn-diff $testdir/Sources
 
-# does not work on stable:
-#wanna-build -A amd64 -b amd64/build-db --info src-b | assert_grep "bin-a-1 (>= 2)"
+wanna-build -A amd64 -b amd64/build-db --info src-b | assert_grep "bin-a-1 (>= 2)"
 wanna-build -A amd64 -b amd64/build-db --info src-b | assert_grep " State .*: BD-Uninstallable"
 wanna-build -A amd64 -b amd64/build-db --list bd-uninstallable | assert_grep "src-b"
 
