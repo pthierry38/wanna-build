@@ -250,6 +250,31 @@ then
 	exit 1
 fi
 
+echo "Marking package as failed, with newlines in the argument"
+wanna-build -A amd64 -b amd64/build-db -m "$(echo -e "Package failed\nTo Build\n\nBadly\n \nOuch")" --failed src-b_1 
+wanna-build -A amd64 -b amd64/build-db --info src-b | assert_grep " State.*:.*Failed"
+
+echo "Exporting database"
+wanna-build -A amd64 -b amd64/build-db --export $testdir/export1
+
+echo "Importing database"
+wanna-build -A amd64 -b amd64/build-db --import $testdir/export1
+
+echo "Exporting database again"
+wanna-build -A amd64 -b amd64/build-db --export $testdir/export2
+
+if ! diff -q $testdir/export1 $testdir/export2
+then
+	echo "Exporting and importing is not idempotent!"
+	exit 1
+fi
+
+echo "Giving back failed package"
+wanna-build -A amd64 -b amd64/build-db -o --give-back src-b_1
+
+echo "Giving back package agian to clear BD-Uninstallable"
+wanna-build -A amd64 -b amd64/build-db -o --give-back src-b_1
+
 echo "Taking the build"
 wanna-build -A amd64 -b amd64/build-db --take src-b_1
 wanna-build -A amd64 -b amd64/build-db --info src-b | assert_grep " State.*:.*Building"

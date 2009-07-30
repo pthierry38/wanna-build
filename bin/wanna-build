@@ -978,6 +978,7 @@ sub add_one_needsbuild {
 			log_ta( $pkg, "--give-back" );
 			$db{$name} = $pkg;
 			print "$name: given back\n" if $verbose;
+			return;
 		}
 		else {
 			print "$name: has uninstallable build-dependencies. Skipping\n",
@@ -2223,7 +2224,7 @@ sub write_db {
 				my $val = $ui->{$key};
                                 $val =~ s/\n*$//;
 				$val =~ s/^/ /mg;
-				$val =~ s/^ $/ ./mg;
+				$val =~ s/^ +$/ ./mg;
 				print F "$key: $val\n";
 			    }
 			    print F "\n";
@@ -2234,7 +2235,7 @@ sub write_db {
 				my $val = $pkg->{$key};
                                 $val =~ s/\n*$//;
 				$val =~ s/^/ /mg;
-				$val =~ s/^ $/ ./mg;
+				$val =~ s/^ +$/ ./mg;
 				print F "$key: $val\n";
 			}
 		    	print F "\n";
