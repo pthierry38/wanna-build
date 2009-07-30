@@ -1883,7 +1883,8 @@ sub list_packages {
 			if $pkg->{'State'} =~ /^Failed/;
 		print "  Dependencies: $pkg->{'Depends'}\n"
 			if $pkg->{'State'} eq "Dep-Wait";
-		print "  Reason: $pkg->{'BD-Problem'}\n"
+		print "  Reasons for BD-Uninstallable:\n    ",
+		          join("\n    ",split("\n",$pkg->{'BD-Problem'})), "\n"
 			if $pkg->{'State'} eq "BD-Uninstallable";
 		print "  Previous state was $pkg->{'Previous-State'} until ",
 			  "$pkg->{'State-Change'}\n"
