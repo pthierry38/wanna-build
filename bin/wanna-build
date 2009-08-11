@@ -1030,8 +1030,12 @@ sub add_one_needsbuild {
 			  "Skipping.\n";
 		return;
 	}
-	change_state( \$pkg, 'BD-Uninstallable' );
-	$pkg->{'BD-Problem'} = "Installability of build dependencies not tested yet";
+	if ($distribution eq "unstable") {
+		change_state( \$pkg, 'BD-Uninstallable' );
+		$pkg->{'BD-Problem'} = "Installability of build dependencies not tested yet";
+	} else {
+		change_state( \$pkg, 'Needs-Build' );
+	}
 	delete $pkg->{'Builder'};
 	delete $pkg->{'Depends'};
 	log_ta( $pkg, "--give-back" );
