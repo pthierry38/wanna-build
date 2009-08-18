@@ -598,7 +598,7 @@ sub add_one_building {
 		my $ok = 'ok';
 		if ($pkg->{'binary_nmu_version'}) {
 			print "$name: Warning: needs binary NMU $pkg->{'binary_nmu_version'}\n" .
-			      "$pkg->{'Binary-NMU-Changelog'}\n";
+			      "$pkg->{'binary_nmu_changelog'}\n";
 			$ok = 'aok';
 		} else {
 			print "$name: Warning: Previous version failed!\n"
@@ -857,7 +857,7 @@ sub add_one_notforus {
 		delete $pkg->{'depends'};
 		delete $pkg->{'buildpri'};
 		delete $pkg->{'binary_nmu_version'};
-		delete $pkg->{'Binary-NMU-Changelog'};
+		delete $pkg->{'binary_nmu_changelog'};
 		log_ta( $pkg, "--no-build" );
 		print "$name: registered as unsuitable\n" if $verbose;
 
@@ -974,13 +974,13 @@ sub set_one_binnmu {
 			delete $pkg->{'builder'};
 			delete $pkg->{'depends'};
 			delete $pkg->{'binary_nmu_version'};
-			delete $pkg->{'Binary-NMU-Changelog'};
+			delete $pkg->{'binary_nmu_changelog'};
 		} elsif ($binNMUver <= $pkg->{'binary_nmu_version'}) {
 			print "$name: already building binNMU $pkg->{'binary_nmu_version'}\n";
 			return;
 		} else {
 			$pkg->{'binary_nmu_version'} = $binNMUver;
-			$pkg->{'Binary-NMU-Changelog'} = $fail_reason;
+			$pkg->{'binary_nmu_changelog'} = $fail_reason;
 			$pkg->{'notes'} = 'out-of-date';
 			$pkg->{'buildpri'} = $pkg->{'permbuildpri'}
 				if (defined $pkg->{'permbuildpri'});
@@ -1010,7 +1010,7 @@ sub set_one_binnmu {
 	delete $pkg->{'builder'};
 	delete $pkg->{'depends'};
 	$pkg->{'binary_nmu_version'} = $binNMUver;
-	$pkg->{'Binary-NMU-Changelog'} = $fail_reason;
+	$pkg->{'binary_nmu_changelog'} = $fail_reason;
 	$pkg->{'notes'} = 'out-of-date';
 	log_ta( $pkg, "--binNMU" );
 	update_source_info($pkg);
@@ -1328,7 +1328,7 @@ sub parse_packages {
 		$pkg->{'version'} = $version
 			if version_less( $pkg->{'version'}, $version);
 		delete $pkg->{'binary_nmu_version'};
-		delete $pkg->{'Binary-NMU-Changelog'};
+		delete $pkg->{'binary_nmu_changelog'};
 		log_ta( $pkg, "--merge-packages" );
 		update_source_info($pkg);
 		print "$name ($version) is up-to-date now.\n" if $verbose;
@@ -1454,7 +1454,7 @@ sub parse_quinn_diff {
 			change_state( \$pkg, 'Dep-Wait' );
 			$pkg->{'version'}  = $version;
 			delete $pkg->{'binary_nmu_version'};
-			delete $pkg->{'Binary-NMU-Changelog'};
+			delete $pkg->{'binary_nmu_changelog'};
 			log_ta( $pkg, "--merge-quinn" );
 			$change++;
 			print "$name ($version) still waiting for dependencies.\n"
@@ -1519,7 +1519,7 @@ sub parse_quinn_diff {
 			$pkg->{'notes'}    = $notes;
 			delete $pkg->{'builder'};
 			delete $pkg->{'binary_nmu_version'};
-			delete $pkg->{'Binary-NMU-Changelog'};
+			delete $pkg->{'binary_nmu_changelog'};
 			log_ta( $pkg, "--merge-quinn" );
 			$new_vers{$name}++;
 			$change++;
