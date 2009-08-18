@@ -936,10 +936,14 @@ sub add_one_needsbuild {
 			  "Skipping.\n";
 		return;
 	}
-	change_state( \$pkg, 'BD-Uninstallable' );
-	$pkg->{'bd_problem'} = "Installability of build dependencies not tested yet";
-	delete $pkg->{'builder'};
-	delete $pkg->{'depends'};
+	if ($distribution eq "unstable") {
+		change_state( \$pkg, 'BD-Uninstallable' );
+		$pkg->{'bd_problem'} = "Installability of build dependencies not tested yet";
+	} else {
+		change_state( \$pkg, 'Needs-Build' );
+	}
+	$pkg->{'builder'} = undef;
+	$pkg->{'depends'} = undef;
 	log_ta( $pkg, "--give-back" );
 	update_source_info($pkg);
 	print "$name: given back\n" if $verbose;
