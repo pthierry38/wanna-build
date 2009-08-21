@@ -401,7 +401,9 @@ sub process {
 			die "This operation is restricted to admin users\n"
 				if (defined @conf::admin_users and
 				    !isin( $real_user, @conf::admin_users));
-			$dbh->do("DELETE from " . table_name())
+			$dbh->do("DELETE from " . table_name() . 
+				" WHERE distribution = ?", undef,
+				$distribution)
 				or die $dbh->errstr;
 			forget_users();
 			read_db( $import_from );
@@ -1553,7 +1555,8 @@ sub parse_quinn_diff {
 
 	if ($dubious) {
 		send_mail( $conf::db_maint,
-				   "Dubious versions in " . table_name() . " table",
+				   "Dubious versions in " . table_name() . " "
+				   . $distribution . " table",
 				   "The following packages have a newer version in the ".
 				   "wanna-build database\n".
 				   "than what quinn-diff says, and this is strange for ".
@@ -1864,7 +1867,7 @@ sub forget_packages {
 			$data .= sprintf "  %-20s: %s\n", $key, $val;
 		}
 		send_mail( $conf::db_maint,
-				   "$name deleted from DB " . table_name(),
+				   "$name deleted from DB " . table_name() . " " . $distribution,
 				   "The package '$name' has been deleted from the database ".
 				   "by $user.\n\n".
 				   "Data registered about the deleted package:\n".
@@ -1877,7 +1880,8 @@ sub forget_packages {
 }
 
 sub forget_users {
-	$dbh->do("DELETE from " . user_table_name()) or die $dbh->errstr;
+	$dbh->do("DELETE from " . user_table_name() . 
+		" WHERE distribution = ?", undef, $distribution) or die $dbh->errstr;
 }
 
 sub read_db {
@@ -1909,8 +1913,10 @@ sub read_db {
 		elsif(exists($thispkg{'user'})) {
 			# user in import, username in database.
 			$dbh->do('INSERT INTO ' . user_table_name() .
-					' (username, last_seen) values (?, ?)',
-				undef, $thispkg{'user'}, $thispkg{'last_seen'})
+					' (username, distribution, last_seen)' .
+					' values (?, ?, ?)',
+				undef, $thispkg{'user'}, $distribution,
+				$thispkg{'last_seen'})
 				or die $dbh->errstr;
 		 }
 	}
@@ -2369,24 +2375,25 @@ sub pkg_version_eq {
 }
 
 sub table_name {
-	return $arch . '_' . $distribution;
+	return $arch;
 }
 
 sub user_table_name {
-	return $arch . '_' . $distribution . '_users';
+	return $arch . '_users';
 }
 
 sub get_source_info {
 	my $name = shift;
 	my $pkg = $dbh->selectrow_hashref('SELECT * FROM ' . 
-		table_name() . ' WHERE package = ?',
-		undef, $name);
+		table_name() . ' WHERE package = ? AND distribution = ?',
+		undef, $name, $distribution);
 	return $pkg;
 }
 
 sub get_all_source_info {
-	my $db = $dbh->selectall_hashref('SELECT * FROM ' . table_name(),
-		'package');
+	my $db = $dbh->selectall_hashref('SELECT * FROM ' . table_name() .
+		' WHERE distribution = ?',
+		'package', undef, $distribution);
 	return $db;
 }
 
@@ -2419,7 +2426,7 @@ sub update_source_info {
 			'depends = ?, ' .
 			'rel = ?, ' .
 			'bd_problem = ? ' .
-			'WHERE package = ?',
+			'WHERE package = ? AND distribution = ?',
 		undef,
 		$pkg->{'version'},
 		$pkg->{'state'},
@@ -2440,36 +2447,38 @@ sub update_source_info {
 		$pkg->{'depends'},
 		$pkg->{'rel'},
 		$pkg->{'bd_problem'},
-		$pkg->{'package'}) or die $dbh->errstr;
+		$pkg->{'package'},
+		$distribution) or die $dbh->errstr;
 }
 
 sub add_source_info {
 	my $pkg = shift;
 	$dbh->do('INSERT INTO ' . table_name() .
-			' (package) values (?)',
-		undef, $pkg->{'package'}) or die $dbh->errstr;
+			' (package, distribution) values (?, ?)',
+		undef, $pkg->{'package'}, $distribution) or die $dbh->errstr;
 }
 
 sub del_source_info {
 	my $name = shift;
 	$dbh->do('DELETE FROM ' . table_name() .
-			' WHERE package = ?',
-		undef, $name) or die $dbh->errstr;
+			' WHERE package = ? AND distribution = ?',
+		undef, $name, $distribution) or die $dbh->errstr;
 }
 
 sub get_user_info {
 	my $name = shift;
 	my $user = $dbh->selectrow_hashref('SELECT * FROM ' . 
-		user_table_name() . ' WHERE username = ?',
-		undef, $name);
+		user_table_name() . ' WHERE username = ? AND distribution = ?',
+		undef, $name, $distribution);
 	return $user;
 }
 
 sub update_user_info {
 	my $user = shift;
 	$dbh->do('UPDATE ' . user_table_name() .
-			' SET last_seen = now() WHERE username = ?',
-		undef, $user)
+			' SET last_seen = now() WHERE username = ?' .
+			' AND distribution = ?',
+		undef, $user, $distribution)
 		or die $dbh->errstr;
 }
 
@@ -2477,8 +2486,9 @@ sub update_user_info {
 sub add_user_info {
 	my $user = shift;
 	$dbh->do('INSERT INTO ' . user_table_name() .
-			' (username, last_seen) values (?, now())',
-		undef, $user)
+			' (username, distribution, last_seen)' .
+			' values (?, ?, now())',
+		undef, $user, $distribution)
 		or die $dbh->errstr;
 }
 
