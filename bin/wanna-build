@@ -2141,7 +2141,7 @@ sub waitfor_maintlock {
 				unlink( $lockfile );
 				return;
 			}
-			warn "Databases locked for general maintenance by $usr -- ".
+			warn "Databases in $conf::dbbase locked for general maintenance by $usr -- ".
 				 "please wait\n" if $try == 0;
 		}
 		if (++$try > 120) {
