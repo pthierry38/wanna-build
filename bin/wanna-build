@@ -2374,11 +2374,11 @@ sub pkg_version_eq {
 }
 
 sub table_name {
-	return $arch;
+	return '"' . $arch . '"';
 }
 
 sub user_table_name {
-	return $arch . '_users';
+	return '"' . $arch . '_users' . '"';
 }
 
 sub get_source_info {
