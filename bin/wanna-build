@@ -1938,13 +1938,13 @@ sub check_entry {
 			  join( "\n", map { "$_: $pkg->{$_}" } keys %$pkg ), "\n";
 		die "Database entry lacks package or username field\n";
 	}
-	if (!exists $pkg->{'version'}) {
-		die "Database entry for $pkg->{'package'} lacks Version: field\n";
-	}
 	# if no State: field, generate one (for old db compat)
 	if (!exists($pkg->{'state'})) {
 		$pkg->{'state'} =
 			exists $pkg->{'failed'} ? 'Failed' : 'Building';
+	}
+	if (!exists $pkg->{'version'} and $pkg->{'state'} ne 'Not-For-Us') {
+		die "Database entry for $pkg->{'package'} lacks Version: field\n";
 	}
 	# check state field
 	die "Bad state $pkg->{'state'} of package $pkg->{Package}\n"
