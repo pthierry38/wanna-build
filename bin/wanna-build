@@ -301,8 +301,18 @@ END {
 	}
 }
 
-$dbh = DBI->connect("DBI:Pg:database=wanna-build") || 
-	die "FATAL: Cannot open database: $DBI::errstr\n";
+my $schema_suffix = '';
+# TODO: Base this on something else, like an option that is passed.
+if ($real_user eq 'nobody') {
+	$dbh = DBI->connect("DBI:Pg:service=wanna-build") || 
+		die "FATAL: Cannot open database: $DBI::errstr\n";
+	$schema_suffix = '_public';
+}
+else
+{
+	$dbh = DBI->connect("DBI:Pg:service=wanna-build-privileged") || 
+		die "FATAL: Cannot open database: $DBI::errstr\n";
+}
 
 # TODO: This shouldn't be needed, file a bug.
 $dbh->{pg_server_prepare} = 0;
@@ -2374,11 +2384,11 @@ sub pkg_version_eq {
 }
 
 sub table_name {
-	return '"' . $arch . '".packages';
+	return '"' . $arch . $schema_suffix . '".packages';
 }
 
 sub user_table_name {
-	return '"' . $arch . '".users';
+	return '"' . $arch . $schema_suffix . '".users';
 }
 
 sub get_source_info {
