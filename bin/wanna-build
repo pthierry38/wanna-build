@@ -1768,9 +1768,9 @@ sub list_packages {
 		next if $category && $pkg->{'state'} eq "Failed" &&
 				$pkg->{'failed_category'} ne $category;
 		next if ($list_min_age > 0 &&
-				 ($ctime-parse_date($pkg->{'State-Change'})) < $list_min_age)||
+				 ($ctime-parse_date($pkg->{'state_change'})) < $list_min_age)||
 				($list_min_age < 0 &&
-				 ($ctime-parse_date($pkg->{'State-Change'})) > -$list_min_age);
+				 ($ctime-parse_date($pkg->{'state_change'})) > -$list_min_age);
 		push( @list, $pkg );
 	}
 
@@ -1800,7 +1800,7 @@ sub list_packages {
 		          join("\n    ",split("\n",$pkg->{'bd_problem'})), "\n"
 			if $pkg->{'state'} eq "BD-Uninstallable";
 		print "  Previous state was $pkg->{'previous_state'} until ",
-			  "$pkg->{'State-Change'}\n"
+			  "$pkg->{'state_change'}\n"
 			if $verbose && $pkg->{'previous_state'};
 		print "  No previous state recorded\n"
 			if $verbose && !$pkg->{'previous_state'};
@@ -1972,7 +1972,7 @@ sub change_state {
 	
 	return if defined($$state) and $$state eq $newstate;
         $pkg->{'previous_state'} = $$state if defined($$state);
-	$pkg->{'State-Change'} = $curr_date;
+	$pkg->{'state_change'} = $curr_date;
 
 	if (defined($$state) and $$state eq 'Failed') {
 		$pkg->{'old_failed'} =
