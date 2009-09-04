@@ -1949,7 +1949,7 @@ sub check_entry {
 	# check state field
 	die "Bad state $pkg->{'state'} of package $pkg->{Package}\n"
 		if !isin( $pkg->{'state'},
-				  qw(Needs-Build Building Built Build-Attempted Uploaded Installed Dep-Wait
+				  qw(Needs-Build Building Built Build-Attempted Uploaded Installed Dep-Wait Dep-Wait-Removed
 					 Failed Failed-Removed Not-For-Us BD-Uninstallable
 					 ) );
 }
