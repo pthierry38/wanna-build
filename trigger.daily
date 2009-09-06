@@ -170,8 +170,6 @@ umask 002
 ALL_ARCHES=$(echo $ARCHS_oldstable $ARCHS_stable $ARCHS_testing $ARCHS_unstable \
 	     | tr ' ' '\n' | sort -u)
 for a in $ALL_ARCHES ; do
-	wanna-build --create-maintenance-lock --database=$a/build-db
-
 	for d in $DISTS ; do
 		dist=`echo $d | sed s/-.*$//`
 		case "$dist" in
@@ -211,7 +209,6 @@ for a in $ALL_ARCHES ; do
 	if [ "$DAY" = "0" ]; then
 		savelog -p -c 128 /srv/wanna-build/db/$a/transactions.log
 	fi
-	wanna-build --remove-maintenance-lock --database=$a/build-db
 done
 umask 022
 for d in $DISTS; do
