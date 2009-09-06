@@ -3,6 +3,7 @@
 use strict;
 use warnings;
 
+use lib '/org/wanna-build/bin';
 use WannaBuild; # for version compare
 
 if (!@ARGV) {

@@ -25,7 +25,7 @@ $basedir ||= "/var/lib/debbuild";
 $dbbase ||= "build-db";
 $transactlog ||= "transactions.log";
 $mailprog ||= "/usr/sbin/sendmail";
-require "/etc/wanna-build.conf";
+require "/org/wanna-build/etc/wanna-build.conf";
 die "$conf::basedir is not a directory\n" if ! -d $conf::basedir;
 die "dbbase is empty\n" if ! $dbbase;
 die "transactlog is empty\n" if ! $transactlog;
@@ -39,6 +39,7 @@ use POSIX;
 use FileHandle;
 use File::Copy;
 use DBI;
+use lib '/org/wanna-build/bin';
 use WannaBuild;
 
 our ($verbose, $mail_logs, $list_order, $list_state,
