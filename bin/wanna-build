@@ -938,7 +938,8 @@ sub add_one_needsbuild {
 		}
 	}
 	if (defined ($pkg->{'builder'}) && $user ne $pkg->{'builder'} &&
-		    !($pkg->{'builder'} =~ /^(\w+)-\w+/ && $1 eq $user)) {
+		!($pkg->{'builder'} =~ /^(\w+)-\w+/ && $1 eq $user) &&
+		!$opt_override) {
 		print "$name: not taken by you, but by ".
 			  "$pkg->{'builder'}. Skipping.\n";
 		return;
