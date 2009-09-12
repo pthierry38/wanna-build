@@ -2350,6 +2350,7 @@ sub usage {
 Usage: $prgname <options...> <package_version...>
 Options:
     -v, --verbose: Verbose execution.
+    -A arch: Architecture this operation is for.
     --take: Take package for building [default operation]
     -f, --failed: Record in database that a build failed due to
         deficiencies in the package (that aren't fixable without a new
