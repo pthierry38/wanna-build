@@ -173,13 +173,12 @@ my %options =
 						 code => sub {
 							 die "Argument of --min-age must be a non-zero number\n"
 								 if $list_min_age == 0;
-							 $list_min_age *= 24*60*60;
 						 } },
 	 "max-age"      => { arg => \$list_min_age,
 						 code => sub {
 							 die "Argument of --max-age must be a non-zero number\n"
 								 if $list_min_age == 0;
-							 $list_min_age *= -24*60*60;
+							 $list_min_age *= -1;
 						 } },
 	 # special actions
 	 import         => { arg => \$import_from, mode => "import" },
@@ -1759,24 +1758,11 @@ sub list_packages {
 	my $cnt = 0;
 	my %scnt;
 	my $ctime = time;
-	my $db;
 
-	if ($state ne "all") {
-		$db = get_all_source_info_state($state);
-	} else {
-		$db = get_all_source_info();
-	}
+ 	my $db = get_all_source_info(state => $state, user => $user, category => $category, list_min_age => $list_min_age);
 	foreach $name (keys %$db) {
 		next if $name =~ /^_/;
-		$pkg = $db->{$name};
-		next if $user && (lc($state) ne 'needs-build' and $pkg->{'builder'} ne $user);
-		next if $category && $pkg->{'state'} eq "Failed" &&
-				$pkg->{'failed_category'} ne $category;
-		next if ($list_min_age > 0 &&
-				 ($ctime-parse_date($pkg->{'state_change'})) < $list_min_age)||
-				($list_min_age < 0 &&
-				 ($ctime-parse_date($pkg->{'state_change'})) > -$list_min_age);
-		push( @list, $pkg );
+		push @list, $db->{$name};
 	}
 
 	foreach $pkg (sort sort_list_func @list) {
@@ -2439,17 +2425,40 @@ sub get_source_info {
 }
 
 sub get_all_source_info {
-	my $db = $dbh->selectall_hashref('SELECT * FROM ' . table_name() .
-		' WHERE distribution = ?',
-		'package', undef, $distribution);
-	return $db;
-}
+	my %options = @_;
 
-sub get_all_source_info_state {
-	my $state = shift;
-	my $db = $dbh->selectall_hashref('SELECT * FROM ' . table_name() .
-		' WHERE distribution = ? and state = ?',
-		'package', undef, $distribution, $state);
+	my $q = 'SELECT * FROM ' . table_name()
+		. ' WHERE distribution = ? ';
+	my @args = ($distribution);
+	if (uc($options{state}) ne "ALL") {
+		$q .= ' AND upper(state) = ? ';
+		push @args, uc($options{state});
+	}
+
+	if ($options{user}) {
+		#this basically means "this user, or no user at all":
+		$q .= ' AND (builder = ? OR upper(state) = ?)';
+		push @args, $options{user};
+		push @args, "NEEDS-BUILD";
+	}
+
+	if ($options{category}) {
+		$q .= ' AND failed_category <> ? AND upper(state) = ? ';
+		push @args, $options{category};
+		push @args, "FAILED";
+	}
+
+	if ($options{list_min_age} > 0) {
+		$q .= ' AND age(state_change::timestamp) > ? ';
+		push @args, $options{list_min_age} . " days";
+	}
+
+	if ($options{list_min_age} < 0) {
+		$q .= ' AND age(state_change::timestamp) < ? days ';
+		push @args, -$options{list_min_age} . " days";
+	}
+
+	my $db = $dbh->selectall_hashref($q, 'package', undef, @args);
 	return $db;
 }
 
