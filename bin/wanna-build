@@ -897,6 +897,12 @@ sub add_one_needsbuild {
 	}
 	$state = $pkg->{'state'};
 
+	if ($state eq "Needs-Build")
+	{
+		print "$name: Already in Needs-Build.\n";
+		return;
+	}
+
 	if ($state eq "BD-Uninstallable") {
 		if ($opt_override) {
 			print "$name: Forcing uninstallability mark to be removed. This is not permanent and might be reset with the next trigger run\n";
