@@ -1759,12 +1759,16 @@ sub list_packages {
 	my $cnt = 0;
 	my %scnt;
 	my $ctime = time;
+	my $db;
 
-	my $db = get_all_source_info();
+	if ($state ne "all") {
+		$db = get_all_source_info_state($state);
+	} else {
+		$db = get_all_source_info();
+	}
 	foreach $name (keys %$db) {
 		next if $name =~ /^_/;
 		$pkg = $db->{$name};
-		next if $state ne "all" && $pkg->{'state'} !~ /^\Q$state\E$/i;
 		next if $user && (lc($state) ne 'needs-build' and $pkg->{'builder'} ne $user);
 		next if $category && $pkg->{'state'} eq "Failed" &&
 				$pkg->{'failed_category'} ne $category;
@@ -2438,6 +2442,14 @@ sub get_all_source_info {
 	my $db = $dbh->selectall_hashref('SELECT * FROM ' . table_name() .
 		' WHERE distribution = ?',
 		'package', undef, $distribution);
+	return $db;
+}
+
+sub get_all_source_info_state {
+	my $state = shift;
+	my $db = $dbh->selectall_hashref('SELECT * FROM ' . table_name() .
+		' WHERE distribution = ? and state = ?',
+		'package', undef, $distribution, $state);
 	return $db;
 }
 
