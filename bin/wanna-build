@@ -303,8 +303,7 @@ END {
 }
 
 my $schema_suffix = '';
-# TODO: Base this on something else, like an option that is passed.
-if ($real_user eq 'nobody') {
+if (isin( $op_mode, qw(list info)) && $distribution !~ /security/) {
 	$dbh = DBI->connect("DBI:Pg:service=wanna-build") || 
 		die "FATAL: Cannot open database: $DBI::errstr\n";
 	$schema_suffix = '_public';
@@ -896,12 +895,6 @@ sub add_one_needsbuild {
 		return;
 	}
 	$state = $pkg->{'state'};
-
-	if ($state eq "Needs-Build")
-	{
-		print "$name: Already in Needs-Build.\n";
-		return;
-	}
 
 	if ($state eq "BD-Uninstallable") {
 		if ($opt_override) {
