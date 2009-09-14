@@ -1831,7 +1831,7 @@ sub info_packages {
 		foreach $dist (@dists) {
 			my $pname = "$name" . ($info_all_dists ? "($dist)" : "");
 			
-			$pkg = get_source_info($name);
+			$pkg = get_readonly_source_info($name);
 			if (!defined( $pkg )) {
 				print "$pname: not registered\n";
 				next;
@@ -2415,6 +2415,14 @@ sub table_name {
 
 sub user_table_name {
 	return '"' . $arch . $schema_suffix . '".users';
+}
+
+sub get_readonly_source_info {
+	my $name = shift;
+	my $pkg = $dbh->selectrow_hashref('SELECT * FROM ' . 
+		table_name() . ' WHERE package = ? AND distribution = ?',
+		undef, $name, $distribution);
+	return $pkg;
 }
 
 sub get_source_info {
