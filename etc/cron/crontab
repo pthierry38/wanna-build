@@ -19,3 +19,5 @@ MAILTO=cron-errors@buildd.debian.org
 
 4  0 * * *       /org/buildd.debian.org/mbox/fix-up-permissions
 
+*/15 * * * *   TZ=UTC /org/buildd.debian.org/web/status/mkstats
+
