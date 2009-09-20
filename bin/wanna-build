@@ -44,7 +44,7 @@ use WannaBuild;
 
 our ($verbose, $mail_logs, $list_order, $list_state,
     $curr_date, $op_mode, $user, $real_user, $distribution,
-    $fail_reason, $opt_override, $import_from, $opt_create_db,
+    $fail_reason, $opt_override, $import_from, $export_to, $opt_create_db,
     %prioval, %sectval,
     $info_all_dists, $arch,
     $category, %catval, %short_category,
@@ -181,6 +181,7 @@ my %options =
 							 $list_min_age *= -1;
 						 } },
 	 # special actions
+	 export         => { arg => \$export_to, mode => "export" },
 	 import         => { arg => \$import_from, mode => "import" },
 	 "manual-edit"  => { mode => "manual-edit" },
 	 );
@@ -250,7 +251,7 @@ if ($verbose) {
 	print "wanna-build $version for $distribution on $arch\n";
 }
 
-if (!@ARGV && !isin( $op_mode, qw(list merge-quinn merge-partial-quinn import 
+if (!@ARGV && !isin( $op_mode, qw(list merge-quinn merge-partial-quinn import export
 				  merge-packages manual-edit
 				  merge-sources))) {
 	warn "No packages given.\n";
@@ -415,6 +416,10 @@ sub process {
 				or die $dbh->errstr;
 			forget_users();
 			read_db( $import_from );
+			last SWITCH;
+		};
+		/^export/ && do {
+			export_db( $export_to );
 			last SWITCH;
 		};
 
@@ -1979,6 +1984,32 @@ sub check_entry {
 					 ) );
 }
 
+sub export_db {
+	my $file = shift;
+	my($name,$pkg,$key);
+
+	print "Writing ASCII database to $file..." if $verbose >= 1;
+	open( F, ">$file" ) or
+		die "Can't open export $file: $!\n";
+
+        my $db = get_all_source_info();
+        foreach $name (keys %$db) {
+		next if $name =~ /^_/;
+		my $pkg = $db->{$name};
+		foreach $key (keys %{$pkg}) {
+			my $val = $pkg->{$key};
+			next if !defined($val);
+			$val =~ s/\n*$//;
+			$val =~ s/^/ /mg;
+			$val =~ s/^ +$/ ./mg;
+			print F "$key: $val\n";
+		}
+		print F "\n";
+       }
+       close( F );
+       print "done\n" if $verbose >= 1;
+}
+
 sub change_state {
 	my $pkgr = shift;
 	my $pkg = $$pkgr;
@@ -2377,6 +2408,7 @@ Options:
         if -l is missing, set user name to be entered in db; usually
         automatically choosen
     --import FILE: Import database from a ASCII file FILE
+    --export FILE: Export database to a ASCII file FILE
 
 The remaining arguments (depending on operation) usually start with
 "name_version", the trailer is ignored. This allows to pass the names
