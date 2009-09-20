@@ -302,7 +302,7 @@ END {
 }
 
 my $schema_suffix = '';
-if (isin( $op_mode, qw(list info)) && $distribution !~ /security/) {
+if (isin( $op_mode, qw(list info)) && $distribution !~ /security/ && !(not -t and $user =~ /-/)) {
 	$dbh = DBI->connect("DBI:Pg:service=wanna-build") || 
 		die "FATAL: Cannot open database: $DBI::errstr\n";
 	$schema_suffix = '_public';
