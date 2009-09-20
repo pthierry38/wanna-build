@@ -2430,7 +2430,7 @@ sub get_all_source_info {
 	my $q = 'SELECT * FROM ' . table_name()
 		. ' WHERE distribution = ? ';
 	my @args = ($distribution);
-	if (uc($options{state}) ne "ALL") {
+	if ($options{state} && uc($options{state}) ne "ALL") {
 		$q .= ' AND upper(state) = ? ';
 		push @args, uc($options{state});
 	}
