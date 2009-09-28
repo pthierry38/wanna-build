@@ -2046,13 +2046,13 @@ sub log_ta {
 		   "changed from $prevstate to $pkg->{'state'} ".
 		   "by $real_user as $user";
 	
-	my $transactlog = db_transactlog();
-	if (!open( LOG, ">>$transactlog" )) {
-		warn "Can't open log file $transactlog: $!\n";
-		return;
-	}
-	print LOG "$curr_date: $str\n";
-	close( LOG );
+	$dbh->do('INSERT INTO ' . transactions_table_name() .
+			' (package, distribution, version, action, ' .
+			' prevstate, state, real_user, set_user, time) ' .
+			' values (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+		undef, $pkg->{'package'}, $distribution,
+		$pkg->{'version'}, $action, $prevstate, $pkg->{'state'},
+		$real_user, $user, 'now()') or die $dbh->errstr;
 
 	if (!($prevstate eq 'Failed' && $pkg->{'state'} eq 'Failed')) {
 		$str .= " (with --override)"
@@ -2082,10 +2082,6 @@ sub send_mail {
 	print PIPE "Subject: $subject\n\n";
 	print PIPE "$text\n";
 	close( PIPE );
-}
-
-sub db_transactlog {
-	return "$conf::basedir/$arch/$conf::transactlog";
 }
 
 # for parsing input to dep-wait
@@ -2437,6 +2433,10 @@ sub table_name {
 
 sub user_table_name {
 	return '"' . $arch . $schema_suffix . '".users';
+}
+
+sub transactions_table_name {
+	return '"' . $arch . $schema_suffix . '".transactions';
 }
 
 sub get_readonly_source_info {
