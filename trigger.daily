@@ -39,7 +39,7 @@ cleanup() {
 trap cleanup 0
 
 echo Dumping wanna-build databases...
-pg_dump service=wanna-build-privileged | bzip2 > /org/wanna-build/dumps/dump_pre_$(date +%Y.%m.%d-%H:%M:%S).bz2
+sudo -u postgres /usr/bin/pg_dumpall --cluster 8.4/wanna-build | bzip2 > /org/wanna-build/dumps/dump_pre_$(date +%Y.%m.%d-%H:%M:%S).bz2
 
 echo Updating wanna-build databases...
 umask 027
@@ -220,7 +220,7 @@ done
 
 echo "merge ended: `date`"
 
-pg_dump service=wanna-build-privileged | bzip2 > /org/wanna-build/dumps/dump_post_$(date +%Y.%m.%d-%H:%M:%S).bz2
+sudo -u postgres /usr/bin/pg_dumpall --cluster 8.4/wanna-build | bzip2 > /org/wanna-build/dumps/dump_post_$(date +%Y.%m.%d-%H:%M:%S).bz2
 
 #
 # Only update stats if it's been at least 20h since the last time.
