@@ -209,9 +209,6 @@ for a in $ALL_ARCHES ; do
 		mv Packages.$d.$a Packages.$d.$a-old
 		mv quinn-$d.$a quinn-$d.$a-old
 	done
-	if [ "$DAY" = "0" ]; then
-		savelog -p -c 128 /srv/wanna-build/db/$a/transactions.log
-	fi
 done
 umask 022
 for d in $DISTS; do
