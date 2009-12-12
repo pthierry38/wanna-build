@@ -2451,7 +2451,7 @@ sub get_source_info {
 	my $name = shift;
 	my $pkg = $dbh->selectrow_hashref('SELECT * FROM ' . 
 		table_name() . ' WHERE package = ? AND distribution = ?' .
-		'FOR UPDATE',
+		' FOR UPDATE',
 		undef, $name, $distribution);
 	return $pkg;
 }
