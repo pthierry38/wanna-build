@@ -1021,8 +1021,14 @@ sub set_one_binnmu {
 		return;
 	}
 
-	change_state( \$pkg, 'BD-Uninstallable' );
-	$pkg->{'bd_problem'} = "Installability of build dependencies not tested yet";
+	if ($distribution eq "unstable") {
+		change_state( \$pkg, 'BD-Uninstallable' );
+		$pkg->{'bd_problem'} = "Installability of build dependencies not tested yet";
+	}
+	else
+	{
+		change_state( \$pkg, 'Needs-Build' );
+	}
 	delete $pkg->{'builder'};
 	delete $pkg->{'depends'};
 	$pkg->{'binary_nmu_version'} = $binNMUver;
