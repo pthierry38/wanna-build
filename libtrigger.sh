@@ -1,7 +1,7 @@
 ARCHS_oldstable="alpha amd64 arm hppa i386 ia64 mips mipsel powerpc s390 sparc"
 ARCHS_stable="alpha amd64 arm armel hppa i386 ia64 mips mipsel powerpc s390 sparc"
-ARCHS_testing="alpha amd64 armel hppa i386 ia64 mips mipsel powerpc s390 sparc kfreebsd-amd64 kfreebsd-i386"
-ARCHS_unstable="$ARCHS_testing"
+ARCHS_testing="amd64 armel hppa i386 ia64 mips mipsel powerpc s390 sparc kfreebsd-amd64 kfreebsd-i386"
+ARCHS_unstable="$ARCHS_testing alpha hurd-i386"
 CURLOPT="-q -s -S -R -f -Y 10 -y 120 -K /srv/wanna-build/trigger.curlrc"
 
 curl_index () {
