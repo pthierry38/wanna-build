@@ -222,6 +222,8 @@ echo "merge ended: `date`"
 
 sudo -u postgres /usr/bin/pg_dumpall --cluster 8.4/wanna-build | bzip2 > /org/wanna-build/dumps/dump_post_$(date +%Y.%m.%d-%H:%M:%S).bz2
 
+(cd /org/wanna-build/dumps && /org/wanna-build/expire_dumps -d . -f "dump_*")
+
 #
 # Only update stats if it's been at least 20h since the last time.
 #
