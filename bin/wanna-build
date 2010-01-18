@@ -2502,7 +2502,7 @@ sub get_all_source_info {
 	}
 
 	if ($options{list_min_age} < 0) {
-		$q .= ' AND age(state_change::timestamp) < ? days ';
+		$q .= ' AND age(state_change::timestamp) < ? ';
 		push @args, -$options{list_min_age} . " days";
 	}
 
