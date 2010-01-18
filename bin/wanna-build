@@ -1162,7 +1162,7 @@ sub parse_sources {
 	my $name;
 	my $full = shift;
 
-	my $pkgs = get_all_source_info();
+	my $db = get_all_source_info();
 
 	local($/) = ""; # read in paragraph mode
 	while( <> ) {
@@ -1184,7 +1184,7 @@ sub parse_sources {
 		$pkgs{$name}{'bin'} = $binaries;
 		$pkgs{$name}{'dep'} = $builddep;
 		$pkgs{$name}{'conf'} = $buildconf;
-		my $pkg = $pkgs->{$name};
+		my $pkg = $db->{$name};
 
 		if (defined $pkg) {
 			my $change = 0;
