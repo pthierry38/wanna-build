@@ -1197,6 +1197,7 @@ sub parse_sources {
 					  "from database, because now Arch: all\n"
 						  if $verbose;
 				del_source_info($name);
+				delete $db->{$name};
 				next;
 			}
 
@@ -1224,7 +1225,6 @@ sub parse_sources {
         }
 	# remove installed packages that no longer have source available
 	# or binaries installed
-        my $db = get_all_source_info();
         foreach $name (keys %$db) {
 		next if $name =~ /^_/;
 		my $pkg = $db->{$name};
@@ -1236,6 +1236,7 @@ sub parse_sources {
 				  "not in Sources anymore\n"
 					  if $verbose;
 			del_source_info($name);
+			delete $db->{$name};
 		} else {
 			next if !isin( $pkg->{'state'}, qw(Installed) );
 			if ($full && not defined $merge_srcvers{$name}) {
@@ -1246,6 +1247,7 @@ sub parse_sources {
                                       "binaries don't exist anymore\n"
                                               if $verbose;
 			    del_source_info($name);
+			    delete $db->{$name};
                         } elsif ($full && version_less( $merge_srcvers{$name}, $pkg->{'version'})) {
                             print "$name ($pkg->{'version'}): ".
                                       "package is Installed but binaries are from ".
