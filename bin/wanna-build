@@ -364,6 +364,7 @@ sub process {
 			die "This operation is restricted to admin users\n"
 				if (defined @conf::admin_users and
 				    !isin( $real_user, @conf::admin_users));
+			lock_table();
 			parse_quinn_diff(1);
 			last SWITCH;
 		};
@@ -371,6 +372,7 @@ sub process {
 			die "This operation is restricted to admin users\n"
 				if (defined @conf::admin_users and
 				    !isin( $real_user, @conf::admin_users));
+			lock_table();
 			parse_quinn_diff(0);
 			last SWITCH;
 		};
@@ -378,6 +380,7 @@ sub process {
 			die "This operation is restricted to admin users\n"
 				if (defined @conf::admin_users and
 				    !isin( $real_user, @conf::admin_users));
+			lock_table();
 			parse_packages();
 			last SWITCH;
 		};
@@ -385,6 +388,7 @@ sub process {
 			die "This operation is restricted to admin users\n"
 				if (defined @conf::admin_users and
 				    !isin( $real_user, @conf::admin_users));
+			lock_table();
 			parse_sources(0);
 			last SWITCH;
 		};
@@ -396,6 +400,7 @@ sub process {
 			die "This operation is restricted to admin users\n"
 				if (defined @conf::admin_users and
 				    !isin( $real_user, @conf::admin_users));
+			lock_table();
 			my @ARGS = @ARGV;
 			@ARGV = ( $ARGS[0] );
 			my $pkgs = parse_packages();
@@ -1157,6 +1162,8 @@ sub parse_sources {
 	my $name;
 	my $full = shift;
 
+	my $pkgs = get_all_source_info();
+
 	local($/) = ""; # read in paragraph mode
 	while( <> ) {
 		my( $version, $arch, $section, $priority, $builddep, $buildconf, $binaries );
@@ -1177,7 +1184,7 @@ sub parse_sources {
 		$pkgs{$name}{'bin'} = $binaries;
 		$pkgs{$name}{'dep'} = $builddep;
 		$pkgs{$name}{'conf'} = $buildconf;
-		my $pkg = get_source_info($name);
+		my $pkg = $pkgs->{$name};
 
 		if (defined $pkg) {
 			my $change = 0;
@@ -1255,6 +1262,7 @@ sub parse_sources {
 sub parse_packages {
 	my $installed;
 
+	my $pkgs = get_all_source_info();
 	local($/) = ""; # read in paragraph mode
 	while( <> ) {
 		my( $name, $version, $depends, $source, $sourcev, $architecture, $provides, $binaryv, $binnmu );
@@ -1296,7 +1304,7 @@ sub parse_packages {
 		next if defined($merge_srcvers{$name}) and $merge_srcvers{$name} eq $version;
 		$merge_srcvers{$name} = $version;
 
-		my $pkg = get_source_info($name);
+		my $pkg = $pkgs->{$name};
 
 		if (defined $pkg) {
 			if (isin( $pkg->{'state'}, qw(Not-For-Us)) ||
@@ -1445,6 +1453,8 @@ sub parse_quinn_diff {
 	my %quinn_pkgs;
 	my $dubious = "";
 	
+	my $pkgs = get_all_source_info();
+
 	while( <> ) {
 		my $change = 0;
 		next if !m,^([-\w\d/]*)/			# section
@@ -1459,7 +1469,7 @@ sub parse_quinn_diff {
 		$priority = "unknown" if $priority eq "-";
 		$priority = "standard" if ($name eq "debian-installer");
 
-		my $pkg = get_source_info($name);
+		my $pkg = $pkgs->{$name};
 
 		# Always update section and priority.
 		if (defined($pkg)) {
@@ -2301,7 +2311,7 @@ sub call_edos_depcheck {
 
     open SOURCES, '>', $tmpfile or die "Could not open temporary file $tmpfile\n";
     for my $key (keys %interesting_packages) {
-	my $pkg = get_source_info($key);
+	my $pkg = $db->{$key};
 	print SOURCES "Package: $key\n";
 	print SOURCES "Version: $pkg->{'version'}\n";
 	print SOURCES "Build-Depends: $srcs->{$key}{'dep'}\n" if $srcs->{$key}{'dep'};
@@ -2337,7 +2347,7 @@ sub call_edos_depcheck {
     unlink( $tmpfile );
 
     for my $key (keys %interesting_packages) {
-	my $pkg = get_source_info($key);
+	my $pkg = $db->{$key};
 	my $change = 
 	    (defined $interesting_packages{$key} and $pkg->{'state'} eq 'Needs-Build') ||
 	    (not defined $interesting_packages{$key} and $pkg->{'state'} eq 'BD-Uninstallable');
@@ -2593,5 +2603,11 @@ sub add_user_info {
 			' values (?, ?, now())',
 		undef, $user, $distribution)
 		or die $dbh->errstr;
+}
+
+sub lock_table()
+{
+	$dbh->do('LOCK TABLE ' . table_name() .
+		' IN EXCLUSIVE MODE', undef) or die $dbh->errstr;
 }
 
