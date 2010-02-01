@@ -12,7 +12,7 @@ $sourceprefix="source---";
 
 $architecture="";
 $binexplain=0;
-$edosoptions = "-failures -explain";
+$edosoptions = "-failures -explain -quiet";
 while ( $arg = shift @ARGV ) {
     if ( $arg eq '-a' || $arg eq '--architecture' ) {
 	if ($#ARGV == -1) {
@@ -43,6 +43,8 @@ if ($debug) {
     print "Edos options: $edosoptions\n";
 }
 
+# check that all stanzas in the binary package file have the same
+# architecture.
 $packagearch="";
 open(P,$packagefile);
 while (<P>) {
@@ -71,7 +73,7 @@ if ( $architecture eq "" ) {
     }
 }
 
-open(RESULT,"add-sources.py ".
+open(RESULT,"python /usr/share/edos-distcheck/add-sources.py ".
      "--prefix \"$sourceprefix\" < $packagefile $sourcesfile $architecture ".
      "| edos-debcheck $edosoptions|");
 
@@ -80,13 +82,10 @@ $explanation="";
 $binpackage="";
 
 while (<RESULT>) {
-    if (/^The following constraints cannot be satisfied:/) {
-    	next
-    } elsif (/^\s+/) {
+    if (/^\s+/) {
 	if ($sourcestanza) {
-	    s/^(\s*)$sourceprefix(.*)(depends on|conflicts with)/$1$2build-$3/o;
-	    s/&gt;/>/;
-	    s/&lt;/</;
+	    s/^(\s*)$sourceprefix(.*)depends on/$1$2build-depends on/o;
+	    s/^(\s*)$sourceprefix(.*) and (.*) conflict/$1$2 build-conflicts with $3/o;
 	    print;
 	    if (/depends on ([^\s]*) .*\{.*\}/) {
 		push(@binqueue,$1);
@@ -95,7 +94,7 @@ while (<RESULT>) {
 	    $explanation .= $_;
 	}
     } else {
-    	if ($sourcestanza) {
+	if ($sourcestanza) {
 	    print "\n";
 	    $sourcestanza=0;
 	}
