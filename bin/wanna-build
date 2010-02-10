@@ -118,6 +118,7 @@ my %options =
 	 "merge-sources" => { mode => "merge-sources" },
 	 "pretend-avail" => { short => "p", mode => "pretend-avail" },
 	 "merge-all"     => { mode => "merge-all" },
+	 "merge-all-overlay" => { mode => "merge-all-overlay" },
 	 info			=> { short => "i", mode => "info" },
 	 'binNMU' => { mode => 'set-binary-nmu', arg => \$binNMUver, 
 			     code => sub { die "Invalid binNMU version: $binNMUver\n"
@@ -396,7 +397,7 @@ sub process {
 			pretend_avail( @ARGV );
 			last SWITCH;
 		};
-		/^merge-all/ && do {
+		/^merge-all$/ && do {
 			die "This operation is restricted to admin users\n"
 				if (defined @conf::admin_users and
 				    !isin( $real_user, @conf::admin_users));
@@ -409,6 +410,21 @@ sub process {
 			@ARGV = ( $ARGS[2] );
 			my $srcs = parse_sources(1);
 			call_edos_depcheck( $ARGS[0], $srcs );
+			last SWITCH;
+		};
+		/^merge-all-overlay/ && do {
+			die "This operation is restricted to admin users\n"
+				if (defined @conf::admin_users and
+				    !isin( $real_user, @conf::admin_users));
+			lock_table();
+			my @ARGS = @ARGV;
+			@ARGV = ( $ARGS[0] );
+			my $pkgs = parse_packages();
+			@ARGV = ( $ARGS[1] );
+			parse_quinn_diff(0);
+			@ARGV = ( $ARGS[2] );
+			my $srcs = parse_sources(1);
+			call_edos_depcheck( $ARGS[3], $srcs );
 			last SWITCH;
 		};
 		/^import/ && do {
