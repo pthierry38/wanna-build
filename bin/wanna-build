@@ -382,7 +382,7 @@ sub process {
 				if (defined @conf::admin_users and
 				    !isin( $real_user, @conf::admin_users));
 			lock_table();
-			parse_packages();
+			parse_packages(0);
 			last SWITCH;
 		};
 		/^merge-sources/ && do {
@@ -404,7 +404,7 @@ sub process {
 			lock_table();
 			my @ARGS = @ARGV;
 			@ARGV = ( $ARGS[0] );
-			my $pkgs = parse_packages();
+			my $pkgs = parse_packages(0);
 			@ARGV = ( $ARGS[1] );
 			parse_quinn_diff(0);
 			@ARGV = ( $ARGS[2] );
@@ -419,7 +419,9 @@ sub process {
 			lock_table();
 			my @ARGS = @ARGV;
 			@ARGV = ( $ARGS[0] );
-			my $pkgs = parse_packages();
+			my $pkgs = parse_packages(0);
+			@ARGV = ( $ARGS[3] );
+			my $pkgs = parse_packages(1);
 			@ARGV = ( $ARGS[1] );
 			parse_quinn_diff(0);
 			@ARGV = ( $ARGS[2] );
@@ -1278,6 +1280,7 @@ sub parse_sources {
 # This function looks through a Packages file and sets the state of
 # packages to 'Installed'
 sub parse_packages {
+	my depwait_only = shift;
 	my $installed;
 
 	my $pkgs = get_all_source_info();
@@ -1296,6 +1299,7 @@ sub parse_packages {
 		next if (defined ($installed->{$name}) and $installed->{$name}{'version'} ne "" and
 			version_lesseq( $version, $installed->{$name}{'version'} ));
 		$installed->{$name}{'version'} = $version;
+		next if $depwait_only;
 		$installed->{$name}{'depends'} = $depends;
 		$installed->{$name}{'all'} = 1 if $architecture eq "all";
 		undef $installed->{$name}{'Provider'};
