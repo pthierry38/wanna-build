@@ -39,9 +39,8 @@ main() {
         PACKAGES="${ARCHIVE_BASE}/archive/${suite}/volatile/{main,contrib}/binary-%ARCH%/Packages.gz"
         PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/archive/${suite}-proposed-updates/volatile/{main,contrib}/binary-%ARCH%/Packages.gz"
         #As volatile is an overlay, also add Debian ${suite}:
-        SOURCES_BASE="${ARCHIVE_MAIN}/archive/${suite}/{main,contrib}/source/Sources.gz"
         PACKAGES_BASE="${ARCHIVE_MAIN}/archive/${suite}/{main,contrib}/binary-%ARCH%/Packages.gz"
-        trigger_wb_update_for_overlay "$suite" "`get_architectures $suite`" "$SOURCES_BASE" "$PACKAGES_BASE" "$SOURCES" "$PACKAGES" "$suite-volatile"
+        trigger_wb_update_with_secondary "$suite" "`get_architectures $suite`" "$PACKAGES_BASE" "$SOURCES" "$PACKAGES" "$suite-volatile"
     done
 
     cleanup

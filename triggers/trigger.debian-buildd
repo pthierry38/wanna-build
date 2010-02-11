@@ -42,10 +42,10 @@ main() {
     PACKAGES="${ARCHIVE_BASE}/archive/${suite}/{main,contrib}/binary-%ARCH%/Packages.gz"
     PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/buildd-${suite}/Packages.gz"
 
-    SOURCES_BASE="${ARCHIVE_MAIN}/archive/${base_suite}/{main,contrib}/source/Sources.gz"
     PACKAGES_BASE="${ARCHIVE_MAIN}/archive/${base_suite}/{main,contrib}/binary-%ARCH%/Packages.gz"
     PACKAGES_BASE="${PACKAGES_BASE} ${ARCHIVE_MAIN}/archive/${base_suite}/main/debian-installer/binary-%ARCH%/Packages.gz"
-    trigger_wb_update_for_overlay "$suite" "`get_architectures $suite`" "$SOURCES_BASE" "$PACKAGES_BASE" "$SOURCES" "$PACKAGES"
+    #PACKAGES_BASE="${PACKAGES_BASE} ${ARCHIVE_MAIN}/buildd-${BASE_SUITE}/Packages.gz"
+    trigger_wb_update_with_secondary "$suite" "`get_architectures $suite`" "$PACKAGES_BASE" "$SOURCES" "$PACKAGES"
 
     cleanup
 }

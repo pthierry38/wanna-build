@@ -36,9 +36,8 @@ main() {
         base_suite=${suite%%-backports}
         SOURCES="${ARCHIVE_BASE}/archive/${suite}/{main,contrib}/source/Sources.gz"
         PACKAGES="${ARCHIVE_BASE}/archive/${suite}/{main,contrib}/binary-%ARCH%/Packages.gz"
-        SOURCES_BASE="${ARCHIVE_MAIN}/archive/${base_suite}/{main,contrib}/source/Sources.gz"
         PACKAGES_BASE="${ARCHIVE_MAIN}/archive/${base_suite}/{main,contrib}/binary-%ARCH%/Packages.gz"
-        trigger_wb_update_for_overlay "$base_suite" "`get_architectures $base_suite`" "$SOURCES_BASE" "$PACKAGES_BASE" "$SOURCES" "$PACKAGES" "$suite"
+        trigger_wb_update_with_secondary "$base_suite" "`get_architectures $base_suite`" "$PACKAGES_BASE" "$SOURCES" "$PACKAGES" "$suite"
     done
 
     cleanup

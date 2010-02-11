@@ -33,11 +33,9 @@ main() {
         base_suite=$suite
         SOURCES="${ARCHIVE_BASE}/archive/${suite}-test/local/source/Sources.gz"
         PACKAGES="${ARCHIVE_BASE}/archive/${suite}-test/local/binary-%ARCH%/Packages.gz"
-        SOURCES_BASE="${ARCHIVE_MAIN}/archive/${base_suite}/{main,contrib}/source/Sources.gz"
-        SOURCES_BASE="${SOURCES_BASE} ${ARCHIVE_BASE}/archive/${suite}/local/source/Sources.gz"
         PACKAGES_BASE="${ARCHIVE_MAIN}/archive/${base_suite}/{main,contrib}/binary-%ARCH%/Packages.gz"
         PACKAGES_BASE="${PACKAGES_BASE} ${ARCHIVE_BASE}/archive/${suite}/local/binary-%ARCH%/Packages.gz"
-        trigger_wb_update_for_overlay "$base_suite" "$ARCHES" "$SOURCES_BASE" "$PACKAGES_BASE" "$SOURCES" "$PACKAGES" "$suite-edu"
+        trigger_wb_update_with_secondary "$base_suite" "$ARCHES" "$PACKAGES_BASE" "$SOURCES" "$PACKAGES" "$suite-edu"
     done
 
     cleanup
