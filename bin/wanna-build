@@ -1286,7 +1286,7 @@ sub parse_sources {
 # This function looks through a Packages file and sets the state of
 # packages to 'Installed'
 sub parse_packages {
-	my depwait_only = shift;
+	my $depwait_only = shift;
 	my $installed;
 
 	my $pkgs = get_all_source_info();
