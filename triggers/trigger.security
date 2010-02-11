@@ -1,0 +1,58 @@
+#!/bin/bash
+# vim:set et ts=4 sw=4 ft=sh ai:
+
+ARCHIVE="debian-security"
+
+set -e
+
+if [ -n "$SSH_ORIGINAL_COMMAND" ]
+then
+    set -- $SSH_ORIGINAL_COMMAND
+    # The name of the script will be put into $1 instead of $0,
+    # so shift the arguments to discard our name.
+    shift
+fi
+
+SUITE="$1"
+
+if [ -z "$SUITE" ]
+then
+    echo "Missing suite to act upon, aborting." >&2
+    exit 1
+fi
+
+. /org/wanna-build/triggers/common
+
+exec >> /org/wanna-build/db/merge.$ARCHIVE.log 2>&1
+
+if [ -f /org/wanna-build/NO-TRIGGERS ]
+then
+    echo Trigger for $ARCHIVE skipped due to NO-TRIGGERS, aborting. >&2
+    exit 0
+fi
+
+
+echo "`date`: Running trigger for $ARCHIVE/$SUITE ..."
+
+main() {
+    set -eE
+    trap cleanup ERR TERM HUP INT QUIT
+
+    ensure_lock
+    ensure_workdir
+
+    # Fetch the most recent Packages and Sources files.
+    sync.sh $ARCHIVE nolock
+
+    SOURCES="${ARCHIVE_BASE}/archive/${SUITE}/updates/{main,contrib}/source/Sources.gz"
+    SOURCES="${SOURCES} ${ARCHIVE_BASE}/buildd-${SUITE}/Sources.gz"
+    PACKAGES="${ARCHIVE_BASE}/archive/${SUITE}/updates/{main,contrib}/binary-%ARCH%/Packages.gz"
+    PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/buildd-${SUITE}/Packages.gz"
+    trigger_wb_update "${SUITE}" "`get_architectures ${SUITE}`" "$SOURCES" "$PACKAGES" "${SUITE}-security"
+
+    cleanup
+}
+
+main
+exit 0
+

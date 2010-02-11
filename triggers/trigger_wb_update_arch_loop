@@ -1,0 +1,16 @@
+#!/bin/bash -x
+
+set -eE
+
+. /org/wanna-build/triggers/common
+
+SUITE="$1"
+ARCH="$2"
+SOURCES="$3"
+PACKAGES="$4"
+WB_SUITE="$5"
+
+new-keep-latest ${ARCH} $(eval echo $(echo ${PACKAGES} | sed -e 's/%ARCH%/${ARCH}/g')) > Packages.${SUITE}.${ARCH}
+do_quinn ${SUITE} ${ARCH}
+do_wb_merge_all ${SUITE} ${ARCH} ${WB_SUITE}
+

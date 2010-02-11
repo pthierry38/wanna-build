@@ -1,0 +1,84 @@
+#!/bin/bash -x
+# vim:set et ts=4 sw=4 ft=sh ai:
+
+ARCHIVE="debian"
+SUITES="oldstable stable testing" 
+# Please note that SUITES_FAST_AUTOBUILD does not pull proposed-updates
+# because there was no need for that yet.
+SUITES_FAST_AUTOBUILD="unstable experimental"
+
+. /org/wanna-build/triggers/common
+
+exec >> /org/wanna-build/db/merge.$ARCHIVE.log 2>&1
+
+if [ -f /org/wanna-build/NO-TRIGGERS ]
+then
+    echo Trigger for $ARCHIVE skipped due to NO-TRIGGERS, aborting. >&2
+    exit 0
+fi
+
+echo "`date`: Running trigger for $ARCHIVE ..."
+
+main_sync() {
+    ensure_lock
+    ensure_workdir
+
+    # Fetch the most recent Packages and Sources files.
+    sync.sh $ARCHIVE nolock
+
+    for SUITE in $SUITES
+    do
+        # There's one sources file for -proposed-updates.  There are packages
+        # files for -proposed-updates itself and additionally for
+        # debian-installer.
+        SOURCES="${ARCHIVE_BASE}/archive/${SUITE}-proposed-updates/{main,contrib}/source/Sources.gz"
+        PACKAGES="${ARCHIVE_BASE}/archive/${SUITE}-proposed-updates/{main,contrib}/binary-%ARCH%/Packages.gz"
+        PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/archive/${SUITE}-proposed-updates/{main,contrib}/debian-installer/binary-%ARCH%/Packages.gz"
+        # Now add the overlay suite as above.
+        SOURCES_BASE="${ARCHIVE_BASE}/archive/${SUITE}/{main,contrib}/source/Sources.gz"
+        PACKAGES_BASE="${ARCHIVE_BASE}/archive/${SUITE}/{main,contrib}/binary-%ARCH%/Packages.gz"
+        PACKAGES_BASE="${PACKAGES_BASE} ${ARCHIVE_BASE}/archive/${SUITE}/{main,contrib}/debian-installer/binary-%ARCH%/Packages.gz"
+        trigger_wb_update_for_overlay "$SUITE" "`get_architectures $SUITE`" "$SOURCES_BASE" "$PACKAGES_BASE" "$SOURCES" "$PACKAGES"
+    done
+
+    for SUITE in $SUITES_FAST_AUTOBUILD
+    do
+        SOURCES="${ARCHIVE_BASE}/archive/${SUITE}/{main,contrib}/source/Sources.gz"
+        SOURCES="${SOURCES} ${ARCHIVE_BASE}/buildd-${SUITE}/Sources.gz"
+        PACKAGES="${ARCHIVE_BASE}/archive/${SUITE}/{main,contrib}/binary-%ARCH%/Packages.gz"
+        PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/archive/${SUITE}/{main,contrib}/debian-installer/binary-%ARCH%/Packages.gz"
+        PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/buildd-${SUITE}/Packages.gz"
+
+        if [ "$SUITE" != "experimental" ]
+        then
+            # The "it's not an overlay" part.
+            trigger_wb_update "${SUITE}" "`get_architectures ${SUITE}`" "$SOURCES" "$PACKAGES"
+        else
+            BASE_SUITE=unstable
+            SOURCES_BASE="${ARCHIVE_BASE}/archive/${BASE_SUITE}/{main,contrib}/source/Sources.gz"
+            SOURCES_BASE="${SOURCES_BASE} ${ARCHIVE_BASE}/buildd-${BASE_SUITE}/Sources.gz"
+            PACKAGES_BASE="${ARCHIVE_MAIN}/archive/${BASE_SUITE}/{main,contrib}/binary-%ARCH%/Packages.gz"
+            PACKAGES_BASE="${PACKAGES_BASE} ${ARCHIVE_MAIN}/archive/${BASE_SUITE}/{main,contrib}/debian-installer/binary-%ARCH%/Packages.gz"
+            PACKAGES_BASE="${PACKAGES_BASE} ${ARCHIVE_MAIN}/buildd-${BASE_SUITE}/Packages.gz"
+            trigger_wb_update_for_overlay "$SUITE" "`get_architectures $SUITE`" "$SOURCES_BASE" "$PACKAGES_BASE" "$SOURCES" "$PACKAGES"
+        fi
+    done
+
+    cleanup
+}
+
+main() {
+    set -eE
+    trap cleanup ERR TERM HUP INT QUIT
+
+    save-database pre
+
+    main_sync
+
+    save-database post
+    do_stats
+}
+
+main &
+exit 0
+

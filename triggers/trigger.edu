@@ -1,0 +1,48 @@
+#!/bin/bash
+# vim:set et ts=4 sw=4 ft=bash ai:
+
+ARCHIVE="debian-edu"
+SUITES="lenny etch"
+ARCHES="i386 amd64 powerpc"
+
+. /org/wanna-build/triggers/common
+
+exec >> /org/wanna-build/db/merge.$ARCHIVE.log 2>&1
+
+if [ -f /org/wanna-build/NO-TRIGGERS ]
+then
+    echo Trigger for $ARCHIVE skipped due to NO-TRIGGERS, aborting. >2
+    exit 0
+fi
+
+echo "`date`: Running trigger for $ARCHIVE ..."
+
+main() {
+    set -eE
+    trap cleanup ERR TERM HUP INT QUIT
+
+    ensure_lock
+    ensure_workdir
+
+    # Fetch the most recent Packages and Sources files.
+    sync.sh debian
+    sync.sh $ARCHIVE nolock
+
+    for suite in $SUITES
+    do
+        base_suite=$suite
+        SOURCES="${ARCHIVE_BASE}/archive/${suite}-test/local/source/Sources.gz"
+        PACKAGES="${ARCHIVE_BASE}/archive/${suite}-test/local/binary-%ARCH%/Packages.gz"
+        SOURCES_BASE="${ARCHIVE_MAIN}/archive/${base_suite}/{main,contrib}/source/Sources.gz"
+        SOURCES_BASE="${SOURCES_BASE} ${ARCHIVE_BASE}/archive/${suite}/local/source/Sources.gz"
+        PACKAGES_BASE="${ARCHIVE_MAIN}/archive/${base_suite}/{main,contrib}/binary-%ARCH%/Packages.gz"
+        PACKAGES_BASE="${PACKAGES_BASE} ${ARCHIVE_BASE}/archive/${suite}/local/binary-%ARCH%/Packages.gz"
+        trigger_wb_update_for_overlay "$base_suite" "$ARCHES" "$SOURCES_BASE" "$PACKAGES_BASE" "$SOURCES" "$PACKAGES" "$suite-edu"
+    done
+
+    cleanup
+}
+
+main &
+exit 0
+

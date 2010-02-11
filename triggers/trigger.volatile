@@ -1,0 +1,52 @@
+#!/bin/bash
+# vim:set et ts=4 sw=4 ft=bash ai:
+
+ARCHIVE="debian-volatile"
+
+. /org/wanna-build/triggers/common
+
+exec >> /org/wanna-build/db/merge.$ARCHIVE.log 2>&1
+
+if [ -f /org/wanna-build/NO-TRIGGERS ]
+then
+    echo Trigger for $ARCHIVE skipped due to NO-TRIGGERS, aborting. >2
+    exit 0
+fi
+
+echo "`date`: Running trigger for $ARCHIVE ..."
+
+main() {
+    set -eE
+    trap cleanup ERR TERM HUP INT QUIT
+
+    ensure_lock
+    ensure_workdir
+
+    # Fetch the most recent Packages and Sources files.
+    sync.sh debian
+    sync.sh $ARCHIVE nolock
+
+    # Autodetect suites by inspecting the directories in dists/.
+    SUITES="$(find ${ARCHIVE_BASE}/archive/ -maxdepth 1 -mindepth 1 -type d | \
+        xargs -n 1 basename | \
+        awk -F- '{print $1}'| \
+        sort | uniq)"
+
+    for suite in $SUITES
+    do
+        SOURCES="${ARCHIVE_BASE}/archive/${suite}/volatile/{main,contrib}/source/Sources.gz"
+        SOURCES="${SOURCES} ${ARCHIVE_BASE}/archive/${suite}-proposed-updates/volatile/{main,contrib}/source/Sources.gz"
+        PACKAGES="${ARCHIVE_BASE}/archive/${suite}/volatile/{main,contrib}/binary-%ARCH%/Packages.gz"
+        PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/archive/${suite}-proposed-updates/volatile/{main,contrib}/binary-%ARCH%/Packages.gz"
+        #As volatile is an overlay, also add Debian ${suite}:
+        SOURCES_BASE="${ARCHIVE_MAIN}/archive/${suite}/{main,contrib}/source/Sources.gz"
+        PACKAGES_BASE="${ARCHIVE_MAIN}/archive/${suite}/{main,contrib}/binary-%ARCH%/Packages.gz"
+        trigger_wb_update_for_overlay "$suite" "`get_architectures $suite`" "$SOURCES_BASE" "$PACKAGES_BASE" "$SOURCES" "$PACKAGES" "$suite-volatile"
+    done
+
+    cleanup
+}
+
+main &
+exit 0
+

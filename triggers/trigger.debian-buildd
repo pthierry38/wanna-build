@@ -1,0 +1,55 @@
+#!/bin/bash
+# vim:set et ts=4 sw=4 ft=bash ai:
+
+ARCHIVE="debian"
+
+. /org/wanna-build/triggers/common
+
+exec >> /org/wanna-build/db/merge.$ARCHIVE.log 2>&1
+
+if [ -f /org/wanna-build/NO-TRIGGERS ]
+then
+    echo Trigger for $ARCHIVE skipped due to NO-TRIGGERS, aborting. >&2
+    exit 0
+fi
+
+echo "`date`: Running trigger for $ARCHIVE-buildd ..."
+
+main() {
+    set -eE
+    trap cleanup ERR TERM HUP INT QUIT
+
+    ensure_lock
+    ensure_workdir
+
+    # Fetch the most recent Packages and Sources files.
+    sync.sh $ARCHIVE nolock
+
+    # Handle unstable as a normal suite.
+    suite=unstable
+    SOURCES="${ARCHIVE_BASE}/archive/${suite}/{main,contrib}/source/Sources.gz"
+    SOURCES="${SOURCES} ${ARCHIVE_BASE}/buildd-${suite}/Sources.gz"
+    PACKAGES="${ARCHIVE_BASE}/archive/${suite}/{main,contrib}/binary-%ARCH%/Packages.gz"
+    PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/archive/${suite}/main/debian-installer/binary-%ARCH%/Packages.gz"
+    PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/buildd-${suite}/Packages.gz"
+    trigger_wb_update "$suite" "`get_architectures $suite`" "$SOURCES" "$PACKAGES"
+
+    # Handle experimental as an overlay suite.
+    suite=experimental
+    base_suite=unstable
+    SOURCES="${ARCHIVE_BASE}/archive/${suite}/{main,contrib}/source/Sources.gz"
+    SOURCES="${SOURCES} ${ARCHIVE_BASE}/buildd-${suite}/Sources.gz"
+    PACKAGES="${ARCHIVE_BASE}/archive/${suite}/{main,contrib}/binary-%ARCH%/Packages.gz"
+    PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/buildd-${suite}/Packages.gz"
+
+    SOURCES_BASE="${ARCHIVE_MAIN}/archive/${base_suite}/{main,contrib}/source/Sources.gz"
+    PACKAGES_BASE="${ARCHIVE_MAIN}/archive/${base_suite}/{main,contrib}/binary-%ARCH%/Packages.gz"
+    PACKAGES_BASE="${PACKAGES_BASE} ${ARCHIVE_MAIN}/archive/${base_suite}/main/debian-installer/binary-%ARCH%/Packages.gz"
+    trigger_wb_update_for_overlay "$suite" "`get_architectures $suite`" "$SOURCES_BASE" "$PACKAGES_BASE" "$SOURCES" "$PACKAGES"
+
+    cleanup
+}
+
+main &
+exit 0
+
