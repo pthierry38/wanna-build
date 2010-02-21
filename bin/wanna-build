@@ -672,7 +672,7 @@ sub add_one_attempted {
 		return;
 	}
 
-	if ($pkg->{'state'} ne "Building" ) {
+	if (($pkg->{'state'} ne "Building") && ($pkg->{'state'} ne "Build-Attempted")) {
 		print "$name: not taken for building (state is $pkg->{'state'}). ",
 			  "Skipping.\n";
 		return;
@@ -704,7 +704,7 @@ sub add_one_built {
 		return;
 	}
 
-	if ($pkg->{'state'} ne "Building" ) {
+        if (($pkg->{'state'} ne "Building") && ($pkg->{'state'} ne "Build-Attempted")) {
 		print "$name: not taken for building (state is $pkg->{'state'}). ",
 			  "Skipping.\n";
 		return;
