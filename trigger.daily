@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 #
 # Updates wanna-build databases after the archive maintenance
 # finishes
@@ -10,7 +10,7 @@
 LANG=C
 PATH="/bin:/usr/bin:/org/wanna-build/bin"
 #testing must be before unstable so late upld don't build for testing needlessly
-DISTS="oldstable-security stable-security testing-security oldstable stable testing unstable"
+DISTS="oldstable-security stable-security testing-security oldstable stable testing unstable experimental"
 # While oldstable is purged
 #DISTS="stable-security testing-security stable testing unstable"
 STATS_DISTS="unstable testing stable"
@@ -39,7 +39,7 @@ cleanup() {
 trap cleanup 0
 
 echo Dumping wanna-build databases...
-sudo -u postgres /usr/bin/pg_dumpall --cluster 8.4/wanna-build | bzip2 > /org/wanna-build/dumps/dump_pre_$(date +%Y.%m.%d-%H:%M:%S).bz2
+save-database pre
 
 echo Updating wanna-build databases...
 umask 027
@@ -84,13 +84,13 @@ for d in $DISTS; do
     for s in $SECTIONS; do
 	if echo $d | grep -qv -- -security; then
 	    curl_index "$MASTER/$dist/$s/source/Sources.gz" "Sources-$d.$s.gz" "Sources.$d"
-	    if [ "$d" != "unstable" ]; then
+	    if [ "$d" != "unstable" -a "$d" != "experimental" ]; then
 		curl_index "$MASTER/$dist-proposed-updates/$s/source/Sources.gz" "Sources-$d-proposed-updates.$s.gz" "Sources.$d-p-u"
 	    fi
 
 	    for a in $ARCHS; do
 		curl_index "$MASTER/$dist/$s/binary-$a/Packages.gz" "Packages-$d.$s.$a.gz" "Packages.$d.$a"
-		if [ "$d" != "unstable" ]; then
+		if [ "$d" != "unstable" -a "$d" != "experimental" ]; then
 		    curl_index "$MASTER/$dist-proposed-updates/$s/binary-$a/Packages.gz" "Packages-$d-proposed-updates.$s.$a.gz" "Packages.$d-p-u.$a"
 		    if [ "$d" != "oldstable" -o "$s" = "main" ]; then
 			curl_index "$MASTER/$dist-proposed-updates/$s/debian-installer/binary-$a/Packages.gz" "Packages-$d-proposed-updates-debian-installer.$s.$a.gz" "Packages.$d-p-u.$a"
@@ -145,7 +145,7 @@ for d in $DISTS; do
     for a in $ARCHS; do
 	quinn-diff -A $a -a /srv/buildd.debian.org/web/quinn-diff/$dist/Packages-arch-specific -s Sources.$d -p Packages.$d.$a >> quinn-$d.$a 2>/dev/null
 	if echo $d | grep -qv -- -security; then
-	    if [ "$d" != "unstable" ]; then
+	    if [ "$d" != "unstable" -a "$d" != "experimental" ]; then
 		cat "Packages.$d.$a" >> "Packages.$d-p-u.$a"
 		quinn-diff -A $a -a /srv/buildd.debian.org/web/quinn-diff/$dist/Packages-arch-specific -s Sources.$d-p-u -p Packages.$d-p-u.$a >> quinn-$d-p-u.$a 2>/dev/null
 		sed -e 's/\[[-a-z]*:[-a-z]*\]$//' quinn-$d.$a > quinn-$d.$a.grep
@@ -217,28 +217,6 @@ done
 
 echo "merge ended: `date`"
 
-sudo -u postgres /usr/bin/pg_dumpall --cluster 8.4/wanna-build | bzip2 > /org/wanna-build/dumps/dump_post_$(date +%Y.%m.%d-%H:%M:%S).bz2
+save-database post
+do_stats
 
-(cd /org/wanna-build/dumps && /org/wanna-build/expire_dumps -d . -f "dump_*")
-
-#
-# Only update stats if it's been at least 20h since the last time.
-#
-interval=72000
-last=`stat --format="%Y" /srv/wanna-build/etc/graph-data`
-now=`date +%s`
-if (( $last + $interval < $now )); then
-        echo "stats start: `date`"
-	/srv/wanna-build/bin/wb-graph >> /srv/wanna-build/etc/graph-data
-	/srv/wanna-build/bin/wb-graph -p >> /srv/wanna-build/etc/graph2-data
-	rm -f "$LOCKFILE"
-	trap - 0
-	/srv/buildd.debian.org/bin/makegraph
-	for a in $ALL_ARCHES; do
-	    echo Last Updated: `date -u` > /srv/buildd.debian.org/web/stats/$a.txt
-	    for d in $STATS_DISTS; do
-		/srv/wanna-build/bin/wanna-build-statistics --database=$a/build-db --dist=$d >> /srv/buildd.debian.org/web/stats/$a.txt
-	    done
-	done
-        echo "stats ended: `date`"
-fi

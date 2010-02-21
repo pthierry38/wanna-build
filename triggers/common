@@ -107,7 +107,7 @@ trigger_wb_update() {
     echo "`date`: Processing ${ARCHIVE}/${SUITE} ..."
 
     new-keep-latest source $(eval echo ${SOURCES}) > Sources.${SUITE}
-    parallel -l 5 -i trigger_wb_update_arch_loop "${SUITE}" "{}" "${SOURCES}" "${PACKAGES}" "${WB_SUITE}" -- ${ARCHS}
+    parallel -l 5 -i trigger_wb_update_arch_loop "${SUITE}" "{}" "${SOURCES}" "${PACKAGES}" "${WB_SUITE}" -- ${ARCHS} || true
     #for ARCH in ${ARCHS}; do
     #trigger_wb_update_arch_loop "${SUITE}" "${ARCH}" "${SOURCES}" "${PACKAGES}" "${WB_SUITE}"
     #done
@@ -135,7 +135,7 @@ trigger_wb_update_for_overlay() {
     new-keep-latest source $(eval echo ${SOURCES}) > Sources.${SUITE}
     new-keep-latest source $(eval echo Sources.${SUITE} ${SOURCES_BASE}) > Sources.${SUITE}-all
 
-    parallel -l 5 -i trigger_wb_update_for_overlay_arch_loop "${SUITE}" "{}" "${SOURCES_BASE}" "${PACKAGES_BASE}" "${SOURCES}" "${PACKAGES}" "${WB_SUITE}" "${WHITELIST_FILE}" -- ${ARCHS}
+    parallel -l 5 -i trigger_wb_update_for_overlay_arch_loop "${SUITE}" "{}" "${SOURCES_BASE}" "${PACKAGES_BASE}" "${SOURCES}" "${PACKAGES}" "${WB_SUITE}" "${WHITELIST_FILE}" -- ${ARCHS} || true
     #for ARCH in ${ARCHS}; do
     #trigger_wb_update_for_overlay_arch_loop "${SUITE}" "${ARCH}" "${SOURCES_BASE}" "${PACKAGES_BASE}" "${SOURCES}" "${PACKAGES}" "${WB_SUITE}" "${WHITELIST_FILE}"
     #done
@@ -166,7 +166,7 @@ trigger_wb_update_with_secondary() {
 
     new-keep-latest source $(eval echo ${SOURCES}) > Sources.${SUITE}
 
-    parallel -l 5 -i trigger_wb_update_arch_loop_with_secondary "${SUITE}" "{}" "${PACKAGES_BASE}" "${SOURCES}" "${PACKAGES}" "${WB_SUITE}" "${WHITELIST_FILE}" -- ${ARCHS}
+    parallel -l 5 -i trigger_wb_update_arch_loop_with_secondary "${SUITE}" "{}" "${PACKAGES_BASE}" "${SOURCES}" "${PACKAGES}" "${WB_SUITE}" "${WHITELIST_FILE}" -- ${ARCHS} || true
     #for ARCH in ${ARCHS}; do
     #trigger_wb_update_arch_loop_with_secondary "${SUITE}" "${ARCH}" "${PACKAGES_BASE}" "${SOURCES}" "${PACKAGES}" "${WB_SUITE}" "${WHITELIST_FILE}"
     #done

@@ -48,9 +48,8 @@ while (<>) {
 		$data{$key} = $_;
 	}
 }
-
 foreach (values %data) {
-	s/\n*$/\n\n/;# always one empty line to separate stanzas
+	chomp; $_ .= "\n\n";
 	print;
 }
 
