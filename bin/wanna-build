@@ -1909,6 +1909,18 @@ sub info_packages {
 	my @firstkeys = qw(package version builder state section priority
 					   installed_version previous_state state_change);
 	my @dists = $info_all_dists ? keys %conf::distributions : ($distribution);
+	my %beautykeys = ( 'package' => 'Package', 'version' => 'Version', 'builder' => 'Builder',
+		'state' => 'State', 'section' => 'Section', 'priority' => 'Priority',
+		'installed_version' => 'Installed-Version', 'previous_state' => 'Previous-State',
+		'state_change' => 'State-Change',
+		'bd_problem' => 'BD-Problem', 
+		'binary_nmu_changelog' => 'Binary-NMU-Changelog', 'binary_nmu_version' => 'Binary-NMU-Version',
+		'buildpri' => 'BuildPri', 'depends' => 'Depends', 'failed' => 'Failed',
+		'failed_category' => 'Failed-Category', 'notes' => 'Notes',
+		'distribution' => 'Distribution', 'old_failed' => 'Old-Failed',
+		'permbuildpri' => 'PermBuildPri', 'rel' => 'Rel',
+		'calprio' => 'CalculatedPri', 'waiting_days' => 'Waiting-Days'
+			 );
 	
 	foreach $name (@_) {
 		$name =~ s/_.*$//; # strip version
@@ -1930,15 +1942,7 @@ sub info_packages {
 				$val = "\n$val" if isin( $key, qw(Failed Old-Failed));
 				$val =~ s/\n/\n    /g;
 				my $print_key = $key;
-				$print_key = 'Package' if ($key eq 'package');
-				$print_key = 'Version' if ($key eq 'version');
-				$print_key = 'Builder' if ($key eq 'builder');
-				$print_key = 'State' if ($key eq 'state');
-				$print_key = 'Section' if ($key eq 'section');
-				$print_key = 'Priority' if ($key eq 'priority');
-				$print_key = 'Installed-Version' if ($key eq 'installed_version');
-				$print_key = 'Previous-State' if ($key eq 'previous_state');
-				$print_key = 'State-Change' if ($key eq 'state_change');
+				$print_key = $beautykeys{$print_key} if $beautykeys{$print_key};
 				printf "  %-20s: %s\n", $print_key, $val;
 			}
 			foreach $key (sort keys %$pkg) {
@@ -1949,20 +1953,7 @@ sub info_packages {
 				$val = "\n$val" if isin( $key, qw(Failed Old-Failed));
 				$val =~ s/\n/\n    /g;
 				my $print_key = $key;
-				$print_key = 'BD-Problem' if ($key eq 'bd_problem');
-				$print_key = 'Binary-NMU-Changelog' if ($key eq 'binary_nmu_changelog');
-				$print_key = 'Binary-NMU-Version' if ($key eq 'binary_nmu_version');
-				$print_key = 'BuildPri' if ($key eq 'buildpri');
-				$print_key = 'Depends' if ($key eq 'depends');
-				$print_key = 'Failed' if ($key eq 'failed');
-				$print_key = 'Failed-Category' if ($key eq 'failed_category');
-				$print_key = 'Notes' if ($key eq 'notes');
-				$print_key = 'Distribution' if ($key eq 'distribution');
-				$print_key = 'Old-Failed' if ($key eq 'old_failed');
-				$print_key = 'PermBuildPri' if ($key eq 'permbuildpri');
-				$print_key = 'Rel' if ($key eq 'rel');
-				$print_key = 'CalculatedPri' if ($key eq 'calprio');
-				$print_key = 'Waiting-Days' if ($key eq 'waiting_days');
+				$print_key = $beautykeys{$print_key} if $beautykeys{$print_key};
 				printf "  %-20s: %s\n", $print_key, $val;
 			}
 		}
