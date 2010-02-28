@@ -41,6 +41,9 @@ use File::Copy;
 use DBI;
 use lib '/org/wanna-build/bin';
 use WannaBuild;
+use YAML::Tiny;
+use Data::Dumper;
+use Hash::Merge qw ( merge );
 
 our ($verbose, $mail_logs, $list_order, $list_state,
     $curr_date, $op_mode, $user, $real_user, $distribution,
@@ -53,6 +56,7 @@ our ($verbose, $mail_logs, $list_order, $list_state,
 
 # global vars
 $ENV{'PATH'} = "/bin:/usr/bin:/usr/local/bin:/org/wanna-build/bin/";
+$ENV{'LC_ALL'} = 'C';
 $verbose = 0;
 $mail_logs = "";
 @curr_time = gmtime;
@@ -292,6 +296,22 @@ if (!$fail_reason) {
 		die "No changelog entry given\n" if !$line;
 		$fail_reason = $line;
 	}
+}
+
+my $yamlmap = ();
+my $yamldir = "/org/wanna-build/etc/yaml";
+my @files = ('wanna-build.yaml');
+if ($user =~ /(buildd.*)-/) { push (@files, "$1.yaml") };
+push ( @files, "$user.yaml");
+foreach my $file (@files) {
+	if ($verbose >= 2) { print "Trying to read $file ...\n"; }
+	next unless -f $yamldir."/".$file;
+	if ($verbose >= 2) { print "Read $file ...\n"; }
+	my $m = YAML::Tiny->read( $yamldir."/".$file )->[0];
+	$yamlmap = merge($m, $yamlmap);
+}
+if (not $yamlmap) {
+	die "FATAL: no configuration found\n";
 }
 
 my $dbh;
@@ -1812,23 +1832,11 @@ sub sort_list_func {
 }
 
 sub calculate_prio {
-######################
-# priority: required = 50, important = 40, standard = 30, optional = 5
-# section: libs = 4, devel = 2
-# component: contrib = -10, non-free = -20
-# never built = -20
-# max(floor(waitingdays),6)
-
-	my $priomap;
-	$priomap->{'priority'} = { 'required' => 50, 'important' => 40, 'standard' => 30, 'optional' => 5 };
-	$priomap->{'section'} = { 'libs' => 4, 'devel' => 2 };
-	$priomap->{'component'} = { 'contrib' => -10, 'non-free' => -20 };
-	$priomap->{'notes'} = { 'uncompiled' => 20, 'out-of-date' => 40, 'partial' => 40 };
-	$priomap->{'waitingdays'} = { 'min' => 0, 'max' => 6, scale => 2 };
+	my $priomap = $yamlmap->{priority};
 	my $pkg = shift;
 	$pkg->{'calprio'} = 0;
-	foreach my $k (keys %$priomap) {
-		$pkg->{'calprio'} += $priomap->{$k}{$pkg->{$k}} if $pkg->{$k} and $priomap->{$k}{$pkg->{$k}};
+	foreach my $k (keys %{$priomap->{keys}}) {
+		$pkg->{'calprio'} += $priomap->{keys}->{$k}{$pkg->{$k}} if $pkg->{$k} and $priomap->{keys}->{$k}{$pkg->{$k}};
 	}
 
 	my $days = $pkg->{'state_days'};

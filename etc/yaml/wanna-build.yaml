@@ -1,0 +1,22 @@
+---
+priority:
+    keys:
+        priority: 
+            required: 50
+            important: 40
+            standard: 30
+            optional: 5
+        section:
+            libs: 4
+            devel: 2
+        component:
+            contrib: -10
+            non-free: -20
+        notes:
+            uncompiled: 20
+            out-of-date: 40
+            partial: 40
+    waitingdays:
+        min: 0
+        max: 6
+        scale: 2
