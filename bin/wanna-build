@@ -2111,6 +2111,7 @@ sub change_state {
 	return if defined($$state) and $$state eq $newstate;
         $pkg->{'previous_state'} = $$state if defined($$state);
 	$pkg->{'state_change'} = $curr_date;
+	$pkg->{'do_state_change'} = 1;
 
 	if (defined($$state) and $$state eq 'Failed') {
 		$pkg->{'old_failed'} =
@@ -2473,7 +2474,7 @@ sub update_source_info {
 			'priority = ?, ' .
 			'installed_version = ?, ' .
 			'previous_state = ?, ' .
-			'state_change = ?, ' .
+			(($pkg->{'do_state_change'}) ? "state_change = now()," : "").
 			'notes = ?, ' .
 			'builder = ?, ' .
 			'failed = ?, ' .
@@ -2494,7 +2495,6 @@ sub update_source_info {
 		$pkg->{'priority'},
 		$pkg->{'installed_version'},
 		$pkg->{'previous_state'},
-		$pkg->{'state_change'},
 		$pkg->{'notes'},
 		$pkg->{'builder'},
 		$pkg->{'failed'},
