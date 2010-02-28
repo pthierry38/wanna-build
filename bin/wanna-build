@@ -1887,6 +1887,8 @@ sub list_packages {
 		print "  Previous state was $pkg->{'previous_state'} until ",
 			  "$pkg->{'state_change'}\n"
 			if $verbose && $pkg->{'previous_state'};
+		print "  Previous state left $pkg->{'state_time'} ago\n"
+			if $verbose && $pkg->{'state_time'};
 		print "  No previous state recorded\n"
 			if $verbose && !$pkg->{'previous_state'};
 		print "  Previous failing reasons:\n    ",
@@ -2414,7 +2416,10 @@ sub get_source_info {
 sub get_all_source_info {
 	my %options = @_;
 
-	my $q = 'SELECT *, extract(days from date_trunc(\'days\', now() - state_change::timestamp)) as state_days FROM ' . table_name()
+	my $q = 'SELECT *, '.
+		'extract(days from date_trunc(\'days\', now() - state_change::timestamp)) as state_days, '.
+		'date_trunc(\'seconds\', now() - state_change::timestamp) as state_time'.
+		' FROM ' . table_name()
 		. ' WHERE distribution = ? ';
 	my @args = ($distribution);
 	if ($options{state} && uc($options{state}) ne "ALL") {
