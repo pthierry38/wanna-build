@@ -1895,8 +1895,8 @@ sub list_packages {
 		print "  Previous state was $pkg->{'previous_state'} until ",
 			  "$pkg->{'state_change'}\n"
 			if $verbose && $pkg->{'previous_state'};
-		print "  Previous state left $pkg->{'state_time'} ago\n"
-			if $verbose && $pkg->{'state_time'};
+		print "  Previous state $pkg->{'previous_state'} left $pkg->{'state_time'} ago\n"
+			if $verbose && $pkg->{'previous_state'};
 		print "  No previous state recorded\n"
 			if $verbose && !$pkg->{'previous_state'};
 		print "  Previous failing reasons:\n    ",
