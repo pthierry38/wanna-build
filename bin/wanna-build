@@ -156,7 +156,7 @@ my %options =
 	 { short => "O", arg => \$list_order,
 	   code => sub {
 		   die "Bad ordering character\n"
-			   if $list_order !~ /^[PSpsncb]+$/;
+			   if $list_order !~ /^[PSpsncbCW]+$/;
 	   } },
 	 message        => { short => "m", arg => \$fail_reason },
 	 # database is deprecated, use arch instead.
@@ -1744,6 +1744,16 @@ sub sort_list_func {
 
 	foreach $letter (split( "", $list_order )) {
 	  SWITCH: foreach ($letter) {
+		  /C/ && do {
+			$x = $b->{'calprio'} <=> $a->{'calprio'};
+			return $x if $x != 0;
+			last SWITCH;
+		  };
+		  /W/ && do {
+			$x = $b->{'waiting_days'} <=> $a->{'waiting_days'};
+			return $x if $x != 0;
+			last SWITCH;
+		  };
 		  /P/ && do {
 			$x = $b->{'buildpri'} <=> $a->{'buildpri'};
 			return $x if $x != 0;
@@ -1844,7 +1854,7 @@ sub list_packages {
  	my $db = get_all_source_info(state => $state, user => $user, category => $category, list_min_age => $list_min_age);
 	foreach $name (keys %$db) {
 		next if $name =~ /^_/;
-		push @list, $db->{$name};
+		push @list, calculate_prio($db->{$name});
 	}
 
 	foreach $pkg (sort sort_list_func @list) {
@@ -1860,6 +1870,8 @@ sub list_packages {
 			if defined $pkg->{'buildpri'};
 		print ":binNMU{" . $pkg->{'binary_nmu_version'} . "}"
 			if defined $pkg->{'binary_nmu_version'};
+		print ":calprio{". $pkg->{'calprio'}."}";
+		print ":wd{". $pkg->{'waiting_days'}."}";
 		print "]\n";
 		print "  Reasons for failing:\n",
 			  "    [Category: ",
@@ -2400,7 +2412,7 @@ sub get_readonly_source_info {
 
 sub get_source_info {
 	my $name = shift;
-	my $pkg = $dbh->selectrow_hashref('SELECT * FROM ' . 
+	my $pkg = $dbh->selectrow_hashref('SELECT *, extract(days from date_trunc(\'days\', now() - state_change::timestamp)) as waiting_days FROM ' . 
 		table_name() . ' WHERE package = ? AND distribution = ?' .
 		' FOR UPDATE',
 		undef, $name, $distribution);
@@ -2410,7 +2422,7 @@ sub get_source_info {
 sub get_all_source_info {
 	my %options = @_;
 
-	my $q = 'SELECT * FROM ' . table_name()
+	my $q = 'SELECT *, extract(days from date_trunc(\'days\', now() - state_change::timestamp)) as waiting_days FROM ' . table_name()
 		. ' WHERE distribution = ? ';
 	my @args = ($distribution);
 	if ($options{state} && uc($options{state}) ne "ALL") {
