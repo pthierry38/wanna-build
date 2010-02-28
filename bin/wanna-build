@@ -1801,6 +1801,39 @@ sub sort_list_func {
 	return 0;
 }
 
+sub calculate_prio {
+######################
+# priority: required = 50, important = 40, standard = 30, optional = 5
+# section: libs = 4, devel = 2
+# component: contrib = -10, non-free = -20
+# never built = -20
+# max(floor(waitingdays),6)
+
+	my $priomap;
+	$priomap->{'priority'} = { 'required' => 50, 'important' => 40, 'standard' => 30, 'optional' => 5 };
+	$priomap->{'section'} = { 'libs' => 4, 'devel' => 2 };
+	$priomap->{'component'} = { 'contrib' => -10, 'non-free' => -20 };
+	$priomap->{'notes'} = { 'uncompiled' => 20, 'out-of-date' => 40, 'partial' => 40 };
+	$priomap->{'waitingdays'} = { 'min' => 0, 'max' => 6, scale => 2 };
+	my $pkg = shift;
+	$pkg->{'calprio'} = 0;
+	foreach my $k (keys %$priomap) {
+		$pkg->{'calprio'} += $priomap->{$k}{$pkg->{$k}} if $pkg->{$k} and $priomap->{$k}{$pkg->{$k}};
+	}
+
+	my $wd = $pkg->{'waiting_days'};
+	$wd = $priomap->{'waitingdays'}->{'min'} if $priomap->{'waitingdays'}->{'min'} and $wd < $priomap->{'waitingdays'}->{'min'};
+	$wd = $priomap->{'waitingdays'}->{'max'} if $priomap->{'waitingdays'}->{'max'} and $wd > $priomap->{'waitingdays'}->{'max'};
+	my $scale = $priomap->{'waitingdays'}->{'scale'} || 1;
+	$pkg->{'calprio'} += $wd * $scale;
+
+	$pkg->{'calprio'} += $pkg->{'permbuildpri'} if  $pkg->{'permbuildpri'};
+	$pkg->{'calprio'} += $pkg->{'buildpri'} if  $pkg->{'buildpri'};
+
+	return $pkg;
+}
+
+
 sub list_packages {
 	my $state = shift;
 	my( $name, $pkg, @list );
@@ -1875,6 +1908,7 @@ sub info_packages {
 				print "$pname: not registered\n";
 				next;
 			}
+			$pkg = calculate_prio($pkg);
 
 			print "$pname:\n";
 			foreach $key (@firstkeys) {
@@ -1915,6 +1949,8 @@ sub info_packages {
 				$print_key = 'Old-Failed' if ($key eq 'old_failed');
 				$print_key = 'PermBuildPri' if ($key eq 'permbuildpri');
 				$print_key = 'Rel' if ($key eq 'rel');
+				$print_key = 'CalculatedPri' if ($key eq 'calprio');
+				$print_key = 'Waiting-Days' if ($key eq 'waiting_days');
 				printf "  %-20s: %s\n", $print_key, $val;
 			}
 		}
@@ -2355,7 +2391,8 @@ sub transactions_table_name {
 
 sub get_readonly_source_info {
 	my $name = shift;
-	my $pkg = $dbh->selectrow_hashref('SELECT * FROM ' . 
+	# SELECT FLOOR(EXTRACT('epoch' FROM age(localtimestamp, '2010-01-22  23:45')) / 86400) -- change to that?
+	my $pkg = $dbh->selectrow_hashref('SELECT *, extract(days from date_trunc(\'days\', now() - state_change::timestamp)) as waiting_days FROM ' . 
 		table_name() . ' WHERE package = ? AND distribution = ?',
 		undef, $name, $distribution);
 	return $pkg;
