@@ -1750,7 +1750,7 @@ sub sort_list_func {
 			last SWITCH;
 		  };
 		  /W/ && do {
-			$x = $b->{'waiting_days'} <=> $a->{'waiting_days'};
+			$x = $b->{'state_days'} <=> $a->{'state_days'};
 			return $x if $x != 0;
 			last SWITCH;
 		  };
@@ -1831,11 +1831,11 @@ sub calculate_prio {
 		$pkg->{'calprio'} += $priomap->{$k}{$pkg->{$k}} if $pkg->{$k} and $priomap->{$k}{$pkg->{$k}};
 	}
 
-	my $wd = $pkg->{'waiting_days'};
-	$wd = $priomap->{'waitingdays'}->{'min'} if $priomap->{'waitingdays'}->{'min'} and $wd < $priomap->{'waitingdays'}->{'min'};
-	$wd = $priomap->{'waitingdays'}->{'max'} if $priomap->{'waitingdays'}->{'max'} and $wd > $priomap->{'waitingdays'}->{'max'};
+	my $days = $pkg->{'state_days'};
+	$days = $priomap->{'waitingdays'}->{'min'} if $priomap->{'waitingdays'}->{'min'} and $days < $priomap->{'waitingdays'}->{'min'};
+	$days = $priomap->{'waitingdays'}->{'max'} if $priomap->{'waitingdays'}->{'max'} and $days > $priomap->{'waitingdays'}->{'max'};
 	my $scale = $priomap->{'waitingdays'}->{'scale'} || 1;
-	$pkg->{'calprio'} += $wd * $scale;
+	$pkg->{'calprio'} += $days * $scale;
 
 	$pkg->{'calprio'} += $pkg->{'permbuildpri'} if  $pkg->{'permbuildpri'};
 	$pkg->{'calprio'} += $pkg->{'buildpri'} if  $pkg->{'buildpri'};
@@ -1871,7 +1871,7 @@ sub list_packages {
 		print ":binNMU{" . $pkg->{'binary_nmu_version'} . "}"
 			if defined $pkg->{'binary_nmu_version'};
 		print ":calprio{". $pkg->{'calprio'}."}";
-		print ":wd{". $pkg->{'waiting_days'}."}";
+		print ":days{". $pkg->{'state_days'}."}";
 		print "]\n";
 		print "  Reasons for failing:\n",
 			  "    [Category: ",
@@ -1919,7 +1919,7 @@ sub info_packages {
 		'failed_category' => 'Failed-Category', 'notes' => 'Notes',
 		'distribution' => 'Distribution', 'old_failed' => 'Old-Failed',
 		'permbuildpri' => 'PermBuildPri', 'rel' => 'Rel',
-		'calprio' => 'CalculatedPri', 'waiting_days' => 'Waiting-Days'
+		'calprio' => 'CalculatedPri', 'state_days' => 'State-Days'
 			 );
 	
 	foreach $name (@_) {
@@ -2396,7 +2396,7 @@ sub transactions_table_name {
 sub get_readonly_source_info {
 	my $name = shift;
 	# SELECT FLOOR(EXTRACT('epoch' FROM age(localtimestamp, '2010-01-22  23:45')) / 86400) -- change to that?
-	my $pkg = $dbh->selectrow_hashref('SELECT *, extract(days from date_trunc(\'days\', now() - state_change::timestamp)) as waiting_days FROM ' . 
+	my $pkg = $dbh->selectrow_hashref('SELECT *, extract(days from date_trunc(\'days\', now() - state_change::timestamp)) as state_days FROM ' . 
 		table_name() . ' WHERE package = ? AND distribution = ?',
 		undef, $name, $distribution);
 	return $pkg;
@@ -2404,7 +2404,7 @@ sub get_readonly_source_info {
 
 sub get_source_info {
 	my $name = shift;
-	my $pkg = $dbh->selectrow_hashref('SELECT *, extract(days from date_trunc(\'days\', now() - state_change::timestamp)) as waiting_days FROM ' . 
+	my $pkg = $dbh->selectrow_hashref('SELECT *, extract(days from date_trunc(\'days\', now() - state_change::timestamp)) as state_days FROM ' . 
 		table_name() . ' WHERE package = ? AND distribution = ?' .
 		' FOR UPDATE',
 		undef, $name, $distribution);
@@ -2414,7 +2414,7 @@ sub get_source_info {
 sub get_all_source_info {
 	my %options = @_;
 
-	my $q = 'SELECT *, extract(days from date_trunc(\'days\', now() - state_change::timestamp)) as waiting_days FROM ' . table_name()
+	my $q = 'SELECT *, extract(days from date_trunc(\'days\', now() - state_change::timestamp)) as state_days FROM ' . table_name()
 		. ' WHERE distribution = ? ';
 	my @args = ($distribution);
 	if ($options{state} && uc($options{state}) ne "ALL") {
