@@ -181,17 +181,25 @@ sub parse_date {
 	my $text = shift;
 
 	return 0 if !$text;
-	die "Cannot parse date: $text\n"
-		if $text !~ /^(\d{4}) (\w{3}) (\d+) (\d{2}):(\d{2}):(\d{2})$/;
-	my ($year, $mon, $day, $hour, $min, $sec) = ($1, $2, $3, $4, $5, $6);
-	$mon =~ y/A-Z/a-z/;
-	die "Invalid month name $mon" if !exists $monname{$mon};
-	$mon = $monname{$mon};
-	return timegm($sec, $min, $hour, $day, $mon, $year);
+
+	if ($text =~ /^(\d{4}) (\w{3}) (\d+) (\d{2}):(\d{2}):(\d{2})$/) {
+		my ($year, $mon, $day, $hour, $min, $sec) = ($1, $2, $3, $4, $5, $6);
+		$mon =~ y/A-Z/a-z/;
+		die "Invalid month name $mon" if !exists $monname{$mon};
+		$mon = $monname{$mon};
+		return timegm($sec, $min, $hour, $day, $mon, $year);
+	} elsif ($text =~ /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(?:\.\d+)?$/) {
+		my ($year, $mon, $day, $hour, $min, $sec) = ($1, $2-1, $3, $4, $5, $6);
+		return timegm($sec, $min, $hour, $day, $mon, $year);
+	} else {
+		die "Cannot parse date: $text\n";
+	}
 }
 
 sub isin {
 	my $val = shift;
+
+	return 0 if !$val;
 
 	return grep( $_ eq $val, @_ );
 }
