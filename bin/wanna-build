@@ -1857,6 +1857,36 @@ sub calculate_prio {
 }
 
 
+sub use_fmt {
+    my $r;
+
+    if (ref($_[0]) eq 'CODE') {
+        $r = &{$_[0]};
+    } else {
+        $r = $_[0];
+    }
+
+    shift;
+    my $t = shift;
+
+    $r ||= "";
+    return $r unless $t;
+
+    my $pkg = shift;
+    my $var = shift;
+    if (substr($t,0,1) eq '!') {
+        $t = substr($t,1);
+        return "" if $r;
+    } else {
+        return "" unless $r;
+    }
+    if ($t =~ /%/) {
+        return print_format($t, $pkg, $var);
+    }
+    return $t;
+}
+sub make_fmt { my $c = shift; my $pkg = shift; my $var = shift; return sub { use_fmt($c, $_[0], $pkg, $var); } };
+
 sub print_format {
     my $printfmt = shift;
     my $pkg = shift;
@@ -1878,15 +1908,19 @@ P previous state
 E in case of Dep-Wait the packages being waited on, in case of Needs-Build the number in the queue
 D in case of BD-Uninstallable the reason for the uninstallability
 
+%{Text}?  print text in case ? is not empty, don't print ?
+%{!Text}? print text in case ? is empty, don't print ?
+Text could contain further %. To start with !, use %!
+
 =cut
     return stringf($printfmt, (
-        'p' => $pkg->{'package'},
-        'a' => $arch,
-        's' => sub { return floor(str2time($pkg->{'state_change'})); },
-        'v' => $pkg->{'version'},
-        'S' => $pkg->{'state'},
-        'u' => $pkg->{'builder'} || "",
-        'X' => sub {
+        'p' => make_fmt( $pkg->{'package'}, $pkg, $var),
+        'a' => make_fmt( $arch, $pkg, $var),
+        's' => make_fmt( sub { return floor(str2time($pkg->{'state_change'})); }, $pkg, $var),
+        'v' => make_fmt( $pkg->{'version'}, $pkg, $var),
+        'S' => make_fmt( $pkg->{'state'}, $pkg, $var),
+        'u' => make_fmt( $pkg->{'builder'}, $pkg, $var),
+        'X' => make_fmt( sub {
             my $c = "$pkg->{'priority'}:$pkg->{'notes'}";
             $c .= ":PREV-FAILED" if $pkg->{'previous_state'} =~ /^Failed/;
             $c .= ":bp{" . $pkg->{'buildpri'} . "}" if defined $pkg->{'buildpri'};
@@ -1894,15 +1928,16 @@ D in case of BD-Uninstallable the reason for the uninstallability
             $c .= ":calprio{". $pkg->{'calprio'}."}";
             $c .= ":days{". $pkg->{'state_days'}."}";
             return $c;
-            },
-        'c' => $pkg->{'section'},
-        'P' => $pkg->{'previous_state'} || "unknwon",
-        'E' => sub { return $pkg->{'depends'} if $pkg->{'state'} eq "Dep-Wait";
+            }, $pkg, $var),
+        'c' => make_fmt( $pkg->{'section'}, $pkg, $var),
+        'P' => make_fmt( $pkg->{'previous_state'} || "unknwon", $pkg, $var),
+        'E' => make_fmt( sub { return $pkg->{'depends'} if $pkg->{'state'} eq "Dep-Wait";
             return $var->{scnt}{'Needs-Build'} + 1 if $pkg->{'state'} eq 'Needs-Build';
-            return ""; },
-        'D' => sub { return "" unless $pkg->{'bd_problem'};
+            return ""; }, $pkg, $var),
+        'D' => make_fmt( sub { return "" unless $pkg->{'bd_problem'};
             return $pkg->{'package'}."#".$arch."-bd-problem\n".
-            join("\\0a",split("\n",$pkg->{'bd_problem'}))."\\0a\n"; },
+            join("\\0a",split("\n",$pkg->{'bd_problem'}))."\\0a\n"; }, $pkg, $var),
+        'B' => make_fmt( sub { return $pkg->{'binary_nmu_version'} if defined $pkg->{'binary_nmu_version'}; }, $pkg, $var),
     ));
 }
 
