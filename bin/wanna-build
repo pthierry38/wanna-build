@@ -44,6 +44,8 @@ use WannaBuild;
 use YAML::Tiny;
 use Data::Dumper;
 use Hash::Merge qw ( merge );
+use String::Format;
+use Date::Parse;
 
 our ($verbose, $mail_logs, $list_order, $list_state,
     $curr_date, $op_mode, $user, $real_user, $distribution,
@@ -52,7 +54,9 @@ our ($verbose, $mail_logs, $list_order, $list_state,
     $info_all_dists, $arch,
     $category, %catval, %short_category,
     $short_date, $list_min_age, $dbbase, @curr_time,
-    $build_priority, %new_vers, $binNMUver, %merge_srcvers, %merge_binsrc);
+    $build_priority, %new_vers, $binNMUver, %merge_srcvers, %merge_binsrc,
+    $printformat
+    );
 
 # global vars
 $ENV{'PATH'} = "/bin:/usr/bin:/usr/local/bin:/org/wanna-build/bin/";
@@ -185,6 +189,7 @@ my %options =
 								 if $list_min_age == 0;
 							 $list_min_age *= -1;
 						 } },
+         "format"       => { arg => \$printformat },
 	 # special actions
 	 export         => { arg => \$export_to, mode => "export" },
 	 import         => { arg => \$import_from, mode => "import" },
@@ -1866,6 +1871,36 @@ sub list_packages {
 	}
 
 	foreach $pkg (sort sort_list_func @list) {
+                if ($printformat) {
+                    print stringf($printformat, (
+                        'p' => $pkg->{'package'},
+                        'a' => $arch,
+                        's' => sub { return floor(str2time($pkg->{'state_change'})); },
+                        'v' => $pkg->{'version'},
+                        'S' => $pkg->{'state'},
+                        'u' => $pkg->{'builder'} || "",
+                        'X' => sub {
+                            my $c = "$pkg->{'priority'}:$pkg->{'notes'}";
+                            $c .= ":PREV-FAILED" if $pkg->{'previous_state'} =~ /^Failed/;
+                            $c .= ":bp{" . $pkg->{'buildpri'} . "}" if defined $pkg->{'buildpri'};
+                            $c .= ":binNMU{" . $pkg->{'binary_nmu_version'} . "}" if defined $pkg->{'binary_nmu_version'};
+                            $c .= ":calprio{". $pkg->{'calprio'}."}";
+                            $c .= ":days{". $pkg->{'state_days'}."}";
+                            return $c;
+                            },
+                        'c' => $pkg->{'section'},
+                        'P' => $pkg->{'previous_state'} || "unknwon",
+                        'E' => sub { return $pkg->{'depends'} if $pkg->{'state'} eq "Dep-Wait";
+                            return $scnt{'Needs-Build'} + 1 if $pkg->{'state'} eq 'Needs-Build';
+                            return ""; },
+                        'D' => sub { return "" unless $pkg->{'bd_problem'};
+                            return $pkg->{'package'}."#".$arch."-bd-problem\n".
+                            join("\\0a",split("\n",$pkg->{'bd_problem'}))."\\0a\n"; },
+                    ))."\n";
+		    ++$cnt;
+		    $scnt{$pkg->{'state'}}++;
+                    next;
+                }
 		print "$pkg->{'section'}/$pkg->{'package'}_$pkg->{'version'}";
 		print ": $pkg->{'state'}"
 			if $state eq "all";
@@ -1905,12 +1940,12 @@ sub list_packages {
 		++$cnt;
 		$scnt{$pkg->{'state'}}++ if $state eq "all";
 	}
-	if ($state eq "all") {
+	if ($state eq "all" && !$printformat) {
 		foreach (sort keys %scnt) {
 			print "Total $scnt{$_} package(s) in state $_.\n";
 		}
 	}
-	print "Total $cnt package(s)\n";
+	print "Total $cnt package(s)\n" unless $printformat;
 	
 }
 
