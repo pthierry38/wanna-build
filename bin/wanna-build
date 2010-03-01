@@ -1927,13 +1927,14 @@ sub list_packages {
 		print "  Reasons for BD-Uninstallable:\n    ",
 		          join("\n    ",split("\n",$pkg->{'bd_problem'})), "\n"
 			if $pkg->{'state'} eq "BD-Uninstallable";
-		print "  Previous state was $pkg->{'previous_state'} until ",
-			  "$pkg->{'state_change'}\n"
-			if $verbose && $pkg->{'previous_state'};
-		print "  Previous state $pkg->{'previous_state'} left $pkg->{'state_time'} ago\n"
+		print "  Previous state was $pkg->{'previous_state'}\n"
 			if $verbose && $pkg->{'previous_state'};
 		print "  No previous state recorded\n"
 			if $verbose && !$pkg->{'previous_state'};
+		print "  State changed at $pkg->{'state_change'}\n"
+			if $verbose && $pkg->{'state_change'};
+		print "  Previous state $pkg->{'previous_state'} left $pkg->{'state_time'} ago\n"
+			if $verbose && $pkg->{'previous_state'};
 		print "  Previous failing reasons:\n    ",
 		      join("\n    ",split("\n",$pkg->{'old_failed'})), "\n"
 			if $verbose && $pkg->{'old_failed'};
