@@ -9,15 +9,9 @@
 MAILTO=cron-errors@buildd.debian.org
 43 * * * *       /org/buildd.debian.org/bin/wb-export
 
-MAILTO=adeodato@buildd.debian.org
-# TODO: locking
-#30 3,9,15,21 * * *     /home/adeodato/bin/wannab-import -q ftp
-#7/30 * * * *           /home/adeodato/bin/wannab-import -q status; /home/adeodato/code/tools/scripts/tt -q genweb
-MAILTO=cron-errors@buildd.debian.org
-
 3  0 * * *       make -sC /org/wanna-build/etc/cron check
 
 4  0 * * *       /org/buildd.debian.org/mbox/fix-up-permissions
 
-*/15 * * * *   TZ=UTC /org/buildd.debian.org/web/status/mkstats
+*/15 * * * *   TZ=UTC /org/buildd.debian.org/web/status/mkstats.aba
 
