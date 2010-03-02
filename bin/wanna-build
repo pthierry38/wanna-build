@@ -1907,9 +1907,11 @@ c section (e.g. libs or utils)
 P previous state
 E in case of Dep-Wait the packages being waited on, in case of Needs-Build the number in the queue
 D in case of BD-Uninstallable the reason for the uninstallability
+d distribution
+t time of state change
 
-%{Text}?  print text in case ? is not empty, don't print ?
-%{!Text}? print text in case ? is empty, don't print ?
+%{Text}?  print Text in case ? is not empty; ? is never printed
+%{!Text}? print Text in case ? is empty; ? is never printed
 Text could contain further %. To start with !, use %!
 
 =cut
@@ -1938,6 +1940,8 @@ Text could contain further %. To start with !, use %!
             return $pkg->{'package'}."#".$arch."-bd-problem\n".
             join("\\0a",split("\n",$pkg->{'bd_problem'}))."\\0a\n"; }, $pkg, $var),
         'B' => make_fmt( sub { return $pkg->{'binary_nmu_version'} if defined $pkg->{'binary_nmu_version'}; }, $pkg, $var),
+        'd' => make_fmt( $distribution, $pkg, $var),
+        't' => make_fmt( $pkg->{'state_change'}, $pkg, $var),
     ));
 }
 
