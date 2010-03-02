@@ -1839,6 +1839,9 @@ sub sort_list_func {
 sub calculate_prio {
 	my $priomap = $yamlmap->{priority};
 	my $pkg = shift;
+        my @s=split("/", $pkg->{'section'});
+        $pkg->{'component'} = $s[0] if $s[1];
+        $pkg->{'component'} ||= 'main';
 	$pkg->{'calprio'} = 0;
 	foreach my $k (keys %{$priomap->{keys}}) {
 		$pkg->{'calprio'} += $priomap->{keys}->{$k}{$pkg->{$k}} if $pkg->{$k} and $priomap->{keys}->{$k}{$pkg->{$k}};
