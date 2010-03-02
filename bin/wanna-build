@@ -1765,73 +1765,24 @@ BEGIN {
 }
 
 sub sort_list_func {
-	my( $letter, $x, $ax, $bx );
+    my $map_funcs = {
+        'C' => ['<=>', sub { return (-1) * $_[0]->{'calprio'}; }],
+        'W' => ['<=>', sub { return (-1) * $_[0]->{'state_days'}; }],
+        'P' => ['<=>', sub { return (-1) * $_[0]->{'buildpri'}; }],
+        'p' => ['<=>', sub { return $prioval{$_[0]->{'priority'}}; }],
+        's' => ['<=>', sub { return $sectval{$_[0]->{'section'}}; }],
+        'n' => ['cmp', sub { return $_[0]->{'package'}; }],
+        'b' => ['cmp', sub { return $_[0]->{'builder'}; }],
+        'c' => ['<=>', sub { return ($_[0]->{'notes'} =~ /^(out-of-date|partial)/) ? 0: ($_[0]->{'notes'} =~ /^uncompiled/) ? 2 : 1; }],
+        'f' => ['<=>', sub { return $catval{ $_[0]->{'failed_category'} ? $_[0]->{'failed_category'}: "none" }; }],
+        'S' => ['<=>', sub { return $prioval{$_[0]->{'priority'}} > $prioval{'standard'}; }],
+    };
 
-	foreach $letter (split( "", $list_order )) {
-	  SWITCH: foreach ($letter) {
-		  /C/ && do {
-			$x = $b->{'calprio'} <=> $a->{'calprio'};
-			return $x if $x != 0;
-			last SWITCH;
-		  };
-		  /W/ && do {
-			$x = $b->{'state_days'} <=> $a->{'state_days'};
-			return $x if $x != 0;
-			last SWITCH;
-		  };
-		  /P/ && do {
-			$x = $b->{'buildpri'} <=> $a->{'buildpri'};
-			return $x if $x != 0;
-			last SWITCH;
-		  };
-		  /p/ && do {
-			  $x = $prioval{$a->{'priority'}} <=> $prioval{$b->{'priority'}};
-			  return $x if $x != 0;
-			  last SWITCH;
-		  };
-		  /s/ && do {
-			  $x = $sectval{$a->{'section'}} <=> $sectval{$b->{'section'}};
-			  return $x if $x != 0;
-			  last SWITCH;
-		  };
-		  /n/ && do {
-			  $x = $a->{'package'} cmp $b->{'package'};
-			  return $x if $x != 0;
-			  last SWITCH;
-		  };
-		  /b/ && do {
-			  $x = $a->{'builder'} cmp $b->{'builder'};
-			  return $x if $x != 0;
-			  last SWITCH;
-		  };
-		  /c/ && do {
-			  $ax = ($a->{'notes'} =~ /^(out-of-date|partial)/) ? 0 :
-				    ($a->{'notes'} =~ /^uncompiled/) ? 2 : 1;
-			  $bx = ($b->{'notes'} =~ /^(out-of-date|partial)/) ? 0 :
-				    ($b->{'notes'} =~ /^uncompiled/) ? 2 : 1;
-			  $x = $ax <=> $bx;
-			  return $x if $x != 0;
-			  last SWITCH;
-		  };
-		  /f/ && do {
-			  my $ca = defined $a->{'failed_category'} ?
-				  $a->{'failed_category'} : "none";
-			  my $cb = defined $b->{'failed_category'} ?
-				  $b->{'failed_category'} : "none";
-			  $x = $catval{$ca} <=> $catval{$cb};
-			  return $x if $x != 0;
-			  last SWITCH;
-		  };
-		  /S/ && do {
-			  my $pa = $prioval{$a->{'priority'}} >
-				  $prioval{'standard'};
-			  my $pb = $prioval{$b->{'priority'}} >
-				  $prioval{'standard'};
-			  $x = $pa <=> $pb;
-			  return $x if $x != 0;
-			  last SWITCH;
-		  };
-	  }
+	foreach my $letter (split( //, $list_order )) {
+            my $r;
+            $r = &{$map_funcs->{$letter}[1]}($a) <=> &{$map_funcs->{$letter}[1]}($b) if $map_funcs->{$letter}[0] eq '<=>';
+            $r = &{$map_funcs->{$letter}[1]}($a) cmp &{$map_funcs->{$letter}[1]}($b) if $map_funcs->{$letter}[0] eq 'cmp';
+            return $r if $r != 0;
 	}
 	return 0;
 }
