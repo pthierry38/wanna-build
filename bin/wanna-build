@@ -239,8 +239,8 @@ while( @ARGV && $ARGV[0] =~ /^-/ ) {
 
 $op_mode = $category ? "set-failed" : "set-building"
 	if !$op_mode; # default operation
-$list_order = $list_state eq "failed" ? 'fPcpsn' : 'PScpsn'
-	if !$list_order and $list_state;
+$list_order = { "failed" =>  'fPcpsn', "needs-build" => "CWn" }->{$list_state} if !$list_order and $list_state;
+$list_order ||= 'PScpsn';
 $distribution ||= "unstable";
 die "Bad distribution '$distribution'\n"
 	if !isin($distribution, keys %conf::distributions);
