@@ -20,3 +20,8 @@ priority:
         min: 0
         max: 6
         scale: 2
+list-order:
+    default: PScpsn
+    failed: fPcpsn
+    needs-build: CWn
+    building: bn
