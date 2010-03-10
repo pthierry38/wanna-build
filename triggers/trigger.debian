@@ -43,7 +43,7 @@ main_sync() {
 
     for SUITE in $SUITES_FAST_AUTOBUILD
     do
-        SOURCES="${ARCHIVE_BASE}/archive/${SUITE}/{main,contrib}/source/Sources.gz"
+        SOURCES="${ARCHIVE_BASE}/archive/${SUITE}/{main,contrib,non-free}/source/Sources.gz"
         SOURCES="${SOURCES} ${ARCHIVE_BASE}/buildd-${SUITE}/Sources.gz"
         PACKAGES="${ARCHIVE_BASE}/archive/${SUITE}/{main,contrib}/binary-%ARCH%/Packages.gz"
         PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/archive/${SUITE}/{main,contrib}/debian-installer/binary-%ARCH%/Packages.gz"

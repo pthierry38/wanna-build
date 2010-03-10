@@ -10,10 +10,10 @@ PACKAGES_BASE="$3"
 SOURCES="$4"
 PACKAGES="$5"
 WB_SUITE="$6"
-WHITELIST_FILE="$7"
+EXT=""
 
 new-keep-latest ${ARCH} $(eval echo $(echo ${PACKAGES} | sed -e 's/%ARCH%/${ARCH}/g')) > Packages.${SUITE}.${ARCH}
 new-keep-latest ${ARCH} Packages.${SUITE}.${ARCH} $(eval echo $(echo ${PACKAGES_BASE} | sed -e 's/%ARCH%/${ARCH}/g')) > Packages.${SUITE}.${ARCH}-all
-do_quinn ${SUITE} ${ARCH} "${WHITELIST_FILE}"
+do_quinn ${SUITE} ${ARCH} "${EXT}"
 do_wb_merge_all ${SUITE} ${ARCH} ${WB_SUITE} secondary
 
