@@ -25,3 +25,5 @@ list-order:
     failed: fPcpsn
     needs-build: CWn
     building: bn
+restrict:
+    component: main contrib

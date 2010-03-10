@@ -1912,6 +1912,9 @@ sub list_packages {
 		push @list, calculate_prio($db->{$name});
 	}
 
+        # filter components
+        @list = grep { my $i = $_->{'component'}; grep { $i eq $_ } split /[, ]+/, $yamlmap->{"restrict"}{'component'} } @list;
+
 	foreach $pkg (sort sort_list_func @list) {
                 if ($printformat) {
                     print print_format($printformat, $pkg, {'cnt' => $cnt, 'scnt' => \%scnt})."\n";
