@@ -27,9 +27,9 @@ main() {
 
     # Handle unstable as a normal suite.
     suite=unstable
-    SOURCES="${ARCHIVE_BASE}/archive/${suite}/{main,contrib,non-free}/source/Sources.gz"
+    SOURCES="${ARCHIVE_BASE}/archive/${suite}/{main,contrib}/source/Sources.gz"
     SOURCES="${SOURCES} ${ARCHIVE_BASE}/buildd-${suite}/Sources.gz"
-    PACKAGES="${ARCHIVE_BASE}/archive/${suite}/{main,contrib,non-free}/binary-%ARCH%/Packages.gz"
+    PACKAGES="${ARCHIVE_BASE}/archive/${suite}/{main,contrib}/binary-%ARCH%/Packages.gz"
     PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/archive/${suite}/main/debian-installer/binary-%ARCH%/Packages.gz"
     PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/buildd-${suite}/Packages.gz"
     trigger_wb_update "$suite" "`get_architectures $suite`" "$SOURCES" "$PACKAGES"
@@ -37,12 +37,12 @@ main() {
     # Handle experimental as an overlay suite.
     suite=experimental
     base_suite=unstable
-    SOURCES="${ARCHIVE_BASE}/archive/${suite}/{main,contrib,non-free}/source/Sources.gz"
+    SOURCES="${ARCHIVE_BASE}/archive/${suite}/{main,contrib}/source/Sources.gz"
     SOURCES="${SOURCES} ${ARCHIVE_BASE}/buildd-${suite}/Sources.gz"
-    PACKAGES="${ARCHIVE_BASE}/archive/${suite}/{main,contrib,non-free}/binary-%ARCH%/Packages.gz"
+    PACKAGES="${ARCHIVE_BASE}/archive/${suite}/{main,contrib}/binary-%ARCH%/Packages.gz"
     PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/buildd-${suite}/Packages.gz"
 
-    PACKAGES_BASE="${ARCHIVE_MAIN}/archive/${base_suite}/{main,contrib,non-free}/binary-%ARCH%/Packages.gz"
+    PACKAGES_BASE="${ARCHIVE_MAIN}/archive/${base_suite}/{main,contrib}/binary-%ARCH%/Packages.gz"
     PACKAGES_BASE="${PACKAGES_BASE} ${ARCHIVE_MAIN}/archive/${base_suite}/main/debian-installer/binary-%ARCH%/Packages.gz"
     #PACKAGES_BASE="${PACKAGES_BASE} ${ARCHIVE_MAIN}/buildd-${BASE_SUITE}/Packages.gz"
     trigger_wb_update_with_secondary "$suite" "`get_architectures $suite`" "$PACKAGES_BASE" "$SOURCES" "$PACKAGES"
