@@ -2467,7 +2467,7 @@ sub transactions_table_name {
 sub get_readonly_source_info {
 	my $name = shift;
 	# SELECT FLOOR(EXTRACT('epoch' FROM age(localtimestamp, '2010-01-22  23:45')) / 86400) -- change to that?
-	my $pkg = $dbh->selectrow_hashref('SELECT *, extract(days from date_trunc(\'days\', now() - state_change::timestamp)) as state_days FROM ' . 
+	my $pkg = $dbh->selectrow_hashref('SELECT *, extract(days from date_trunc(\'days\', now() - state_change)) as state_days FROM ' . 
 		table_name() . ' WHERE package = ? AND distribution = ?',
 		undef, $name, $distribution);
 	return $pkg;
@@ -2475,7 +2475,7 @@ sub get_readonly_source_info {
 
 sub get_source_info {
 	my $name = shift;
-	my $pkg = $dbh->selectrow_hashref('SELECT *, extract(days from date_trunc(\'days\', now() - state_change::timestamp)) as state_days FROM ' . 
+	my $pkg = $dbh->selectrow_hashref('SELECT *, extract(days from date_trunc(\'days\', now() - state_change)) as state_days FROM ' . 
 		table_name() . ' WHERE package = ? AND distribution = ?' .
 		' FOR UPDATE',
 		undef, $name, $distribution);
@@ -2486,8 +2486,8 @@ sub get_all_source_info {
 	my %options = @_;
 
 	my $q = 'SELECT *, '.
-		'extract(days from date_trunc(\'days\', now() - state_change::timestamp)) as state_days, '.
-		'date_trunc(\'seconds\', now() - state_change::timestamp) as state_time'.
+		'extract(days from date_trunc(\'days\', now() - state_change)) as state_days, '.
+		'date_trunc(\'seconds\', now() - state_change) as state_time'.
 		' FROM ' . table_name()
 		. ' WHERE distribution = ? ';
 	my @args = ($distribution);
@@ -2510,12 +2510,12 @@ sub get_all_source_info {
 	}
 
 	if ($options{list_min_age} > 0) {
-		$q .= ' AND age(state_change::timestamp) > ? ';
+		$q .= ' AND age(state_change) > ? ';
 		push @args, $options{list_min_age} . " days";
 	}
 
 	if ($options{list_min_age} < 0) {
-		$q .= ' AND age(state_change::timestamp) < ? ';
+		$q .= ' AND age(state_change) < ? ';
 		push @args, -$options{list_min_age} . " days";
 	}
 
