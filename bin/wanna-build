@@ -1860,6 +1860,7 @@ X the string normally between [], e.g. optional:out-of-date:calprio{61}:days{25}
 c section (e.g. libs or utils)
 P previous state
 E in case of Dep-Wait the packages being waited on, in case of Needs-Build the number in the queue
+F in case of Failed the fail reason
 D in case of BD-Uninstallable the reason for the uninstallability
 d distribution
 t time of state change
@@ -1890,6 +1891,9 @@ Text could contain further %. To start with !, use %!
         'E' => make_fmt( sub { return $pkg->{'depends'} if $pkg->{'state'} eq "Dep-Wait";
             return $var->{scnt}{'Needs-Build'} + 1 if $pkg->{'state'} eq 'Needs-Build';
             return ""; }, $pkg, $var),
+	'F' => make_fmt( sub { return "" unless $pkg->{'failed'};
+            return $pkg->{'package'}."#".$arch."-failure\n ".
+	    join("\\0a",split("\n",$pkg->{'failed'}))."\\0a\n"; }, $pkg, $var),
         'D' => make_fmt( sub { return "" unless $pkg->{'bd_problem'};
             return $pkg->{'package'}."#".$arch."-bd-problem\n".
             join("\\0a",split("\n",$pkg->{'bd_problem'}))."\\0a\n"; }, $pkg, $var),
