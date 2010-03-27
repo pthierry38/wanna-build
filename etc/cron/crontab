@@ -7,11 +7,15 @@
 # Stats update.
 #
 MAILTO=cron-errors@buildd.debian.org
-43 * * * *       /org/buildd.debian.org/bin/wb-export
+43 * * * *       /srv/buildd.debian.org/bin/wb-export
 
-3  0 * * *       make -sC /org/wanna-build/etc/cron check
+3  0 * * *       make -sC /srv/wanna-build/etc/cron check
 
-4  0 * * *       /org/buildd.debian.org/mbox/fix-up-permissions
+4  0 * * *       /srv/buildd.debian.org/mbox/fix-up-permissions
 
-*/15 * * * *   TZ=UTC /org/buildd.debian.org/web/status/mkstats.aba
+*/15 * * * *   TZ=UTC /srv/buildd.debian.org/web/status/mkstats.aba
+
+0 0 * * *	/usr/sbin/logrotate /srv/wanna-build/etc/logrotate.conf -s /srv/wanna-build/etc/logrotate.status
+
+*/15 * * * *	/srv/buildd.debian.org/wbpy/run-mqueue
 
