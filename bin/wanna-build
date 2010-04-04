@@ -1894,8 +1894,10 @@ Text could contain further %. To start with !, use %!
             return $var->{scnt}{'Needs-Build'} + 1 if $pkg->{'state'} eq 'Needs-Build';
             return ""; }, $pkg, $var),
 	'F' => make_fmt( sub { return "" unless $pkg->{'failed'};
+	    my $failed = $pkg->{'failed'};
+	    $failed =~ s/\\/\\\\/g;
             return $pkg->{'package'}."#".$arch."-failure\n ".
-	    join("\\0a",split("\n",$pkg->{'failed'}))."\\0a\n"; }, $pkg, $var),
+	    join("\\0a",split("\n",$failed))."\\0a\n"; }, $pkg, $var),
         'D' => make_fmt( sub { return "" unless $pkg->{'bd_problem'};
             return $pkg->{'package'}."#".$arch."-bd-problem\n".
             join("\\0a",split("\n",$pkg->{'bd_problem'}))."\\0a\n"; }, $pkg, $var),
