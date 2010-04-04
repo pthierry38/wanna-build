@@ -1,0 +1,50 @@
+#! /usr/bin/python
+
+
+import sys, os.path
+#from debian_bundle import deb822
+import apt_pkg
+
+
+def check_source(ok, f, fw):
+    ret=[]
+    pkg = apt_pkg.ParseTagFile(f)
+    while pkg.Step():
+        if not pkg.Section.get('Package'): continue
+        if pkg.Section.get('Section','').startswith('non-free'):
+            if pkg.Section.get('Autobuild') != 'yes': continue
+            if pkg.Section['Package'] not in ok: continue
+        ret += [pkg.Section['Package']]
+        fw.write(str(pkg.Section))
+        fw.write("\n")
+    return ret
+    f.close()
+    fw.close()
+
+def check_binary(ok, f, fw):
+    pkg = apt_pkg.ParseTagFile(f)
+    while pkg.Step():
+        if pkg.Section.get('Source', pkg.Section.get('Package')).split(" ")[0] not in ok: continue
+        fw.write(str(pkg.Section))
+        fw.write("\n")
+    f.close()
+    fw.close()
+
+def outfile(name, file):
+    #return open(dir + "/" + os.path.basename(file), "w")
+    #return open(file + name, "w")
+    if file.endswith(name): return open(file[:-len(name)], "w")
+
+def main():
+    if len(sys.argv) <= 4:
+        print "Error - too few args"
+        return
+
+    name = sys.argv[1]
+    oklist = [ x[:-1].split(' ')[0] for x in open(sys.argv[2]) ]
+    okpkgs = check_source(oklist, open(sys.argv[3]), outfile(name, sys.argv[3]))
+    for file in sys.argv[4:]:
+        check_binary(okpkgs, open(file), outfile(name, file))
+
+if __name__ == '__main__':
+        main()
