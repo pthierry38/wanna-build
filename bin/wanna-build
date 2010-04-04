@@ -1850,20 +1850,21 @@ Within an format string, the following values are allowed (need to be preceded b
 This can be combined to e.g.
 wanna-build --format='wanna-build -A %a --give-back %p_%v' -A mipsel --list=failed
 
-p Package name
 a Architecture
-s Time in this state in full seconds since epoch
-v Package version
-S Package state
-u Builder (e.g. buildd_mipsel-rem)
-X the string normally between [], e.g. optional:out-of-date:calprio{61}:days{25}
 c section (e.g. libs or utils)
-P previous state
-E in case of Dep-Wait the packages being waited on, in case of Needs-Build the number in the queue
-F in case of Failed the fail reason
 D in case of BD-Uninstallable the reason for the uninstallability
 d distribution
+E in case of Dep-Wait the packages being waited on, in case of Needs-Build the number in the queue
+P previous state
+p Package name
+S Package state
+s Time in this state in full seconds since epoch
 t time of state change
+u Builder (e.g. buildd_mipsel-rem)
+v Package version
+V full Package version (i.e. with +b.., = %v%{+b}B%B
+X the string normally between [], e.g. optional:out-of-date:calprio{61}:days{25}
+F in case of Failed the fail reason
 
 %{Text}?  print Text in case ? is not empty; ? is never printed
 %{!Text}? print Text in case ? is empty; ? is never printed
@@ -1875,6 +1876,7 @@ Text could contain further %. To start with !, use %!
         'a' => make_fmt( $arch, $pkg, $var),
         's' => make_fmt( sub { return floor(str2time($pkg->{'state_change'})); }, $pkg, $var),
         'v' => make_fmt( $pkg->{'version'}, $pkg, $var),
+        'V' => make_fmt( sub { $pkg->{'binary_nmu_version'} ? $pkg->{'version'}."+b".$pkg->{'binary_nmu_version'} : $pkg->{'version'} }, $pkg, $var),
         'S' => make_fmt( $pkg->{'state'}, $pkg, $var),
         'u' => make_fmt( $pkg->{'builder'}, $pkg, $var),
         'X' => make_fmt( sub {
