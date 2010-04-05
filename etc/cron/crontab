@@ -7,6 +7,8 @@
 # Stats update.
 #
 MAILTO=cron-errors@buildd.debian.org
+PATH=/bin:/usr/bin:/usr/local/bin:/srv/wanna-build/bin:/srv/buildd.debian.org/bin
+
 43 * * * *       /srv/buildd.debian.org/bin/wb-export
 
 3  0 * * *       make -sC /srv/wanna-build/etc/cron check
