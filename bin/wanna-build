@@ -1930,21 +1930,12 @@ sub list_packages {
 		    $scnt{$pkg->{'state'}}++;
                     next;
                 }
-		print "$pkg->{'section'}/$pkg->{'package'}_$pkg->{'version'}";
-		print ": $pkg->{'state'}"
+		print print_format("%c/%p_%v", $pkg, {});
+		print print_format(": %S", $pkg, {})
 			if $state eq "all";
-		print " by $pkg->{'builder'}"
-			if $pkg->{'state'} ne "Needs-Build" && $pkg->{'builder'};
-		print " [$pkg->{'priority'}:$pkg->{'notes'}";
-		print ":PREV-FAILED"
-			if $pkg->{'previous_state'} =~ /^Failed/;
-		print ":bp{" . $pkg->{'buildpri'} . "}"
-			if defined $pkg->{'buildpri'};
-		print ":binNMU{" . $pkg->{'binary_nmu_version'} . "}"
-			if defined $pkg->{'binary_nmu_version'};
-		print ":calprio{". $pkg->{'calprio'}."}";
-		print ":days{". $pkg->{'state_days'}."}";
-		print "]\n";
+		print print_format("%{ by }u%u", $pkg, {})
+			if $pkg->{'state'} ne "Needs-Build";
+		print print_format(" [%X]\n", $pkg, {});
 		print "  Reasons for failing:\n",
 			  "    [Category: ",
 			  defined $pkg->{'failed_category'} ? $pkg->{'failed_category'} : "none",
