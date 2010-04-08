@@ -55,7 +55,7 @@ our ($verbose, $mail_logs, $list_order, $list_state,
     $category, %catval, %short_category,
     $short_date, $list_min_age, $dbbase, @curr_time,
     $build_priority, %new_vers, $binNMUver, %merge_srcvers, %merge_binsrc,
-    $printformat
+    $printformat, $ownprintformat
     );
 
 # global vars
@@ -190,6 +190,7 @@ my %options =
 							 $list_min_age *= -1;
 						 } },
          "format"       => { arg => \$printformat },
+         "own-format"       => { arg => \$ownprintformat },
 	 # special actions
 	 export         => { arg => \$export_to, mode => "export" },
 	 import         => { arg => \$import_from, mode => "import" },
@@ -304,13 +305,15 @@ if (!$fail_reason) {
 my $yamlmap = ();
 my $yamldir = "/org/wanna-build/etc/yaml";
 my @files = ('wanna-build.yaml');
+if ((getpwuid($>))[7]) { push (@files, ((getpwuid($>))[7])."/.wanna-build.yaml"); }
 if ($user =~ /(buildd.*)-/) { push (@files, "$1.yaml") };
-push ( @files, "$user.yaml");
+if ($user) { push ( @files, "$user.yaml"); }
 foreach my $file (@files) {
-	if ($verbose >= 2) { print "Trying to read $file ...\n"; }
-	next unless -f $yamldir."/".$file;
-	if ($verbose >= 2) { print "Read $file ...\n"; }
-	my $m = YAML::Tiny->read( $yamldir."/".$file )->[0];
+        my $cfile = File::Spec->rel2abs( $file, $yamldir );
+	if ($verbose >= 2) { print "Trying to read $file ($cfile) ...\n"; }
+	next unless -f $cfile;
+	if ($verbose >= 2) { print "Read $file ($cfile) ...\n"; }
+	my $m = YAML::Tiny->read( $cfile )->[0];
 	$yamlmap = merge($m, $yamlmap);
 }
 if (not $yamlmap) {
@@ -1855,6 +1858,7 @@ c section (e.g. libs or utils)
 D in case of BD-Uninstallable the reason for the uninstallability
 d distribution
 E in case of Dep-Wait the packages being waited on, in case of Needs-Build the number in the queue
+F in case of Failed the fail reason
 P previous state
 p Package name
 S Package state
@@ -1864,7 +1868,6 @@ u Builder (e.g. buildd_mipsel-rem)
 v Package version
 V full Package version (i.e. with +b.., = %v%{+b}B%B
 X the string normally between [], e.g. optional:out-of-date:calprio{61}:days{25}
-F in case of Failed the fail reason
 
 %{Text}?  print Text in case ? is not empty; ? is never printed
 %{!Text}? print Text in case ? is empty; ? is never printed
@@ -1922,6 +1925,12 @@ sub list_packages {
 
         # filter components
         @list = grep { my $i = $_->{'component'}; grep { $i eq $_ } split /[, ]+/, $yamlmap->{"restrict"}{'component'} } @list;
+
+        # first adjust ownprintformat, then set printformat accordingly
+        $printformat ||= $yamlmap->{"format"}{$ownprintformat};
+        $printformat ||= $yamlmap->{"format"}{"default"}{$state};
+        $printformat ||= $yamlmap->{"format"}{"default"}{"default"};
+        undef $printformat if ($ownprintformat eq 'none');
 
 	foreach $pkg (sort sort_list_func @list) {
                 if ($printformat) {
