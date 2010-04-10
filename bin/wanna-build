@@ -56,7 +56,7 @@ our ($verbose, $mail_logs, $list_order, $list_state,
     $category, %catval, %short_category,
     $short_date, $list_min_age, $dbbase, @curr_time,
     $build_priority, %new_vers, $binNMUver, %merge_srcvers, %merge_binsrc,
-    $printformat, $ownprintformat
+    $printformat, $ownprintformat, $privmode
     );
 
 # global vars
@@ -242,8 +242,25 @@ while( @ARGV && $ARGV[0] =~ /^-/ ) {
 $op_mode = $category ? "set-failed" : "set-building"
 	if !$op_mode; # default operation
 $distribution ||= "unstable";
-die "Bad distribution '$distribution'\n"
-	if !isin($distribution, keys %conf::distributions);
+if ($distribution eq 'any-priv') {
+    $privmode = 'yes';
+    $distribution = 'any';
+}
+if ($distribution eq 'any-unpriv') {
+    $privmode = 'no';
+    $distribution = 'any';
+}
+undef $distribution if $distribution eq 'any';
+if ($distribution) {
+    my @dists = split(/[, ]+/, $distribution);
+    foreach my $dist (@dists) {
+        die "Bad distribution '$distribution'\n"
+	    if !isin($dist, keys %conf::distributions);
+    }
+}
+if (!isin ( $op_mode, qw(list) ) && ( !$distribution || $distribution =~ /[ ,]/)) {
+    die "multiple distributions are only allowed for list";
+}
 
 # If they didn't specify an arch, try to get it from database name which
 # is in the form of $arch/build-db
@@ -333,7 +350,7 @@ END {
 }
 
 my $schema_suffix = '';
-if (isin( $op_mode, qw(list info)) && $distribution !~ /security/ && !(not -t and $user =~ /-/)) {
+if (isin( $op_mode, qw(list info)) && $distribution !~ /security/ && !(not -t and $user =~ /-/) && !($privmode eq 'yes')) {
 	$dbh = DBI->connect("DBI:Pg:service=wanna-build") || 
 		die "FATAL: Cannot open database: $DBI::errstr\n";
 	$schema_suffix = '_public';
@@ -1924,7 +1941,7 @@ Text could contain further %. To start with !, use %!
             return $pkg->{'package'}."#".$arch."-bd-problem\n".
             join("\\0a",split("\n",$pkg->{'bd_problem'}))."\\0a\n"; }, $pkg, $var),
         'B' => make_fmt( sub { return $pkg->{'binary_nmu_version'} if defined $pkg->{'binary_nmu_version'}; }, $pkg, $var),
-        'd' => make_fmt( $distribution, $pkg, $var),
+        'd' => make_fmt( $pkg->{'distribution'}, $pkg, $var),
         't' => make_fmt( $pkg->{'state_change'}, $pkg, $var),
         'o' => make_fmt( $pkg->{'successtime'}, $pkg, $var),
         'O' => make_fmt( sub { return seconds2time ( $pkg->{'successtime'}); }, $pkg, $var),
@@ -2536,8 +2553,15 @@ sub get_all_source_info {
                 ' left join ( '.
                     'select distinct on (package, distribution) build_time, package, distribution from '.pkg_history_table_name().' order by package, distribution, timestamp desc'.
                     ' ) as anytime using (package, distribution) '
-		. ' WHERE distribution = ? ';
-	my @args = ($distribution);
+		. ' WHERE 1=1 ';
+        my @args = ();
+        if ($distribution) {
+            my @dists = split(/[, ]+/, $distribution);
+            $q .= ' AND ( distribution = ? '.(' OR distribution = ? ' x $#dists).' )';
+            foreach my $d ( @dists ) {
+                push @args, ($d);
+            }
+        }
 	if ($options{state} && uc($options{state}) ne "ALL") {
 		$q .= ' AND upper(state) = ? ';
 		push @args, uc($options{state});
