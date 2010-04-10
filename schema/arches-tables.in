@@ -1,0 +1,87 @@
+drop schema "ARCH" cascade;
+drop schema "ARCH_public" cascade;
+create schema "ARCH";
+create schema "ARCH_public";
+
+grant usage on schema "ARCH" to "ARCH", wb_all;
+grant usage on schema "ARCH_public" to "ARCH", public;
+grant usage on schema "ARCH" to wb_security;
+
+create table "ARCH".packages
+    package character varying NOT NULL,
+    distribution character varying NOT NULL,
+    version character varying,
+    state character varying,
+    section character varying,
+    priority character varying,
+    installed_version character varying,
+    previous_state character varying,
+    state_change timestamp without time zone,
+    notes character varying,
+    builder character varying,
+    failed text,
+    old_failed text,
+    binary_nmu_version integer,
+    binary_nmu_changelog character varying,
+    failed_category character varying,
+    permbuildpri integer,
+    buildpri integer,
+    depends character varying,
+    rel character varying,
+    bd_problem text,
+    primary key (package, distribution)
+);
+
+create index "idx_ARCH_state" on "ARCH".packages (state);
+
+create table "ARCH".users
+(
+        username varchar,
+        distribution varchar,
+        last_seen timestamp,
+        primary key (username, distribution)
+);
+
+create table "ARCH".transactions
+(
+        package varchar,
+        distribution varchar,
+        version varchar,
+        action varchar,
+        prevstate varchar,
+        state varchar,
+        real_user varchar,
+        set_user varchar,
+        time timestamp
+);
+
+CREATE TABLE "ARCH".pkg_history (
+    package character varying NOT NULL,
+    distribution character varying NOT NULL,
+    version character varying NOT NULL,
+    "timestamp" timestamp without time zone NOT NULL,
+    result character varying NOT NULL,
+    build_time integer,
+    disk_space bigint,
+    primary key (package, distribution, version, "timestamp")
+);
+
+grant all on "ARCH".packages to "ARCH";
+grant all on "ARCH".users to "ARCH";
+grant insert, select on "ARCH".transactions to "ARCH";
+grant all on table "ARCH".pkg_history TO "ARCH";
+
+grant select on "ARCH".packages to wb_security;
+grant select on "ARCH".transactions to wb_security;
+grant select on "ARCH".pkg_history TO wb_security;
+
+create view "ARCH_public".packages as select * from "ARCH".packages where distribution not like '%-security';
+create view "ARCH_public".users as select * from "ARCH".users where distribution not like '%-security';
+create view "ARCH_public".transactions as select * from "ARCH".transactions where distribution not like '%-security';
+create view "ARCH_public".pkg_history as select * from "ARCH".pkg_history where distribution not like '%-security';
+
+grant select on "ARCH_public".packages to public;
+grant select on "ARCH_public".users to public;
+grant select on "ARCH_public".transactions to public;
+#grant select on "ARCH_public".pkg_history to public;
+
