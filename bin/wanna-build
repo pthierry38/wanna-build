@@ -46,6 +46,7 @@ use Data::Dumper;
 use Hash::Merge qw ( merge );
 use String::Format;
 use Date::Parse;
+use List::Util qw[max];
 
 our ($verbose, $mail_logs, $list_order, $list_state,
     $curr_date, $op_mode, $user, $real_user, $distribution,
@@ -1814,6 +1815,17 @@ sub calculate_prio {
 }
 
 
+sub seconds2time {
+    my $t = shift;
+    return "" unless $t;
+    my $sec = $t % 60;
+    my $min = int($t/60) % 60;
+    my $hours = int($t / 3600);
+    return sprintf("%d:%02d:%02d", $hours, $min, $sec) if $hours;
+    return sprintf("%d:%02d", $min, $sec);
+}
+
+
 sub use_fmt {
     my $r;
 
@@ -1859,8 +1871,15 @@ D in case of BD-Uninstallable the reason for the uninstallability
 d distribution
 E in case of Dep-Wait the packages being waited on, in case of Needs-Build the number in the queue
 F in case of Failed the fail reason
+n newline
+o time of last successful build (seconds)
+O time of last successful build (formated)
 P previous state
 p Package name
+q time of last build (seconds)
+Q time of last build (formated)
+r max time of last (successful) build (seconds)
+R max time of last (successful) build (formated)
 S Package state
 s Time in this state in full seconds since epoch
 t time of state change
@@ -1907,6 +1926,12 @@ Text could contain further %. To start with !, use %!
         'B' => make_fmt( sub { return $pkg->{'binary_nmu_version'} if defined $pkg->{'binary_nmu_version'}; }, $pkg, $var),
         'd' => make_fmt( $distribution, $pkg, $var),
         't' => make_fmt( $pkg->{'state_change'}, $pkg, $var),
+        'o' => make_fmt( $pkg->{'successtime'}, $pkg, $var),
+        'O' => make_fmt( sub { return seconds2time ( $pkg->{'successtime'}); }, $pkg, $var),
+        'q' => make_fmt( $pkg->{'anytime'}, $pkg, $var),
+        'Q' => make_fmt( sub { return seconds2time ( $pkg->{'anytime'}); }, $pkg, $var),
+        'r' => make_fmt( sub { return max($pkg->{'successtime'}, $pkg->{'anytime'}); }, $pkg, $var),
+        'R' => make_fmt( sub { return seconds2time ( max($pkg->{'successtime'}, $pkg->{'anytime'})); }, $pkg, $var),
     ));
 }
 
@@ -1994,7 +2019,9 @@ sub info_packages {
 		'failed_category' => 'Failed-Category', 'notes' => 'Notes',
 		'distribution' => 'Distribution', 'old_failed' => 'Old-Failed',
 		'permbuildpri' => 'PermBuildPri', 'rel' => 'Rel',
-		'calprio' => 'CalculatedPri', 'state_days' => 'State-Days'
+		'calprio' => 'CalculatedPri', 'state_days' => 'State-Days',
+                'successtime' => 'Success-build-time',
+                'anytime' => 'Build-time'
 			 );
 	
 	foreach $name (@_) {
@@ -2468,11 +2495,23 @@ sub transactions_table_name {
 	return '"' . $arch . $schema_suffix . '".transactions';
 }
 
+sub pkg_history_table_name {
+	return '"' . $arch . $schema_suffix . '".pkg_history';
+}
+
 sub get_readonly_source_info {
 	my $name = shift;
 	# SELECT FLOOR(EXTRACT('epoch' FROM age(localtimestamp, '2010-01-22  23:45')) / 86400) -- change to that?
-	my $pkg = $dbh->selectrow_hashref('SELECT *, extract(days from date_trunc(\'days\', now() - state_change)) as state_days FROM ' . 
-		table_name() . ' WHERE package = ? AND distribution = ?',
+        my $q = 'SELECT rel, priority, state_change, permbuildpri, section, buildpri, failed, state, binary_nmu_changelog, bd_problem, version, package, distribution, installed_version, notes, failed_category, builder, old_failed, previous_state, binary_nmu_version, depends, extract(days from date_trunc(\'days\', now() - state_change)) as state_days, successtime.build_time as successtime, anytime.build_time as anytime FROM ' . 
+		table_name() .
+                ' left join ( '.
+                    'select distinct on (package, distribution) build_time, package, distribution from '.pkg_history_table_name().' where result = \'successful\' order by package, distribution, timestamp desc '.
+                    ' ) as successtime using (package, distribution) '.
+                ' left join ( '.
+                    'select distinct on (package, distribution) build_time, package, distribution from '.pkg_history_table_name().' order by package, distribution, timestamp desc'.
+                    ' ) as anytime using (package, distribution) '.
+                ' WHERE package = ? AND distribution = ?';
+	my $pkg = $dbh->selectrow_hashref( $q,
 		undef, $name, $distribution);
 	return $pkg;
 }
@@ -2489,10 +2528,14 @@ sub get_source_info {
 sub get_all_source_info {
 	my %options = @_;
 
-	my $q = 'SELECT *, '.
-		'extract(days from date_trunc(\'days\', now() - state_change)) as state_days, '.
-		'date_trunc(\'seconds\', now() - state_change) as state_time'.
-		' FROM ' . table_name()
+        my $q = 'SELECT rel, priority, state_change, permbuildpri, section, buildpri, failed, state, binary_nmu_changelog, bd_problem, version, package, distribution, installed_version, notes, failed_category, builder, old_failed, previous_state, binary_nmu_version, depends, extract(days from date_trunc(\'days\', now() - state_change)) as state_days, successtime.build_time as successtime, anytime.build_time as anytime FROM ' . 
+		table_name() .
+                ' left join ( '.
+                    'select distinct on (package, distribution) build_time, package, distribution from '.pkg_history_table_name().' where result = \'successful\' order by package, distribution, timestamp desc '.
+                    ' ) as successtime using (package, distribution) '.
+                ' left join ( '.
+                    'select distinct on (package, distribution) build_time, package, distribution from '.pkg_history_table_name().' order by package, distribution, timestamp desc'.
+                    ' ) as anytime using (package, distribution) '
 		. ' WHERE distribution = ? ';
 	my @args = ($distribution);
 	if ($options{state} && uc($options{state}) ne "ALL") {
