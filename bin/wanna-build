@@ -2542,9 +2542,15 @@ sub get_all_source_info {
 	my %options = @_;
 
         my $q = "SELECT rel, priority, state_change, permbuildpri, section, buildpri, failed, state, binary_nmu_changelog, bd_problem, version, package, distribution, installed_version, notes, failed_category, builder, old_failed, previous_state, binary_nmu_version, depends, extract(days from date_trunc('days', now() - state_change)) as state_days"
-            . ", (SELECT max(build_time) FROM ".pkg_history_table_name()." WHERE pkg_history.package = packages.package AND pkg_history.distribution = packages.distribution AND result = 'successful') AS successtime"
-            . ", (SELECT max(build_time) FROM ".pkg_history_table_name()." WHERE pkg_history.package = packages.package AND pkg_history.distribution = packages.distribution ) AS anytime"
+#            . ", (SELECT max(build_time) FROM ".pkg_history_table_name()." WHERE pkg_history.package = packages.package AND pkg_history.distribution = packages.distribution AND result = 'successful') AS successtime"
+#            . ", (SELECT max(build_time) FROM ".pkg_history_table_name()." WHERE pkg_history.package = packages.package AND pkg_history.distribution = packages.distribution ) AS anytime"
             . " FROM " .  table_name()
+                . " left join ( "
+                  . "select distinct on (package, distribution) build_time, package, distribution from ".pkg_history_table_name()." where result = 'successful' order by package, distribution, timestamp "
+                  . " ) as successtime using (package, distribution) "
+                . " left join ( "
+                  . "select distinct on (package, distribution) build_time, package, distribution from ".pkg_history_table_name()." order by package, distribution, timestamp desc"
+                  . " ) as anytime using (package, distribution) "
 	    . " WHERE TRUE ";
         my @args = ();
         if ($distribution) {
