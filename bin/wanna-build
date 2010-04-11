@@ -2566,11 +2566,10 @@ sub get_all_source_info {
 		push @args, uc($options{state});
 	}
 
-	if ($options{user}) {
+	if ($options{user} && uc($options{state}) ne "NEEDS-BUILD") { # if it's NEEDS-BUILD, we don't look at users
 		#this basically means "this user, or no user at all":
-		$q .= ' AND (builder = ? OR upper(state) = ?)';
+		$q .= " AND (builder = ? OR upper(state) = 'NEEDS-BUILD')";
 		push @args, $options{user};
-		push @args, "NEEDS-BUILD";
 	}
 
 	if ($options{category}) {
