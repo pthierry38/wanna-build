@@ -66,6 +66,8 @@ CREATE TABLE "ARCH".pkg_history (
     primary key (package, distribution, version, "timestamp")
 );
 
+create index pkg_history_index on "ARCH".pkg_history (package, distribution, timestamp desc, result);
+
 grant all on "ARCH".packages to "ARCH";
 grant all on "ARCH".users to "ARCH";
 grant insert, select on "ARCH".transactions to "ARCH";
@@ -83,5 +85,5 @@ create view "ARCH_public".pkg_history as select * from "ARCH".pkg_history where 
 grant select on "ARCH_public".packages to public;
 grant select on "ARCH_public".users to public;
 grant select on "ARCH_public".transactions to public;
-#grant select on "ARCH_public".pkg_history to public;
+grant select on "ARCH_public".pkg_history to public;
 
