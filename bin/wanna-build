@@ -2519,15 +2519,11 @@ sub pkg_history_table_name {
 sub get_readonly_source_info {
 	my $name = shift;
 	# SELECT FLOOR(EXTRACT('epoch' FROM age(localtimestamp, '2010-01-22  23:45')) / 86400) -- change to that?
-        my $q = 'SELECT rel, priority, state_change, permbuildpri, section, buildpri, failed, state, binary_nmu_changelog, bd_problem, version, package, distribution, installed_version, notes, failed_category, builder, old_failed, previous_state, binary_nmu_version, depends, extract(days from date_trunc(\'days\', now() - state_change)) as state_days, successtime.build_time as successtime, anytime.build_time as anytime FROM ' . 
-		table_name() .
-                ' left join ( '.
-                    'select distinct on (package, distribution) build_time, package, distribution from '.pkg_history_table_name().' where result = \'successful\' order by package, distribution, timestamp desc '.
-                    ' ) as successtime using (package, distribution) '.
-                ' left join ( '.
-                    'select distinct on (package, distribution) build_time, package, distribution from '.pkg_history_table_name().' order by package, distribution, timestamp desc'.
-                    ' ) as anytime using (package, distribution) '.
-                ' WHERE package = ? AND distribution = ?';
+        my $q = "SELECT rel, priority, state_change, permbuildpri, section, buildpri, failed, state, binary_nmu_changelog, bd_problem, version, package, distribution, installed_version, notes, failed_category, builder, old_failed, previous_state, binary_nmu_version, depends, extract(days from date_trunc('days', now() - state_change)) as state_days"
+            . ", (SELECT max(build_time) FROM ".pkg_history_table_name()." WHERE pkg_history.package = packages.package AND pkg_history.distribution = packages.distribution AND result = 'successful') AS successtime"
+            . ", (SELECT max(build_time) FROM ".pkg_history_table_name()." WHERE pkg_history.package = packages.package AND pkg_history.distribution = packages.distribution ) AS anytime"
+            . " FROM " .  table_name()
+            . ' WHERE package = ? AND distribution = ?';
 	my $pkg = $dbh->selectrow_hashref( $q,
 		undef, $name, $distribution);
 	return $pkg;
@@ -2545,15 +2541,11 @@ sub get_source_info {
 sub get_all_source_info {
 	my %options = @_;
 
-        my $q = 'SELECT rel, priority, state_change, permbuildpri, section, buildpri, failed, state, binary_nmu_changelog, bd_problem, version, package, distribution, installed_version, notes, failed_category, builder, old_failed, previous_state, binary_nmu_version, depends, extract(days from date_trunc(\'days\', now() - state_change)) as state_days, successtime.build_time as successtime, anytime.build_time as anytime FROM ' . 
-		table_name() .
-                ' left join ( '.
-                    'select distinct on (package, distribution) build_time, package, distribution from '.pkg_history_table_name().' where result = \'successful\' order by package, distribution, timestamp desc '.
-                    ' ) as successtime using (package, distribution) '.
-                ' left join ( '.
-                    'select distinct on (package, distribution) build_time, package, distribution from '.pkg_history_table_name().' order by package, distribution, timestamp desc'.
-                    ' ) as anytime using (package, distribution) '
-		. ' WHERE 1=1 ';
+        my $q = "SELECT rel, priority, state_change, permbuildpri, section, buildpri, failed, state, binary_nmu_changelog, bd_problem, version, package, distribution, installed_version, notes, failed_category, builder, old_failed, previous_state, binary_nmu_version, depends, extract(days from date_trunc('days', now() - state_change)) as state_days"
+            . ", (SELECT max(build_time) FROM ".pkg_history_table_name()." WHERE pkg_history.package = packages.package AND pkg_history.distribution = packages.distribution AND result = 'successful') AS successtime"
+            . ", (SELECT max(build_time) FROM ".pkg_history_table_name()." WHERE pkg_history.package = packages.package AND pkg_history.distribution = packages.distribution ) AS anytime"
+            . " FROM " .  table_name()
+	    . " WHERE TRUE ";
         my @args = ();
         if ($distribution) {
             my @dists = split(/[, ]+/, $distribution);
