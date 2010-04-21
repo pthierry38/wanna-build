@@ -1900,6 +1900,7 @@ R max time of last (successful) build (formated)
 S Package state
 s Time in this state in full seconds since epoch
 t time of state change
+T time since state change
 u Builder (e.g. buildd_mipsel-rem)
 v Package version
 V full Package version (i.e. with +b.., = %v%{+b}B%B
@@ -1943,6 +1944,7 @@ Text could contain further %. To start with !, use %!
         'B' => make_fmt( sub { return $pkg->{'binary_nmu_version'} if defined $pkg->{'binary_nmu_version'}; }, $pkg, $var),
         'd' => make_fmt( $pkg->{'distribution'}, $pkg, $var),
         't' => make_fmt( $pkg->{'state_change'}, $pkg, $var),
+        'T' => make_fmt( sub { return seconds2time(time() - floor(str2time($pkg->{'state_change'}))); }, $pkg, $var),
         'o' => make_fmt( $pkg->{'successtime'}, $pkg, $var),
         'O' => make_fmt( sub { return seconds2time ( $pkg->{'successtime'}); }, $pkg, $var),
         'q' => make_fmt( $pkg->{'anytime'}, $pkg, $var),
