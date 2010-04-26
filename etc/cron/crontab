@@ -21,3 +21,5 @@ PATH=/bin:/usr/bin:/usr/local/bin:/srv/wanna-build/bin:/srv/buildd.debian.org/bi
 
 */15 * * * *	/srv/buildd.debian.org/wbpy/run-mqueue
 
+@reboot mkdir -m 755 /tmp/status
+
