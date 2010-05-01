@@ -34,10 +34,10 @@ main() {
 
     for suite in $SUITES
     do
-        SOURCES="${ARCHIVE_BASE}/archive/${suite}/volatile/{main,contrib}/source/Sources.gz"
-        SOURCES="${SOURCES} ${ARCHIVE_BASE}/archive/${suite}-proposed-updates/volatile/{main,contrib}/source/Sources.gz"
-        PACKAGES="${ARCHIVE_BASE}/archive/${suite}/volatile/{main,contrib}/binary-%ARCH%/Packages.gz"
-        PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/archive/${suite}-proposed-updates/volatile/{main,contrib}/binary-%ARCH%/Packages.gz"
+        SOURCES="${ARCHIVE_BASE}/archive/${suite}/volatile/{main,contrib,non-free}/source/Sources.gz"
+        SOURCES="${SOURCES} ${ARCHIVE_BASE}/archive/${suite}-proposed-updates/volatile/{main,contrib,non-free}/source/Sources.gz"
+        PACKAGES="${ARCHIVE_BASE}/archive/${suite}/volatile/{main,contrib,non-free}/binary-%ARCH%/Packages.gz"
+        PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/archive/${suite}-proposed-updates/volatile/{main,contrib,non-free}/binary-%ARCH%/Packages.gz"
         #As volatile is an overlay, also add Debian ${suite}:
         PACKAGES_BASE="${ARCHIVE_MAIN}/archive/${suite}/{main,contrib}/binary-%ARCH%/Packages.gz"
         trigger_wb_update_with_secondary "$suite" "`get_architectures $suite`" "$PACKAGES_BASE" "$SOURCES" "$PACKAGES" "$suite-volatile"
