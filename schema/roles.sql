@@ -90,3 +90,5 @@ create user thijs in role wb_security;
 create user white in role wb_security;
 grant wb_security to dannf;
 
+create user nomeata in role wb_all;
+
