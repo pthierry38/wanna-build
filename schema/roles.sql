@@ -85,6 +85,7 @@ create user jmm in role wb_security;
 create user joey in role wb_security;
 create user nion in role wb_security;
 create user noahm in role wb_security;
+create user seb in role wb_security;
 create user thijs in role wb_security;
 create user white in role wb_security;
 grant wb_security to dannf;
