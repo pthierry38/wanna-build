@@ -58,8 +58,8 @@ def all_files(pattern, search_path, pathsep=os.pathsep):
 
 def parse_file_dates_pre(list):
     out = []
-    # dump_2006.05.02-11:52:01.bz2
-    p = re.compile('^\./dump_pre_([0-9]{4})\.([0-9]{2})\.([0-9]{2})-([0-9]{2}):([0-9]{2}):([0-9]{2})(.bz2)?$')
+    # dump_2006.05.02-11:52:01.gz
+    p = re.compile('^\./dump_pre_([0-9]{4})\.([0-9]{2})\.([0-9]{2})-([0-9]{2}):([0-9]{2}):([0-9]{2})(.gz)?$')
     for file in list:
         m = p.search(file)
         if m:
@@ -69,8 +69,8 @@ def parse_file_dates_pre(list):
 
 def parse_file_dates_post(list):
     out = []
-    # dump_2006.05.02-11:52:01.bz2
-    p = re.compile('^\./dump_post_([0-9]{4})\.([0-9]{2})\.([0-9]{2})-([0-9]{2}):([0-9]{2}):([0-9]{2})(.bz2)?$')
+    # dump_2006.05.02-11:52:01.gz
+    p = re.compile('^\./dump_post_([0-9]{4})\.([0-9]{2})\.([0-9]{2})-([0-9]{2}):([0-9]{2}):([0-9]{2})(.gz)?$')
     for file in list:
         m = p.search(file)
         if m:
