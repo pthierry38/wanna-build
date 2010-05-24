@@ -2338,6 +2338,28 @@ sub build_deplist {
 	return $result;
 }
 
+
+sub greparch {
+    my ($gapkglong, $gaarch) = @_;
+    my ($gapkg, $gaarchs) = split(/ \[/, $gapkglong);
+    if ($gaarchs) {
+        $_ = $gapkg;
+        chop($gaarchs); # take away the ]
+        my @gaarches = split(/ /, $gaarchs);
+        if (substr($gaarches[0], 0, 1) eq '!') {
+            return 0 if grep /^!$gaarch$/, @gaarches;
+        } else { # positive case
+            return 0 unless grep /^$gaarch$/, @gaarches;
+        }
+    };
+    return 1;
+}
+sub filterarch {
+    my $faarch = $_[1];
+    return join(', ', grep { &greparch($_, $faarch) } split(/, ?/, $_[0]));
+}
+
+
 sub call_edos_depcheck {
     my $packagesfile = shift;
     my $srcs = shift;
@@ -2366,10 +2388,15 @@ sub call_edos_depcheck {
     my ($SOURCES, $tmpfile) = tempfile( $tmpfile_pattern, UNLINK => 1 );
     for my $key (keys %interesting_packages) {
 	my $pkg = $db->{$key};
-	print $SOURCES "Package: $key\n";
+        # we print the source files as binary ones (with "source---"-prefixed),
+        # so we can try if these "binary" packages are installable.
+        # If such a "binary" package is installable, the corresponding source package is buildable.
+	print $SOURCES "Package: source---$key\n";
 	print $SOURCES "Version: $pkg->{'version'}\n";
-	print $SOURCES "Build-Depends: $srcs->{$key}{'dep'}\n" if $srcs->{$key}{'dep'};
-	print $SOURCES "Build-Conflicts: $srcs->{$key}{'conf'}\n" if $srcs->{$key}{'conf'};
+        my $t = &filterarch($srcs->{$key}{'dep'}, $arch);
+	print $SOURCES "Depends: $t\n" if $t;
+        my $u = &filterarch($srcs->{$key}{'conf'}, $arch);
+	print $SOURCES "Conflicts: $u\n" if $u;
 	print $SOURCES "Architecture: all\n";
 	print $SOURCES "\n";
     }
