@@ -2361,24 +2361,19 @@ sub call_edos_depcheck {
     #print "I would look at these sources with edos-depcheck:\n";
     #print join " ", keys %interesting_packages,"\n";
 
-    my $tmpfile_pattern = "/tmp/wanna-build-interesting-sources-$distribution.$$-";
-    my ($tmpfile, $i);
-    for( $i = 0;; ++$i ) {
-	    $tmpfile = $tmpfile_pattern . $i;
-	    last if ! -e $tmpfile;
-    }
-
-    open SOURCES, '>', $tmpfile or die "Could not open temporary file $tmpfile\n";
+    my $tmpfile_pattern = "/tmp/wanna-build-interesting-sources-$distribution.$$-XXXXX";
+    use File::Temp qw/ tempfile /;
+    my ($SOURCES, $tmpfile) = tempfile( $tmpfile_pattern, UNLINK => 1 );
     for my $key (keys %interesting_packages) {
 	my $pkg = $db->{$key};
-	print SOURCES "Package: $key\n";
-	print SOURCES "Version: $pkg->{'version'}\n";
-	print SOURCES "Build-Depends: $srcs->{$key}{'dep'}\n" if $srcs->{$key}{'dep'};
-	print SOURCES "Build-Conflicts: $srcs->{$key}{'conf'}\n" if $srcs->{$key}{'conf'};
-	print SOURCES "Architecture: all\n";
-	print SOURCES "\n";
+	print $SOURCES "Package: $key\n";
+	print $SOURCES "Version: $pkg->{'version'}\n";
+	print $SOURCES "Build-Depends: $srcs->{$key}{'dep'}\n" if $srcs->{$key}{'dep'};
+	print $SOURCES "Build-Conflicts: $srcs->{$key}{'conf'}\n" if $srcs->{$key}{'conf'};
+	print $SOURCES "Architecture: all\n";
+	print $SOURCES "\n";
     }
-    close SOURCES;
+    close $SOURCES;
 
     if (open(EDOS,"-|","wb-edos-builddebcheck", "-a", $arch, $packagesfile, $tmpfile))
     {
