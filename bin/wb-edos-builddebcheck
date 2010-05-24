@@ -73,8 +73,7 @@ if ( $architecture eq "" ) {
     }
 }
 
-open(RESULT,"python /org/wanna-build/bin/add-sources.py ".
-     "--prefix \"$sourceprefix\" < /dev/null $sourcesfile $architecture ".
+open(RESULT,"cat $sourcesfile".
      "| edos-debcheck $edosoptions '-base FILE' $packagefile |");
 
 $sourcestanza=0;
