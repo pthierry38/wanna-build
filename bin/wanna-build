@@ -2382,6 +2382,7 @@ sub call_edos_depcheck {
     
     #print "I would look at these sources with edos-depcheck:\n";
     #print join " ", keys %interesting_packages,"\n";
+    return unless %interesting_packages;
 
     my $tmpfile_pattern = "/tmp/wanna-build-interesting-sources-$distribution.$$-XXXXX";
     use File::Temp qw/ tempfile /;
