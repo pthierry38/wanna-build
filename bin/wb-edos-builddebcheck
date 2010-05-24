@@ -73,9 +73,9 @@ if ( $architecture eq "" ) {
     }
 }
 
-open(RESULT,"python /usr/share/edos-distcheck/add-sources.py ".
-     "--prefix \"$sourceprefix\" < $packagefile $sourcesfile $architecture ".
-     "| edos-debcheck $edosoptions|");
+open(RESULT,"python /org/wanna-build/bin/add-sources.py ".
+     "--prefix \"$sourceprefix\" < /dev/null $sourcesfile $architecture ".
+     "| edos-debcheck $edosoptions '-base FILE' $packagefile |");
 
 $sourcestanza=0;
 $explanation="";
