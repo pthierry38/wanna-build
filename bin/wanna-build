@@ -2359,6 +2359,86 @@ sub filterarch {
     return join(', ', grep { &greparch($_, $faarch) } split(/, ?/, $_[0]));
 }
 
+sub wb_edos_builddebcheck {
+# Copyright (C) 2008 Ralf Treinen <treinen@debian.org>
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, version 2 of the License.
+# integrated into wanna-builds code by Andreas Barth 2010
+
+    my $args = shift;
+    my $sourceprefix="source---";
+    my $architecture=$args->{'arch'};
+    my $edosoptions = "-failures -explain -quiet";
+    my @packagefiles = $args->{'pkgs'};
+    my $sourcesfile = $args->{'src'};
+
+    my $packagearch="";
+    foreach my $packagefile (@packagefiles) {
+        open(P,$packagefile);
+        while (<P>) {
+            next unless /^Architecture/;
+            next if /^Architecture:\s*all/;
+            /Architecture:\s*([^\s]*)/;
+            if ($packagearch eq "") {
+    	        $packagearch = $1;
+            } elsif ( $packagearch ne $1) {
+    	        return "Package file contains different architectures: $packagearch, $1";
+            }
+        }
+        close P;
+    }
+
+    if ( $architecture eq "" ) {
+        if ( $packagearch eq "" ) {
+    	return "No architecture option given, " .
+    	    "and no non-all architecture found in the Packages file";
+        } else {
+	    $architecture = $packagearch;
+        }
+    } else {
+        if ( $packagearch ne "" & $architecture ne $packagearch) {
+	    return "Architecture option is $architecture ".
+	    "but the package file contains architecture $packagearch";
+        }   
+    }
+
+    print "calling: edos-debcheck $edosoptions < $sourcesfile ".join('', map {" '-base FILE' ".$_ } @packagefiles);
+    open(RESULT, '-|',
+        "edos-debcheck $edosoptions < $sourcesfile ".join('', map {" '-base FILE' ".$_ } @packagefiles));
+
+    my $explanation="";
+    my $result={};
+    my $binpkg="";
+
+    while (<RESULT>) {
+# source---pulseaudio (= 0.9.15-4.1~bpo50+1): FAILED
+#   source---pulseaudio (= 0.9.15-4.1~bpo50+1) depends on missing:
+#   - libltdl-dev (>= 2.2.6a-2)
+# source---libcanberra (= 0.22-1~bpo50+1): FAILED
+#   source---libcanberra (= 0.22-1~bpo50+1) depends on missing:
+#   - libltdl-dev
+#   - libltdl7-dev (>= 2.2.6)
+
+        if (/^\s+/) {
+    	    s/^(\s*)$sourceprefix(.*)depends on/$1$2build-depends on/o;
+            s/^(\s*)$sourceprefix(.*) and (.*) conflict/$1$2 build-conflicts with $3/o;
+            $explanation .= $_;
+        } else {
+            if (/^$sourceprefix(.*) \(.*\): FAILED/o) {
+                $result->{$binpkg} = $explanation if $binpkg;
+                $explanation = "";
+                $binpkg = $1;
+            } # else something broken is happening
+        }
+    }
+
+    close RESULT;
+    $result->{$binpkg} = $explanation if $binpkg;
+    return $result;
+
+}
+
 
 sub call_edos_depcheck {
     my $packagesfile = shift;
@@ -2403,27 +2483,19 @@ sub call_edos_depcheck {
     }
     close $SOURCES;
 
-    if (open(EDOS,"-|","wb-edos-builddebcheck", "-a", $arch, $packagesfile, $tmpfile))
-    {
-	local($/) = ""; # read in paragraph mode
-	while( <EDOS> ) {
-		my( $key, $reason ) ;
-		s/\s*$//m;
-		/^Package:\s*(\S+)$/mi and $key = $1;
-		/^Failed-Why:(([^\n]|\n ([^\n]|\.))*)$/msi and $reason = $1;
-		$reason =~ s/^\s*//mg;
-		$reason ||= 'No reason given by edos-debcheck';
-
+    my $edosresults = wb_edos_builddebcheck({'arch' => $arch, 'pkgs' => [$packagesfile], 'src' => $tmpfile)
+    if (ref($edosresults) eq 'HASH') {
+        foreach my $key (keys %$edosresults) {
 		if (exists $interesting_packages{$key}) {
-		    $interesting_packages{$key} = $reason;
+		    $interesting_packages{$key} = $edosresults->{$key};
 		} else {
 		    #print "TODO: edos reported a package we do not care about now\n" if $verbose;
 		}
-	}
-	close EDOS;
+        }
     } else {
-	print "ERROR: Could not run wb-edos-builddebcheck. I am continuing, assuming\n" .
-	      "all packages have installable build-dependencies."
+        # if $edosresults isn't an hash, then something went wrong and the string is the error message
+        print "ERROR: Could not run wb-edos-builddebcheck. I am continuing, assuming\n" .
+             "all packages have installable build-dependencies."
     }
     
     unlink( $tmpfile );
