@@ -455,7 +455,7 @@ sub process {
 			parse_quinn_diff(0);
 			@ARGV = ( $ARGS[2] );
 			my $srcs = parse_sources(1);
-			call_edos_depcheck( $ARGS[0], $srcs );
+			call_edos_depcheck( {'arch' => $arch, 'pkgs' => ($ARGS[0]), 'srcs' => $srcs });
 			last SWITCH;
 		};
 		/^merge-all-secondary/ && do {
@@ -478,7 +478,7 @@ sub process {
 			parse_quinn_diff(0);
 			@ARGV = ( $ARGS[2] );
 			my $srcs = parse_sources(1);
-			call_edos_depcheck( $ARGS[3], $srcs );
+			call_edos_depcheck( {'arch' => $arch, 'pkgs' => ($ARGS[3]), 'srcs' => $srcs });
 			last SWITCH;
 		};
 		/^import/ && do {
@@ -2441,8 +2441,8 @@ sub wb_edos_builddebcheck {
 
 
 sub call_edos_depcheck {
-    my $packagesfile = shift;
-    my $srcs = shift;
+    my $args = shift;
+    my $srcs = $args->{'srcs'};
     my $key;
     
     return if defined ($conf::distributions{$distribution}{noadw});
@@ -2483,7 +2483,7 @@ sub call_edos_depcheck {
     }
     close $SOURCES;
 
-    my $edosresults = wb_edos_builddebcheck({'arch' => $arch, 'pkgs' => ($packagesfile), 'src' => $tmpfile});
+    my $edosresults = wb_edos_builddebcheck({'arch' => $args->{'arch'}, 'pkgs' => $args->{'pkgs'}, 'src' => $tmpfile});
     if (ref($edosresults) eq 'HASH') {
         foreach my $key (keys %$edosresults) {
 		if (exists $interesting_packages{$key}) {
