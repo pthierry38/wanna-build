@@ -2483,7 +2483,7 @@ sub call_edos_depcheck {
     }
     close $SOURCES;
 
-    my $edosresults = wb_edos_builddebcheck({'arch' => $arch, 'pkgs' => [$packagesfile], 'src' => $tmpfile});
+    my $edosresults = wb_edos_builddebcheck({'arch' => $arch, 'pkgs' => ($packagesfile), 'src' => $tmpfile});
     if (ref($edosresults) eq 'HASH') {
         foreach my $key (keys %$edosresults) {
 		if (exists $interesting_packages{$key}) {
