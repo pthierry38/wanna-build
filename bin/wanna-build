@@ -2891,7 +2891,7 @@ sub parse_all_v3() {
             # does at least one binary exist in the database and is more recent - if so, we're probably just outdated, ignore the source package
             for my $bin (@{$pkgs->{'binary'}}) {
                 if ($binary->{$bin} and vercmp($pkgs->{'version'}, $binary->{$bin}) < 0) {
-                    print "merge-v3: skiping $name\n" if $verbose;
+                    print "merge-v3: skiping $name ($arch)\n" if $verbose || $simulate;
                     next SRCS;
                 }
             }
@@ -2908,9 +2908,9 @@ sub parse_all_v3() {
                 $pkg->{'binary_nmu_version'} = $pkgs->{'binnmu'};
                 $pkg->{'section'} = $pkgs->{'section'};
                 $pkg->{'priority'} = $pkgs->{'priority'};
-                print "should set $name to installed\n" if $simulate;
+                print "merge-v3: set $name ($arch) to installed\n" if $verbose || $simulate;
                 log_ta( $pkg, "--merge-v3: installed" ) unless $simulate;
-	            update_source_info($pkg) unless $simulate;
+                update_source_info($pkg) unless $simulate;
             }
             next;
         }
@@ -2958,7 +2958,7 @@ sub parse_all_v3() {
         delete $pkg->{'binary_nmu_changelog'};
         log_ta( $pkg, "--merge-v3: needs-build" ) unless $simulate;
         update_source_info($pkg) unless $simulate;
-        print "$name ($pkgs->{'version'}) needs rebuilding now.\n" if $verbose || $simulate;
+        print "$name ($pkgs->{'version'} / $arch) needs rebuilding now.\n" if $verbose || $simulate;
     }
 
     foreach my $name (keys %$db) {
@@ -2967,7 +2967,7 @@ sub parse_all_v3() {
         # package disappeared - delete
         change_state( \$pkg, 'deleted' );
         log_ta( $pkg, "--merge-v3: deleted" ) unless $simulate;
-	print "$name ($pkg->{'version'}): deleted from database\n" if $verbose || $simulate;
+	print "$name ($pkg->{'version'} / $arch) deleted from database\n" if $verbose || $simulate;
         del_source_info($name) unless $simulate;
         delete $db->{$name};
     }
