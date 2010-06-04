@@ -40,6 +40,7 @@ use FileHandle;
 use File::Copy;
 use DBI;
 use lib '/org/wanna-build/bin';
+use lib '/org/wanna-build/lib';
 use WannaBuild;
 use YAML::Tiny;
 use Data::Dumper;
@@ -47,6 +48,7 @@ use Hash::Merge qw ( merge );
 use String::Format;
 use Date::Parse;
 use List::Util qw[max];
+use Dpkg::Version qw(vercmp); # TODO: change this for running with squeeze dpkg
 
 our ($verbose, $mail_logs, $list_order, $list_state,
     $curr_date, $op_mode, $user, $real_user, $distribution,
@@ -58,6 +60,7 @@ our ($verbose, $mail_logs, $list_order, $list_state,
     $build_priority, %new_vers, $binNMUver, %merge_srcvers, %merge_binsrc,
     $printformat, $ownprintformat, $privmode
     );
+our $simulate = 0;
 
 # global vars
 $ENV{'PATH'} = "/bin:/usr/bin:/usr/local/bin:/org/wanna-build/bin/";
@@ -128,6 +131,7 @@ my %options =
 	 "pretend-avail" => { short => "p", mode => "pretend-avail" },
 	 "merge-all"     => { mode => "merge-all" },
 	 "merge-all-secondary" => { mode => "merge-all-secondary" },
+	 "merge-v3"      => { mode => "merge-v3" },
 	 info			=> { short => "i", mode => "info" },
 	 'binNMU' => { mode => 'set-binary-nmu', arg => \$binNMUver, 
 			     code => sub { die "Invalid binNMU version: $binNMUver\n"
@@ -480,6 +484,22 @@ sub process {
 			my $srcs = parse_sources(1);
 			call_edos_depcheck( {'arch' => $arch, 'pkgs' => ($ARGS[3]), 'srcs' => $srcs });
 			last SWITCH;
+		};
+		/^merge-v3/ && do {
+                        die "This operation is restricted to admin users\n"
+			    if (defined @conf::admin_users and !isin( $real_user, @conf::admin_users) and !$simulate);
+                        # call with installed-packages+ . installed-sources+ [ . available-for-build-packages+ ]
+                        # in case available-for-build-packages is not specified, installed-packages are used
+                        lock_table() unless $simulate;
+                        my @ipkgs = &parse_argv( \@ARGV, '.');
+                        my @isrcs = &parse_argv( \@ARGV, '.');
+                        my @bpkgs = &parse_argv( \@ARGV, '.');
+                        use WB::QD;
+                        my $srcs = WB::QD::readsourcebins($arch, '/org/buildd.debian.org/etc/packages-arch-specific/Packages-arch-specific', \@isrcs, \@ipkgs);
+                        parse_all_v3($$srcs);
+                        @bpkgs = @ipkgs unless @bpkgs;
+                        call_edos_depcheck( {'arch' => $arch, 'pkgs' => @bpkgs, 'srcs' => $$srcs, 'depwait' => 1 });
+                        last SWITCH;
 		};
 		/^import/ && do {
 			die "This operation is restricted to admin users\n"
@@ -2403,7 +2423,7 @@ sub wb_edos_builddebcheck {
         }   
     }
 
-    print "calling: edos-debcheck $edosoptions < $sourcesfile ".join('', map {" '-base FILE' ".$_ } @packagefiles);
+    print "calling: edos-debcheck $edosoptions < $sourcesfile ".join('', map {" '-base FILE' ".$_ } @packagefiles)."\n";
     open(RESULT, '-|',
         "edos-debcheck $edosoptions < $sourcesfile ".join('', map {" '-base FILE' ".$_ } @packagefiles));
 
@@ -2429,7 +2449,14 @@ sub wb_edos_builddebcheck {
                 $result->{$binpkg} = $explanation if $binpkg;
                 $explanation = "";
                 $binpkg = $1;
-            } # else something broken is happening
+            } elsif (/^(depwait---.*) \(.*\): FAILED/o) {
+                $result->{$binpkg} = $explanation if $binpkg;
+                $explanation = "";
+                $binpkg = $1;
+            } else { # else something broken is happening
+                #print "ignoring $_\n";
+                1;
+            }
         }
     }
 
@@ -2445,24 +2472,29 @@ sub call_edos_depcheck {
     my $srcs = $args->{'srcs'};
     my $key;
     
-    return if defined ($conf::distributions{$distribution}{noadw});
+    return if defined ($conf::distributions{$distribution}{noadw}) && not defined $args->{'depwait'};
 
     # We need to check all of needs-build, as any new upload could make
     # something in needs-build have uninstallable deps
     # We also check everything in bd-uninstallable, as any new upload could
     # make that work again
-    my %interesting_packages;
+    my (%interesting_packages, %interesting_packages_depwait);
     my $db = get_all_source_info();
     foreach $key (keys %$db) {
 	my $pkg = $db->{$key};
-        if (defined $pkg and isin($pkg->{'state'}, qw/Needs-Build BD-Uninstallable/)) {
+        if (defined $pkg and isin($pkg->{'state'}, qw/Needs-Build BD-Uninstallable/) and not defined ($conf::distributions{$distribution}{noadw})) {
 		$interesting_packages{$key} = undef;
+	}
+        if (defined $pkg and isin($pkg->{'state'}, qw/Dep-Wait/) and defined $args->{'depwait'}) {
+		$interesting_packages_depwait{$key} = undef;
+                # we always check for BD-Uninstallability in depwait - could be that depwait is satisfied but package is uninstallable
+		$interesting_packages{$key} = undef unless defined ($conf::distributions{$distribution}{noadw});
 	}
     }
     
     #print "I would look at these sources with edos-depcheck:\n";
     #print join " ", keys %interesting_packages,"\n";
-    return unless %interesting_packages;
+    return unless %interesting_packages || %interesting_packages_depwait;
 
     my $tmpfile_pattern = "/tmp/wanna-build-interesting-sources-$distribution.$$-XXXXX";
     use File::Temp qw/ tempfile /;
@@ -2474,10 +2506,21 @@ sub call_edos_depcheck {
         # If such a "binary" package is installable, the corresponding source package is buildable.
 	print $SOURCES "Package: source---$key\n";
 	print $SOURCES "Version: $pkg->{'version'}\n";
-        my $t = &filterarch($srcs->{$key}{'dep'}, $arch);
+        my $t = &filterarch($srcs->{$key}{'dep'} || $srcs->{$key}{'depends'}, $arch);
 	print $SOURCES "Depends: $t\n" if $t;
-        my $u = &filterarch($srcs->{$key}{'conf'}, $arch);
+        my $u = &filterarch($srcs->{$key}{'conf'} || $srcs->{$key}{'conflicts'}, $arch);
 	print $SOURCES "Conflicts: $u\n" if $u;
+	print $SOURCES "Architecture: all\n";
+	print $SOURCES "\n";
+    }
+    for my $key (keys %interesting_packages_depwait) {
+	my $pkg = $db->{$key};
+        # we print the source files as binary ones (with "depwait---"-prefixed),
+        # so we can try if these "binary" packages are installable.
+        # If such a "binary" package is installable, the corresponding source package goes out of depwait
+	print $SOURCES "Package: depwait---$key\n";
+	print $SOURCES "Version: $pkg->{'version'}\n";
+	print $SOURCES "Depends: $pkg->{'depends'}\n";
 	print $SOURCES "Architecture: all\n";
 	print $SOURCES "\n";
     }
@@ -2485,9 +2528,17 @@ sub call_edos_depcheck {
 
     my $edosresults = wb_edos_builddebcheck({'arch' => $args->{'arch'}, 'pkgs' => $args->{'pkgs'}, 'src' => $tmpfile});
     if (ref($edosresults) eq 'HASH') {
-        foreach my $key (keys %$edosresults) {
+        foreach my $key (grep { $_ !~ /^depwait---/ } keys %$edosresults) {
 		if (exists $interesting_packages{$key}) {
 		    $interesting_packages{$key} = $edosresults->{$key};
+		} else {
+		    #print "TODO: edos reported a package we do not care about now\n" if $verbose;
+		}
+        }
+        foreach my $key (grep { $_ =~ /^depwait---/ } keys %$edosresults) {
+                $key =~ /^depwait---(.*)/ and $key = $1;
+		if (exists $interesting_packages_depwait{$key}) {
+		    $interesting_packages_depwait{$key} = $edosresults->{"depwait---".$key};
 		} else {
 		    #print "TODO: edos reported a package we do not care about now\n" if $verbose;
 		}
@@ -2501,6 +2552,7 @@ sub call_edos_depcheck {
     unlink( $tmpfile );
 
     for my $key (keys %interesting_packages) {
+        next if defined $interesting_packages_depwait{$key};
 	my $pkg = $db->{$key};
 	my $change = 
 	    (defined $interesting_packages{$key} and $pkg->{'state'} eq 'Needs-Build') ||
@@ -2520,12 +2572,29 @@ sub call_edos_depcheck {
 	    }	
 	}
 	if ($change) {
-	    log_ta( $pkg, "--merge-all" );
-	    print "edos-builddebchange changed state of ${key}_$pkg->{'version'} to $pkg->{'state'}\n" if $verbose;
+	    log_ta( $pkg, "--merge-all (edos)" ) unless $simulate;
+	    print "edos-builddebchange changed state of ${key}_$pkg->{'version'} to $pkg->{'state'}\n" if $verbose || $simulate;
 	}
 	if ($change || $problemchange) {
-	    update_source_info($pkg);
+	    update_source_info($pkg) unless $simulate;
 	}
+    }
+
+    for my $key (keys %interesting_packages_depwait) {
+        if ($interesting_packages_depwait{$key}) {
+            print "dependency on $key not fullfiled yet\n" if $verbose || $simulate;
+            next;
+        }
+	my $pkg = $db->{$key};
+	    if (defined $interesting_packages{$key}) {
+		    change_state( \$pkg, 'BD-Uninstallable' );
+		    $pkg->{'bd_problem'} = $interesting_packages{$key};
+	    } else {
+		    change_state( \$pkg, 'Needs-Build' );
+	    }
+	log_ta( $pkg, "edos_depcheck: depwait" ) unless $simulate;
+	update_source_info($pkg) unless $simulate;
+	print "edos-builddebchange changed state of ${key}_$pkg->{'version'} to $pkg->{'state'}\n" if $verbose || $simulate;
     }
 }
 
@@ -2789,3 +2858,115 @@ sub lock_table()
 		' IN EXCLUSIVE MODE', undef) or die $dbh->errstr;
 }
 
+sub parse_argv() {
+# parts the array $_[0] and $_[1] and returns the sub-array (modifies the original one)
+    my @ret = ();
+    my $args = shift;
+    my $separator = shift;
+    while($args->[0] && $args->[0] ne $separator) { 
+        push @ret, shift @$args;
+    }
+    shift @$args if @$args;
+    return @ret;
+}
+
+sub parse_all_v3() {
+    my $srcs = shift;
+    my $db = get_all_source_info();
+    my $binary = $srcs->{'_binary'};
+
+    SRCS:
+    foreach my $name (keys %$srcs) {
+        next if $name eq '_binaries';
+
+        # state = installed, out-of-date, uncompiled, not-for-us
+        my $pkgs = $srcs->{$name};
+        my $pkg = $db->{$name};
+
+        unless ($pkg) {
+            next SRCS if $pkgs->{'status'} eq 'not-for-us';
+
+            # does at least one binary exist in the database and is more recent - if so, we're probably just outdated, ignore the source package
+            for my $bin (@{$pkgs->{'binary'}}) {
+                if ($binary->{$bin} and vercmp($pkgs->{'version'}, $binary->{$bin}) < 0) {
+                    print "merge-v3: skiping $name\n" if $verbose;
+                    next SRCS;
+                }
+            }
+        }
+
+        if ($pkgs->{'status'} eq 'installed' && $pkg->{'binary_nmu_version'} && $pkgs->{'binnmu'} < $pkg->{'binary_nmu_version'}) {
+                $pkgs->{'status'} = 'out-of-date';
+        }
+        if ($pkgs->{'status'} eq 'installed') {
+            if ($pkg->{'state'} ne 'Installed') {
+                change_state( \$pkg, 'Installed');
+                $pkg->{'version'} = $pkgs->{'version'};
+                $pkg->{'installed_version'} = $pkgs->{'version'};
+                $pkg->{'binary_nmu_version'} = $pkgs->{'binnmu'};
+                $pkg->{'section'} = $pkgs->{'section'};
+                $pkg->{'priority'} = $pkgs->{'priority'};
+                print "should set $name to installed\n" if $simulate;
+                log_ta( $pkg, "--merge-v3: installed" ) unless $simulate;
+	            update_source_info($pkg) unless $simulate;
+            }
+            next;
+        }
+
+        if ($pkgs->{'status'} eq 'not-for-us') {
+            next if isin( $pkg->{'state'}, qw(Not-For-Us Installed Failed-Removed));
+
+            if (isin( $pkg->{'state'}, qw(Failed Build-Attempted Built))) {
+                change_state( \$pkg, "Failed-Removed" );
+		log_ta( $pkg, "--merge-v3: Failed-Removed" ) unless $simulate;
+		update_source_info($pkg) unless $simulate;
+                print "$name ($pkg->{'version'}): (virtually) deleted from database\n" if $verbose || $simulate;
+                next;
+            }
+
+            print "should delete $name (not-for-us)\n" if $verbose || $simulate || 1; # not implemented yet on purpose
+            next;
+        }
+
+        # only uncompiled / out-of-date are left, so check if anything new
+        next if $pkgs->{'version'} eq $pkg->{'version'};
+
+        print "should set $name to needs-builds\n" if $simulate;
+        if (defined( $pkg->{'state'} ) && isin( $pkg->{'state'}, qw(Building Built Build-Attempted))) {
+            send_mail( $pkg->{'builder'},
+                "new version of $name (dist=$distribution)",
+                "As far as I'm informed, you're currently building the package $name\n".
+                "in version $pkg->{'version'}.\n\n".
+                "Now there's a new source version $pkgs->{'version'}. If you haven't finished\n".
+                "compiling $name yet, you can stop it to save some work.\n".
+                "Just to inform you...\n".
+                "(This is an automated message)\n" ) unless $simulate;
+	    print "$name: new version ($pkgs->{'version'}) while building $pkg->{'version'} -- sending mail to builder ($pkg->{'builder'})\n"
+				  if $verbose || $simulate;
+	    }
+        change_state( \$pkg, 'Needs-Build');
+        $pkg->{'notes'} = $pkgs->{'status'};
+        $pkg->{'version'} = $pkgs->{'version'};
+        $pkg->{'section'} = $pkgs->{'section'};
+        $pkg->{'priority'} = $pkgs->{'priority'};
+        $pkg->{'dep'} = $pkgs->{'depends'};
+        $pkg->{'conf'} = $pkgs->{'conflicts'};
+        delete $pkg->{'builder'};
+        delete $pkg->{'binary_nmu_version'};
+        delete $pkg->{'binary_nmu_changelog'};
+        log_ta( $pkg, "--merge-v3: needs-build" ) unless $simulate;
+        update_source_info($pkg) unless $simulate;
+        print "$name ($pkgs->{'version'}) needs rebuilding now.\n" if $verbose || $simulate;
+    }
+
+    foreach my $name (keys %$db) {
+        next if $srcs->{$name};
+        my $pkg = $db->{$name};
+        # package disappeared - delete
+        change_state( \$pkg, 'deleted' );
+        log_ta( $pkg, "--merge-v3: deleted" ) unless $simulate;
+	print "$name ($pkg->{'version'}): deleted from database\n" if $verbose || $simulate;
+        del_source_info($name) unless $simulate;
+        delete $db->{$name};
+    }
+}
