@@ -60,6 +60,7 @@ our ($verbose, $mail_logs, $list_order, $list_state,
     $build_priority, %new_vers, $binNMUver, %merge_srcvers, %merge_binsrc,
     $printformat, $ownprintformat, $privmode
     );
+our $Pas = '/org/buildd.debian.org/etc/packages-arch-specific/Packages-arch-specific';
 our $simulate = 0;
 
 # global vars
@@ -196,6 +197,7 @@ my %options =
 						 } },
          "format"       => { arg => \$printformat },
          "own-format"       => { arg => \$ownprintformat },
+         "Pas"          => { arg => \$Pas },
 	 # special actions
 	 export         => { arg => \$export_to, mode => "export" },
 	 import         => { arg => \$import_from, mode => "import" },
@@ -495,7 +497,7 @@ sub process {
                         my @isrcs = &parse_argv( \@ARGV, '.');
                         my @bpkgs = &parse_argv( \@ARGV, '.');
                         use WB::QD;
-                        my $srcs = WB::QD::readsourcebins($arch, '/org/buildd.debian.org/etc/packages-arch-specific/Packages-arch-specific', \@isrcs, \@ipkgs);
+                        my $srcs = WB::QD::readsourcebins($arch, $Pas, \@isrcs, \@ipkgs);
                         parse_all_v3($$srcs);
                         @bpkgs = @ipkgs unless @bpkgs;
                         call_edos_depcheck( {'arch' => $arch, 'pkgs' => @bpkgs, 'srcs' => $$srcs, 'depwait' => 1 });
