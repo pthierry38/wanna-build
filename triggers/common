@@ -64,8 +64,8 @@ do_wb_merge_all() {
     echo "do_wb_merge_all $SUITE/$ARCH started"
     if test "$4" != "overlay" && test "$4" != "secondary"
     then
-        wanna-build -v --merge-all --arch=$ARCH --dist=$WB_SUITE \
-            Packages.$SUITE.$ARCH quinn-$SUITE.$ARCH Sources.$SUITE
+        #wanna-build -v --merge-all --arch=$ARCH --dist=$WB_SUITE Packages.$SUITE.$ARCH quinn-$SUITE.$ARCH Sources.$SUITE
+        wanna-build -v --merge-v3 --arch=$ARCH --dist=$WB_SUITE Packages.$SUITE.$ARCH . Sources.$SUITE
     fi
     if [ "$4" = "overlay" ]
     then
