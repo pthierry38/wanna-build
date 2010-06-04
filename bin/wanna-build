@@ -107,6 +107,7 @@ elsif ($progname =~ /^list-(.*)$/) {
 
 my %options =
 	(# flags
+	 simulate       => { flag => \$simulate }, # this is not supported by all operations (yet)!
 	 verbose        => { short => "v", flag => \$verbose },
 	 override		=> { short => "o", flag => \$opt_override },
 	 "create-db"	=> { flag => \$opt_create_db },
@@ -493,6 +494,8 @@ sub process {
                         # call with installed-packages+ . installed-sources+ [ . available-for-build-packages+ ]
                         # in case available-for-build-packages is not specified, installed-packages are used
                         lock_table() unless $simulate;
+                        my $replacemap = { '%ARCH%' => $arch, '%SUITE%' => $distribution };
+                        map { my $k = $_; grep { $k =~ s,$_,$replacemap->{$_}, } keys %{$replacemap}; $_ = $k; } @ARGV;
                         my @ipkgs = &parse_argv( \@ARGV, '.');
                         my @isrcs = &parse_argv( \@ARGV, '.');
                         my @bpkgs = &parse_argv( \@ARGV, '.');
