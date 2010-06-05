@@ -70,13 +70,13 @@ do_wb_merge_all() {
     fi
     if [ "$4" = "overlay" ]
     then
-        wanna-build -v --merge-all --arch=$ARCH --dist=$WB_SUITE \
-            Packages.$SUITE.$ARCH-all quinn-$SUITE.$ARCH Sources.$SUITE-all
+        #wanna-build -v --merge-all --arch=$ARCH --dist=$WB_SUITE Packages.$SUITE.$ARCH-all quinn-$SUITE.$ARCH Sources.$SUITE-all
+        wanna-build -v --Pas ${PAS_FILE} --merge-v3 --arch=$ARCH --dist=$WB_SUITE Packages.$SUITE.$ARCH-all . Sources.$SUITE-all
     fi
     if [ "$4" = "secondary" ]
     then
-        wanna-build -v --merge-all-secondary --arch=$ARCH --dist=$WB_SUITE \
-            Packages.$SUITE.$ARCH quinn-$SUITE.$ARCH Sources.$SUITE Packages.$SUITE.$ARCH-all
+        #wanna-build -v --merge-all-secondary --arch=$ARCH --dist=$WB_SUITE Packages.$SUITE.$ARCH quinn-$SUITE.$ARCH Sources.$SUITE Packages.$SUITE.$ARCH-all
+        wanna-build -v --Pas ${PAS_FILE} --merge-v3 --arch=$ARCH --dist=$WB_SUITE Packages.$SUITE.$ARCH . Sources.$SUITE . Packages.$SUITE.$ARCH-all
     fi
     echo "do_wb_merge_all $SUITE/$ARCH done"
 }
