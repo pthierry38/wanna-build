@@ -2587,7 +2587,7 @@ sub call_edos_depcheck {
 
     for my $key (keys %interesting_packages_depwait) {
         if ($interesting_packages_depwait{$key}) {
-            print "dependency on $key not fullfiled yet\n" if $verbose || $simulate;
+            print "dep-wait for $key ($args->{'arch'}) not fullfiled yet\n" if $verbose || $simulate;
             next;
         }
 	my $pkg = $db->{$key};
