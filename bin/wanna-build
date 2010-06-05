@@ -2578,7 +2578,7 @@ sub call_edos_depcheck {
 	}
 	if ($change) {
 	    log_ta( $pkg, "--merge-all (edos)" ) unless $simulate;
-	    print "edos-builddebchange changed state of ${key}_$pkg->{'version'} to $pkg->{'state'}\n" if $verbose || $simulate;
+	    print "edos-builddebchange changed state of ${key}_$pkg->{'version'} ($args->{'arch'}) to $pkg->{'state'}\n" if $verbose || $simulate;
 	}
 	if ($change || $problemchange) {
 	    update_source_info($pkg) unless $simulate;
@@ -2599,7 +2599,7 @@ sub call_edos_depcheck {
 	    }
 	log_ta( $pkg, "edos_depcheck: depwait" ) unless $simulate;
 	update_source_info($pkg) unless $simulate;
-	print "edos-builddebchange changed state of ${key}_$pkg->{'version'} to $pkg->{'state'}\n" if $verbose || $simulate;
+	print "edos-builddebchange changed state of ${key}_$pkg->{'version'} ($args->{'arch'}) from dep-wait to $pkg->{'state'}\n" if $verbose || $simulate;
     }
 }
 
