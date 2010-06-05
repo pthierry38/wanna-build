@@ -2898,6 +2898,7 @@ sub parse_all_v3() {
                     next SRCS;
                 }
             }
+            $pkg->{'package'}  = $name;
         }
 
         if ($pkgs->{'status'} eq 'installed' && $pkg->{'binary_nmu_version'} && $pkgs->{'binnmu'} < $pkg->{'binary_nmu_version'}) {
