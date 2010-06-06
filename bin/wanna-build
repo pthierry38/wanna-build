@@ -62,6 +62,7 @@ our ($verbose, $mail_logs, $list_order, $list_state,
     );
 our $Pas = '/org/buildd.debian.org/etc/packages-arch-specific/Packages-arch-specific';
 our $simulate = 0;
+our $api = 0; # allow buildds to specify an different api
 
 # global vars
 $ENV{'PATH'} = "/bin:/usr/bin:/usr/local/bin:/org/wanna-build/bin/";
@@ -108,6 +109,11 @@ elsif ($progname =~ /^list-(.*)$/) {
 my %options =
 	(# flags
 	 simulate       => { flag => \$simulate }, # this is not supported by all operations (yet)!
+	 api            => { arg => \$api, code => sub {
+                            # official apis are numeric
+                            die "$api isn't numeric" unless int($api) eq $api;
+                            die "$api too large" unless $api <= 1;
+                            } },
 	 verbose        => { short => "v", flag => \$verbose },
 	 override		=> { short => "o", flag => \$opt_override },
 	 "create-db"	=> { flag => \$opt_create_db },
@@ -710,6 +716,7 @@ sub add_one_building {
 		}
 	}
 	if ($ok) {
+            if ($api < 1) {
 		my $ok = 'ok';
 		if ($pkg->{'binary_nmu_version'}) {
 			print "$name: Warning: needs binary NMU $pkg->{'binary_nmu_version'}\n" .
@@ -720,16 +727,29 @@ sub add_one_building {
 				if $pkg->{'previous_state'} =~ /^Failed/ ||
 				   $pkg->{'state'} =~ /^Failed/;
 		}
+		print "$name: $ok\n" if $verbose;
+            } else {
+                print "$name:\n";
+                print "    - status: ok\n";
+                if ($pkg->{'binary_nmu_version'}) {
+                    print "    - binNMU:\n";
+                    print "        - version: $pkg->{'binary_nmu_version'}\n";
+                    print "        - changelog: $pkg->{'binary_nmu_changelog'}\n";
+                }
+            }
 		change_state( \$pkg, 'Building' );
 		$pkg->{'package'} = $name;
 		$pkg->{'version'} = $version;
 		$pkg->{'builder'} = $user;
 		log_ta( $pkg, "--take" );
 		update_source_info($pkg);
-		print "$name: $ok\n" if $verbose;
 	}
 	else {
+            if ($api < 1) {
 		print "$name: NOT OK!\n  $reason\n";
+            } else {
+		print "$name:\n    - status: not ok\n    - reason: \"$reason\"\n";
+            }
 	}
 }
 
@@ -2276,6 +2296,13 @@ sub log_ta {
 		   "changed from $prevstate to $pkg->{'state'} ".
 		   "by $real_user as $user";
 	
+        if ($simulate) {
+            printf ("update transactions: %s %s %s %s %s %s %s %s\n",
+		$pkg->{'package'}, $distribution,
+		$pkg->{'version'}, $action, $prevstate, $pkg->{'state'},
+                $real_user, $user);
+            return;
+        }
 	$dbh->do('INSERT INTO ' . transactions_table_name() .
 			' (package, distribution, version, action, ' .
 			' prevstate, state, real_user, set_user, time) ' .
@@ -2702,6 +2729,7 @@ sub get_readonly_source_info {
 
 sub get_source_info {
 	my $name = shift;
+        return get_readonly_source_info($name) if $simulate;
 	my $pkg = $dbh->selectrow_hashref('SELECT *, extract(days from date_trunc(\'days\', now() - state_change)) as state_days FROM ' . 
 		table_name() . ' WHERE package = ? AND distribution = ?' .
 		' FOR UPDATE',
@@ -2765,6 +2793,7 @@ sub get_all_source_info {
 
 sub update_source_info {
 	my $pkg = shift;
+        return if $simulate;
 
 	my $pkg2 = get_source_info($pkg->{'package'});
 	if (! defined $pkg2)
@@ -2817,6 +2846,7 @@ sub update_source_info {
 }
 
 sub add_source_info {
+        return if $simulate;
 	my $pkg = shift;
 	$dbh->do('INSERT INTO ' . table_name() .
 			' (package, distribution) values (?, ?)',
@@ -2824,6 +2854,7 @@ sub add_source_info {
 }
 
 sub del_source_info {
+        return if $simulate;
 	my $name = shift;
 	$dbh->do('DELETE FROM ' . table_name() .
 			' WHERE package = ? AND distribution = ?',
@@ -2839,6 +2870,7 @@ sub get_user_info {
 }
 
 sub update_user_info {
+        return if $simulate;
 	my $user = shift;
 	$dbh->do('UPDATE ' . user_table_name() .
 			' SET last_seen = now() WHERE username = ?' .
@@ -2849,6 +2881,7 @@ sub update_user_info {
 
 
 sub add_user_info {
+        return if $simulate;
 	my $user = shift;
 	$dbh->do('INSERT INTO ' . user_table_name() .
 			' (username, distribution, last_seen)' .
@@ -2859,6 +2892,7 @@ sub add_user_info {
 
 sub lock_table()
 {
+        return if $simulate;
 	$dbh->do('LOCK TABLE ' . table_name() .
 		' IN EXCLUSIVE MODE', undef) or die $dbh->errstr;
 }
