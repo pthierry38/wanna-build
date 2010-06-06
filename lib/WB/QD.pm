@@ -27,7 +27,6 @@ sub readsourcebins {
     local($/) = ""; # read in paragraph mode
 
     foreach my $s (@$SRC) {
-        print "SRC: $s\n";
         my $S = new IO::Uncompress::AnyInflate($s) || return "WB::QD::SRC can't open $s";
         while(<$S>) {
             my $p={};

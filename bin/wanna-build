@@ -3,6 +3,7 @@
 # wanna-build: coordination script for Debian buildds
 # Copyright (C) 1998 Roman Hodek <Roman.Hodek@informatik.uni-erlangen.de>
 # Copyright (C) 2005-2008 Ryan Murray <rmurray@debian.org>
+# Copyright (C) 2010      Andreas Barth <aba@not.so.argh.org>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -2951,16 +2952,24 @@ sub parse_all_v3() {
                 $pkgs->{'status'} = 'out-of-date';
         }
         if (isin($pkgs->{'status'}, qw (installed related))) {
+            my $change = 0;
             if ($pkg->{'state'} ne 'Installed') {
                 change_state( \$pkg, 'Installed');
-                $pkg->{'version'} = $pkgs->{'version'};
-                $pkg->{'installed_version'} = $pkgs->{'version'};
-                $pkg->{'binary_nmu_version'} = $pkgs->{'binnmu'};
-                $pkg->{'section'} = $pkgs->{'section'};
-                $pkg->{'priority'} = $pkgs->{'priority'};
-                if (isin($pkgs->{'status'}, qw (related))) {
-                    $pkg->{'notes'} = "related";
+                delete $pkg->{'depends'};
+                $change++;
+            }
+            my $attrs = { 'version' => 'version', 'installed_version' => 'version', 'binary_nmu_version' => 'binnmu', 'section' => 'section', 'priority' => 'priority' };
+            foreach my $k (keys %$attrs) {
+                if ($pkg->{$k} ne $pkgs->{$attrs->{$k}}) {
+                    $pkg->{$k} = $pkgs->{$attrs->{$k}};
+                    $change++;
                 }
+            }
+            if (isin($pkgs->{'status'}, qw (related))) {
+                $pkg->{'notes'} = "related";
+                $change++;
+            }
+            if ($change) {
                 print "$logstr set to installed/".$pkg->{'notes'}."\n" if $verbose || $simulate;
                 log_ta( $pkg, "--merge-v3: installed" ) unless $simulate;
                 update_source_info($pkg) unless $simulate;
