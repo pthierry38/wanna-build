@@ -36,52 +36,6 @@ get_architectures() {
     fi
 }
 
-# Runs quinn-diff with the right arguments.
-do_quinn() {
-    SUITE="$1"
-    ARCH="$2"
-    WHITELIST_FILE="$3"
-    quinn-diff \
-        -A $ARCH \
-        -a "$PAS_BASE/$SUITE/Packages-arch-specific" \
-        -s Sources.$SUITE \
-        -p Packages.$SUITE.$ARCH \
-        | filter-q-d "${WHITELIST_FILE}" > quinn-$SUITE.$ARCH 2>/dev/null
-}
-
-# Call wanna-build's importing function.  WB_SUITE might differ from SUITE
-# for other archives than the main one.
-do_wb_merge_all() {
-    SUITE="$1"
-    ARCH="$2"
-    WB_SUITE="$3"
-    OPTIONS="$4"
-
-    if [ -z "$WB_SUITE" ]
-    then
-        WB_SUITE="$SUITE"
-    fi
-
-    echo "do_wb_merge_all $SUITE/$ARCH started"
-    if test "$4" != "overlay" && test "$4" != "secondary"
-    then
-        #wanna-build -v --merge-all --arch=$ARCH --dist=$WB_SUITE Packages.$SUITE.$ARCH quinn-$SUITE.$ARCH Sources.$SUITE
-        wanna-build -v --Pas ${PAS_FILE} --merge-v3 --arch=$ARCH --dist=$WB_SUITE Packages.$SUITE.$ARCH . Sources.$SUITE
-    fi
-    if [ "$4" = "overlay" ]
-    then
-        #wanna-build -v --merge-all --arch=$ARCH --dist=$WB_SUITE Packages.$SUITE.$ARCH-all quinn-$SUITE.$ARCH Sources.$SUITE-all
-        # this currently makes the packages unknown to wanna-build. Perhaps we should keep them in pseudo-installed or so. Hm.
-        wanna-build -v --Pas ${PAS_FILE} --merge-v3 --arch=$ARCH --dist=$WB_SUITE Packages.$SUITE.$ARCH . Sources.$SUITE . Packages.$SUITE.$ARCH-all . Sources.$SUITE-all
-    fi
-    if [ "$4" = "secondary" ]
-    then
-        #wanna-build -v --merge-all-secondary --arch=$ARCH --dist=$WB_SUITE Packages.$SUITE.$ARCH quinn-$SUITE.$ARCH Sources.$SUITE Packages.$SUITE.$ARCH-all
-        wanna-build -v --Pas ${PAS_FILE} --merge-v3 --arch=$ARCH --dist=$WB_SUITE Packages.$SUITE.$ARCH . Sources.$SUITE . Packages.$SUITE.$ARCH-all . Sources.$SUITE-all
-    fi
-    echo "do_wb_merge_all $SUITE/$ARCH done"
-}
-
 cleanup() {
     rm -rf "$LOCKFILE"
 }
@@ -112,7 +66,7 @@ trigger_wb_update() {
     for ARCH in ${ARCHS}; do
         new-keep-latest ${ARCH} $(eval echo $(echo ${PACKAGES} | sed -e 's/%ARCH%/${ARCH}/g')) > Packages.${SUITE}.${ARCH}
     done
-    parallel -l 5 -i wanna-build -v --Pas ${PAS_FILE} --merge-v3 --arch="{}" --dist=$WB_SUITE Packages.%SUITE%.%ARCH% . Sources.%SUITE% -- ${ARCHS} || true
+    parallel -l 5 -i wanna-build -v --Pas ${PAS_FILE} --merge-v3 -A "{}" --dist=$WB_SUITE Packages.%SUITE%.%ARCH% . Sources.%SUITE% -- ${ARCHS} || true
 
     echo "`date`: ${ARCHIVE}/${SUITE} done"
 }
@@ -140,7 +94,7 @@ trigger_wb_update_for_overlay() {
         new-keep-latest ${ARCH} $(eval echo $(echo ${PACKAGES} | sed -e 's/%ARCH%/${ARCH}/g')) > Packages.${SUITE}.${ARCH}
         new-keep-latest ${ARCH} Packages.${SUITE}.${ARCH} $(eval echo $(echo ${PACKAGES_BASE} | sed -e 's/%ARCH%/${ARCH}/g')) > Packages.${SUITE}.${ARCH}-all
     done
-    parallel -l 5 -i wanna-build -v --Pas ${PAS_FILE} --merge-v3 --arch="{}" --dist=$WB_SUITE Packages.%SUITE%.%ARCH% . Sources.%SUITE% . \
+    parallel -l 5 -i wanna-build -v --Pas ${PAS_FILE} --merge-v3 -A "{}" --dist=$WB_SUITE Packages.%SUITE%.%ARCH% . Sources.%SUITE% . \
         Packages.%SUITE%.%ARCH%-all . Sources.%SUITE%-all -- ${ARCHS} || true
 
     echo "`date`: ${ARCHIVE}/${SUITE} done"
@@ -173,7 +127,7 @@ trigger_wb_update_with_secondary() {
         new-keep-latest ${ARCH} $(eval echo $(echo ${PACKAGES} | sed -e 's/%ARCH%/${ARCH}/g')) > Packages.${SUITE}.${ARCH}
         ucat Packages.${SUITE}.${ARCH} $(eval echo $(echo ${PACKAGES_BASE} | sed -e 's/%ARCH%/${ARCH}/g')) > Packages.${SUITE}.${ARCH}-all
     done
-    parallel -l 5 -i wanna-build -v --Pas ${PAS_FILE} --merge-v3 --arch="{}" --dist=$WB_SUITE Packages.%SUITE%.%ARCH% . Sources.%SUITE% . \
+    parallel -l 5 -i wanna-build -v --Pas ${PAS_FILE} --merge-v3 -A "{}" --dist=$WB_SUITE Packages.%SUITE%.%ARCH% . Sources.%SUITE% . \
         Packages.%SUITE%.%ARCH%-all -- ${ARCHS} || true
 
     echo "`date`: ${ARCHIVE}/${SUITE} done"
