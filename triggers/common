@@ -71,7 +71,8 @@ do_wb_merge_all() {
     if [ "$4" = "overlay" ]
     then
         #wanna-build -v --merge-all --arch=$ARCH --dist=$WB_SUITE Packages.$SUITE.$ARCH-all quinn-$SUITE.$ARCH Sources.$SUITE-all
-        wanna-build -v --Pas ${PAS_FILE} --merge-v3 --arch=$ARCH --dist=$WB_SUITE Packages.$SUITE.$ARCH-all . Sources.$SUITE-all
+        # this currently makes the packages unknown to wanna-build. Perhaps we should keep them in pseudo-installed or so. Hm.
+        wanna-build -v --Pas ${PAS_FILE} --merge-v3 --arch=$ARCH --dist=$WB_SUITE Packages.$SUITE.$ARCH . Sources.$SUITE . Packages.$SUITE.$ARCH-all
     fi
     if [ "$4" = "secondary" ]
     then
