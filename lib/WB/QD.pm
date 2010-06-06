@@ -27,7 +27,8 @@ sub readsourcebins {
     local($/) = ""; # read in paragraph mode
 
     foreach my $s (@$SRC) {
-        my $S = new IO::Uncompress::AnyInflate($s) || return "can't open $s";
+        print "SRC: $s\n";
+        my $S = new IO::Uncompress::AnyInflate($s) || return "WB::QD::SRC can't open $s";
         while(<$S>) {
             my $p={};
             /^Package:\s*(\S+)$/mi and $p->{'name'} = $1;
@@ -56,7 +57,7 @@ sub readsourcebins {
     }
 
     foreach my $p (@$BIN) {
-        my $P = new IO::Uncompress::AnyInflate($p) || return "can't open $p";
+        my $P = new IO::Uncompress::AnyInflate($p) || return "WB::QD::PKGS can't open $p";
         while(<$P>) {
             my $p;
             /^Version:\s*(\S+)$/mi and $p->{'version'} = $1;

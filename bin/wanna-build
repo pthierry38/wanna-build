@@ -508,12 +508,14 @@ sub process {
                         my @psrcs = &parse_argv( \@ARGV, '.');
                         use WB::QD;
                         my $srcs = WB::QD::readsourcebins($arch, $Pas, \@isrcs, \@ipkgs);
-                        my $psrcs = WB::QD::readsourcebins($arch, $Pas, \@psrcs, []);
-                        foreach my $k (keys %$$psrcs) {
-                            next if $$srcs->{$k};
-                            my $pkg = $$psrcs->{$k};
-                            $pkg->{'status'} = 'related';
-                            $$srcs->{$k} = $pkg;
+                        if (@psrcs) {
+                            my $psrcs = WB::QD::readsourcebins($arch, $Pas, \@psrcs, []);
+                            foreach my $k (keys %$$psrcs) {
+                                next if $$srcs->{$k};
+                                my $pkg = $$psrcs->{$k};
+                                $pkg->{'status'} = 'related';
+                                $$srcs->{$k} = $pkg;
+                            }
                         }
                         parse_all_v3($$srcs);
                         @bpkgs = @ipkgs unless @bpkgs;
@@ -737,7 +739,7 @@ sub add_one_building {
 		}
 		print "$name: $ok\n" if $verbose;
             } else {
-                print "$name:\n";
+                print "- $name:\n";
                 print "    - status: ok\n";
                 if ($pkg->{'binary_nmu_version'}) {
                     print "    - binNMU:\n";
@@ -756,7 +758,7 @@ sub add_one_building {
             if ($api < 1) {
 		print "$name: NOT OK!\n  $reason\n";
             } else {
-		print "$name:\n    - status: not ok\n    - reason: \"$reason\"\n";
+		print "- $name:\n    - status: not ok\n    - reason: \"$reason\"\n";
             }
 	}
 }
@@ -2305,10 +2307,10 @@ sub log_ta {
 		   "by $real_user as $user";
 	
         if ($simulate) {
-            printf ("update transactions: %s %s %s %s %s %s %s %s\n",
+            printf "update transactions: %s %s %s %s %s %s %s %s\n",
 		$pkg->{'package'}, $distribution,
 		$pkg->{'version'}, $action, $prevstate, $pkg->{'state'},
-                $real_user, $user);
+                $real_user, $user;
             return;
         }
 	$dbh->do('INSERT INTO ' . transactions_table_name() .
@@ -2924,7 +2926,7 @@ sub parse_all_v3() {
 
     SRCS:
     foreach my $name (keys %$srcs) {
-        next if $name eq '_binaries';
+        next if $name eq '_binary';
 
         # state = installed, out-of-date, uncompiled, not-for-us
         my $pkgs = $srcs->{$name};
@@ -2932,21 +2934,23 @@ sub parse_all_v3() {
 
         unless ($pkg) {
             next SRCS if $pkgs->{'status'} eq 'not-for-us';
+            my $logstr = "merge-v3 ".$name." ($arch):";
 
             # does at least one binary exist in the database and is more recent - if so, we're probably just outdated, ignore the source package
             for my $bin (@{$pkgs->{'binary'}}) {
                 if ($binary->{$bin} and vercmp($pkgs->{'version'}, $binary->{$bin}) < 0) {
-                    print "merge-v3: skiping $name ($arch)\n" if $verbose || $simulate;
+                    print "$logstr skipped because binaries (assumed to be) overwritten\n" if $verbose || $simulate;
                     next SRCS;
                 }
             }
             $pkg->{'package'}  = $name;
         }
+        my $logstr = "merge-v3 ".$name."_$pkgs->{'version'} ($arch, previous-state: $pkg->{'state'}):";
 
-        if (isin($pkgs->{'status'}, qw (installed, related)) && $pkg->{'binary_nmu_version'} && $pkgs->{'binnmu'} < $pkg->{'binary_nmu_version'}) {
+        if (isin($pkgs->{'status'}, qw (installed related)) && $pkg->{'binary_nmu_version'} && $pkgs->{'binnmu'} < $pkg->{'binary_nmu_version'}) {
                 $pkgs->{'status'} = 'out-of-date';
         }
-        if (isin($pkgs->{'status'}, qw (installed, related))) {
+        if (isin($pkgs->{'status'}, qw (installed related))) {
             if ($pkg->{'state'} ne 'Installed') {
                 change_state( \$pkg, 'Installed');
                 $pkg->{'version'} = $pkgs->{'version'};
@@ -2957,7 +2961,7 @@ sub parse_all_v3() {
                 if (isin($pkgs->{'status'}, qw (related))) {
                     $pkg->{'notes'} = "related";
                 }
-                print "merge-v3: set $name ($arch) to installed/".$pkg->{'notes'}."\n" if $verbose || $simulate;
+                print "$logstr set to installed/".$pkg->{'notes'}."\n" if $verbose || $simulate;
                 log_ta( $pkg, "--merge-v3: installed" ) unless $simulate;
                 update_source_info($pkg) unless $simulate;
             }
@@ -2971,18 +2975,21 @@ sub parse_all_v3() {
                 change_state( \$pkg, "Failed-Removed" );
 		log_ta( $pkg, "--merge-v3: Failed-Removed" ) unless $simulate;
 		update_source_info($pkg) unless $simulate;
-                print "$name ($pkg->{'version'}): (virtually) deleted from database\n" if $verbose || $simulate;
+                print "$logstr (virtually) deleted from database\n" if $verbose || $simulate;
                 next;
             }
 
-            print "should delete $name (not-for-us)\n" if $verbose || $simulate || 1; # not implemented yet on purpose
+            print "$logstr should delete (not-for-us according to P-a-s)\n" if $verbose || $simulate || 1; # not implemented yet on purpose
             next;
         }
 
         # only uncompiled / out-of-date are left, so check if anything new
+        if (!(isin($pkgs->{'status'}, qw (uncompiled out-of-date)))) {
+            print "$logstr package in unknown state: $pkgs->{'status'}\n";
+            next SRCS;
+        }
         next if $pkgs->{'version'} eq $pkg->{'version'};
 
-        print "should set $name to needs-builds\n" if $simulate;
         if (defined( $pkg->{'state'} ) && isin( $pkg->{'state'}, qw(Building Built Build-Attempted))) {
             send_mail( $pkg->{'builder'},
                 "new version of $name (dist=$distribution)",
@@ -2992,7 +2999,7 @@ sub parse_all_v3() {
                 "compiling $name yet, you can stop it to save some work.\n".
                 "Just to inform you...\n".
                 "(This is an automated message)\n" ) unless $simulate;
-	    print "$name: new version ($pkgs->{'version'}) while building $pkg->{'version'} -- sending mail to builder ($pkg->{'builder'})\n"
+	    print "$logstr new version while building $pkg->{'version'} -- sending mail to builder ($pkg->{'builder'})\n"
 				  if $verbose || $simulate;
 	    }
         change_state( \$pkg, 'Needs-Build');
@@ -3007,16 +3014,17 @@ sub parse_all_v3() {
         delete $pkg->{'binary_nmu_changelog'};
         log_ta( $pkg, "--merge-v3: needs-build" ) unless $simulate;
         update_source_info($pkg) unless $simulate;
-        print "$name ($pkgs->{'version'} / $arch) needs rebuilding now.\n" if $verbose || $simulate;
+        print "$logstr set to needs-builds\n" if $simulate || $verbose;
     }
 
     foreach my $name (keys %$db) {
         next if $srcs->{$name};
         my $pkg = $db->{$name};
+        my $logstr = "merge-v3 ".$name."_$pkg->{'version'} ($arch, previous-state: $pkg->{'state'}):";
         # package disappeared - delete
         change_state( \$pkg, 'deleted' );
         log_ta( $pkg, "--merge-v3: deleted" ) unless $simulate;
-	print "$name ($pkg->{'version'} / $arch) deleted from database\n" if $verbose || $simulate;
+	print "$logstr deleted from database\n" if $verbose || $simulate;
         del_source_info($name) unless $simulate;
         delete $db->{$name};
     }
