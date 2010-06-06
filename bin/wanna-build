@@ -497,7 +497,7 @@ sub process {
 		/^merge-v3/ && do {
                         die "This operation is restricted to admin users\n"
 			    if (defined @conf::admin_users and !isin( $real_user, @conf::admin_users) and !$simulate);
-                        # call with installed-packages+ . installed-sources+ [ . available-for-build-packages+ ]
+                        # call with installed-packages+ . installed-sources+ [ . available-for-build-packages* [ . consider-as-installed-source* ]  ]
                         # in case available-for-build-packages is not specified, installed-packages are used
                         lock_table() unless $simulate;
                         my $replacemap = { '%ARCH%' => $arch, '%SUITE%' => $distribution };
@@ -505,8 +505,16 @@ sub process {
                         my @ipkgs = &parse_argv( \@ARGV, '.');
                         my @isrcs = &parse_argv( \@ARGV, '.');
                         my @bpkgs = &parse_argv( \@ARGV, '.');
+                        my @psrcs = &parse_argv( \@ARGV, '.');
                         use WB::QD;
                         my $srcs = WB::QD::readsourcebins($arch, $Pas, \@isrcs, \@ipkgs);
+                        my $psrcs = WB::QD::readsourcebins($arch, $Pas, \@psrcs, []);
+                        foreach my $k (keys %$$psrcs) {
+                            next if $$srcs->{$k};
+                            my $pkg = $$psrcs->{$k};
+                            $pkg->{'status'} = 'related';
+                            $$srcs->{$k} = $pkg;
+                        }
                         parse_all_v3($$srcs);
                         @bpkgs = @ipkgs unless @bpkgs;
                         call_edos_depcheck( {'arch' => $arch, 'pkgs' => @bpkgs, 'srcs' => $$srcs, 'depwait' => 1 });
@@ -2935,10 +2943,10 @@ sub parse_all_v3() {
             $pkg->{'package'}  = $name;
         }
 
-        if ($pkgs->{'status'} eq 'installed' && $pkg->{'binary_nmu_version'} && $pkgs->{'binnmu'} < $pkg->{'binary_nmu_version'}) {
+        if (isin($pkgs->{'status'}, qw (installed, related)) && $pkg->{'binary_nmu_version'} && $pkgs->{'binnmu'} < $pkg->{'binary_nmu_version'}) {
                 $pkgs->{'status'} = 'out-of-date';
         }
-        if ($pkgs->{'status'} eq 'installed') {
+        if (isin($pkgs->{'status'}, qw (installed, related))) {
             if ($pkg->{'state'} ne 'Installed') {
                 change_state( \$pkg, 'Installed');
                 $pkg->{'version'} = $pkgs->{'version'};
@@ -2946,7 +2954,10 @@ sub parse_all_v3() {
                 $pkg->{'binary_nmu_version'} = $pkgs->{'binnmu'};
                 $pkg->{'section'} = $pkgs->{'section'};
                 $pkg->{'priority'} = $pkgs->{'priority'};
-                print "merge-v3: set $name ($arch) to installed\n" if $verbose || $simulate;
+                if (isin($pkgs->{'status'}, qw (related))) {
+                    $pkg->{'notes'} = "related";
+                }
+                print "merge-v3: set $name ($arch) to installed/".$pkg->{'notes'}."\n" if $verbose || $simulate;
                 log_ta( $pkg, "--merge-v3: installed" ) unless $simulate;
                 update_source_info($pkg) unless $simulate;
             }
