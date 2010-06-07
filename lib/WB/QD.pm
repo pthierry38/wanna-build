@@ -67,7 +67,8 @@ sub readsourcebins {
             /^Source:\s*(\S+)\s+\((\S+)\)$/mi and $p->{'source'} = $1 and $p->{'version'} = $2;
             $p->{'version'} =~ /(\S+)\+b([0-9]+)/ and $p->{'version'} = $1 and $p->{'binnmu'} = $2;
 
-            $binary->{$p->{'binary'}} = { 'version' => $p->{'version'}, 'arch' => $p->{'arch'}} unless $binary->{$p->{'binary'}} and vercmp($binary->{$p->{'binary'}->{'version'}}, $p->{'version'}) < 0;
+            next unless $p->{'arch'} eq 'all' || $p->{'arch'} eq ${arch};
+            $binary->{$p->{'binary'}} = { 'version' => $p->{'version'}, 'arch' => $p->{'arch'}} unless $binary->{$p->{'binary'}} and vercmp($binary->{$p->{'binary'}}->{'version'}, $p->{'version'}) < 0;
 
             #next if $pas->{$p->{'binary'}} && pasignore($pas->{$p->{'binary'}}, $arch);
             next if $p->{'arch'} eq 'all';

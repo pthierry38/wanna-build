@@ -66,7 +66,7 @@ trigger_wb_update() {
     for ARCH in ${ARCHS}; do
         new-keep-latest ${ARCH} $(eval echo $(echo ${PACKAGES} | sed -e 's/%ARCH%/${ARCH}/g')) > Packages.${SUITE}.${ARCH}
     done
-    parallel -l 5 -i wanna-build -v --Pas ${PAS_FILE} --merge-v3 -A "{}" --dist=$WB_SUITE Packages.%SUITE%.%ARCH% . Sources.%SUITE% -- ${ARCHS} || true
+    parallel -l 5 -i wanna-build -v --Pas ${PAS_FILE} --merge-v3 -A "{}" --dist=$WB_SUITE Packages.${SUITE}.%ARCH% . Sources.${SUITE} -- ${ARCHS} || true
 
     echo "`date`: ${ARCHIVE}/${SUITE} done"
 }
@@ -94,8 +94,8 @@ trigger_wb_update_for_overlay() {
         new-keep-latest ${ARCH} $(eval echo $(echo ${PACKAGES} | sed -e 's/%ARCH%/${ARCH}/g')) > Packages.${SUITE}.${ARCH}
         new-keep-latest ${ARCH} Packages.${SUITE}.${ARCH} $(eval echo $(echo ${PACKAGES_BASE} | sed -e 's/%ARCH%/${ARCH}/g')) > Packages.${SUITE}.${ARCH}-all
     done
-    parallel -l 5 -i wanna-build -v --Pas ${PAS_FILE} --merge-v3 -A "{}" --dist=$WB_SUITE Packages.%SUITE%.%ARCH% . Sources.%SUITE% . \
-        Packages.%SUITE%.%ARCH%-all . Sources.%SUITE%-all -- ${ARCHS} || true
+    parallel -l 5 -i wanna-build -v --Pas ${PAS_FILE} --merge-v3 -A "{}" --dist=$WB_SUITE Packages.${SUITE}.%ARCH% . Sources.${SUITE} . \
+        Packages.${SUITE}.%ARCH%-all . Sources.${SUITE}-all -- ${ARCHS} || true
 
     echo "`date`: ${ARCHIVE}/${SUITE} done"
 }
@@ -127,8 +127,8 @@ trigger_wb_update_with_secondary() {
         new-keep-latest ${ARCH} $(eval echo $(echo ${PACKAGES} | sed -e 's/%ARCH%/${ARCH}/g')) > Packages.${SUITE}.${ARCH}
         ucat Packages.${SUITE}.${ARCH} $(eval echo $(echo ${PACKAGES_BASE} | sed -e 's/%ARCH%/${ARCH}/g')) > Packages.${SUITE}.${ARCH}-all
     done
-    parallel -l 5 -i wanna-build -v --Pas ${PAS_FILE} --merge-v3 -A "{}" --dist=$WB_SUITE Packages.%SUITE%.%ARCH% . Sources.%SUITE% . \
-        Packages.%SUITE%.%ARCH%-all -- ${ARCHS} || true
+    parallel -l 5 -i wanna-build -v --Pas ${PAS_FILE} --merge-v3 -A "{}" --dist=$WB_SUITE Packages.${SUITE}.%ARCH% . Sources.${SUITE} . \
+        Packages.${SUITE}.%ARCH%-all -- ${ARCHS} || true
 
     echo "`date`: ${ARCHIVE}/${SUITE} done"
 }

@@ -45,9 +45,13 @@ main_sync() {
     do
         SOURCES="${ARCHIVE_BASE}/archive/${SUITE}/{main,contrib}/source/Sources.gz"
         SOURCES="${SOURCES} ${ARCHIVE_BASE}/buildd-${SUITE}/Sources.gz"
+        NFSOURCES="${ARCHIVE_BASE}/archive/${SUITE}/non-free/source/Sources.gz"
         PACKAGES="${ARCHIVE_BASE}/archive/${SUITE}/{main,contrib}/binary-%ARCH%/Packages.gz"
         PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/archive/${SUITE}/{main,contrib}/debian-installer/binary-%ARCH%/Packages.gz"
         PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/buildd-${SUITE}/Packages.gz"
+        NFPACKAGES="${ARCHIVE_BASE}/archive/${SUITE}/non-free/binary-%ARCH%/Packages.gz"
+        NFPACKAGES="${NFPACKAGES} ${ARCHIVE_BASE}/archive/${SUITE}/non-free/debian-installer/binary-%ARCH%/Packages.gz"
+        /org/wanna-build/triggers/filter-nonfree /org/wanna-build/etc/non-free-include-list "`get_architectures $SUITE`" Sources.${SUITE}.non-free Packages.${SUITE}.%ARCH%.non-free ${NFSOURCES} . ${NFPACKAGES} || true
 
         if [ "$SUITE" != "experimental" ]
         then

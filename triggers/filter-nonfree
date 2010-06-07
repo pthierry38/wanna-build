@@ -1,33 +1,38 @@
 #! /usr/bin/python
 
 
-import sys, os.path
+import sys, os.path, gzip, subprocess
 #from debian_bundle import deb822
 import apt_pkg
 
 
-def check_source(ok, f, fw):
+def check_source(ok, srcs, fw):
     ret=[]
-    pkg = apt_pkg.ParseTagFile(f)
-    while pkg.Step():
-        if not pkg.Section.get('Package'): continue
-        if pkg.Section.get('Section','').startswith('non-free'):
-            if pkg.Section.get('Autobuild') != 'yes': continue
-            if pkg.Section['Package'] not in ok: continue
-        ret += [pkg.Section['Package']]
-        fw.write(str(pkg.Section))
-        fw.write("\n")
-    return ret
-    f.close()
+    for f in srcs:
+        #f = open(f, 'r')
+        f = subprocess.Popen("zcat %s" % (f), shell=True, stdout=subprocess.PIPE).stdout
+        pkg = apt_pkg.ParseTagFile(f)
+        while pkg.Step():
+            if not pkg.Section.get('Package'): continue
+            if pkg.Section.get('Section','').startswith('non-free'):
+                if pkg.Section.get('Autobuild') != 'yes': continue
+                if pkg.Section['Package'] not in ok: continue
+            ret += [pkg.Section['Package']]
+            fw.write(str(pkg.Section))
+            fw.write("\n")
+        f.close()
     fw.close()
+    return ret
 
-def check_binary(ok, f, fw):
-    pkg = apt_pkg.ParseTagFile(f)
-    while pkg.Step():
-        if pkg.Section.get('Source', pkg.Section.get('Package')).split(" ")[0] not in ok: continue
-        fw.write(str(pkg.Section))
-        fw.write("\n")
-    f.close()
+def check_binary(ok, bins, fw):
+    for f in bins:
+        f = subprocess.Popen("zcat %s" % (f), shell=True, stdout=subprocess.PIPE).stdout
+        pkg = apt_pkg.ParseTagFile(f)
+        while pkg.Step():
+            if pkg.Section.get('Source', pkg.Section.get('Package')).split(" ")[0] not in ok: continue
+            fw.write(str(pkg.Section))
+            fw.write("\n")
+        f.close()
     fw.close()
 
 def outfile(name, file):
@@ -35,16 +40,32 @@ def outfile(name, file):
     #return open(file + name, "w")
     if file.endswith(name): return open(file[:-len(name)], "w")
 
+def replarch(arch, pkgs):
+    return [ x.replace('%ARCH%', arch) for x in pkgs ]
+
 def main():
+    # call me:
+    # /org/wanna-build/etc/non-free-include-list "arch1 arch2" write-sources write-packages Sources* . Packages*
     if len(sys.argv) <= 4:
         print "Error - too few args"
         return
 
-    name = sys.argv[1]
-    oklist = [ x[:-1].split(' ')[0] for x in open(sys.argv[2]) ]
-    okpkgs = check_source(oklist, open(sys.argv[3]), outfile(name, sys.argv[3]))
-    for file in sys.argv[4:]:
-        check_binary(okpkgs, open(file), outfile(name, file))
+    oklist = [ x[:-1].split(' ')[0] for x in open(sys.argv[1]) ]
+    #outsrcs = open(sys.argv[3], "w")
+    #outpkgs = open(sys
+    rem = sys.argv[5:]
+    if '.' not in rem:
+        print "need both Sources and Packages"
+        return
+    src = rem[:rem.index('.')]
+    bin = rem[rem.index('.')+1:]
+    if not src or not bin:
+        print "need non-empty Sources and Packages"
+        return
+    okpkgs = check_source(oklist, src, open(sys.argv[3], "w"))
+    print okpkgs
+    for arch in sys.argv[2].split(" "):
+        check_binary(okpkgs, replarch(arch, bin), open(replarch(arch, [sys.argv[4]])[0], "w"))
 
 if __name__ == '__main__':
         main()

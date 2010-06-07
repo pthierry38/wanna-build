@@ -520,7 +520,7 @@ sub process {
                         }
                         parse_all_v3($$srcs, {'arch' => $arch, 'suite' => $distribution, 'time' => $curr_date});
                         @bpkgs = @ipkgs unless @bpkgs;
-                        call_edos_depcheck( {'arch' => $arch, 'pkgs' => @bpkgs, 'srcs' => $$srcs, 'depwait' => 1 });
+                        call_edos_depcheck( {'arch' => $arch, 'pkgs' => \@bpkgs, 'srcs' => $$srcs, 'depwait' => 1 });
                         last SWITCH;
 		};
 		/^import/ && do {
@@ -2433,11 +2433,11 @@ sub wb_edos_builddebcheck {
     my $sourceprefix="source---";
     my $architecture=$args->{'arch'};
     my $edosoptions = "-failures -explain -quiet";
-    my @packagefiles = $args->{'pkgs'};
+    my $packagefiles = $args->{'pkgs'};
     my $sourcesfile = $args->{'src'};
 
     my $packagearch="";
-    foreach my $packagefile (@packagefiles) {
+    foreach my $packagefile (@$packagefiles) {
         open(P,$packagefile);
         while (<P>) {
             next unless /^Architecture/;
@@ -2466,9 +2466,9 @@ sub wb_edos_builddebcheck {
         }   
     }
 
-    print "calling: edos-debcheck $edosoptions < $sourcesfile ".join('', map {" '-base FILE' ".$_ } @packagefiles)."\n";
+    print "calling: edos-debcheck $edosoptions < $sourcesfile ".join('', map {" '-base FILE' ".$_ } @$packagefiles)."\n";
     open(RESULT, '-|',
-        "edos-debcheck $edosoptions < $sourcesfile ".join('', map {" '-base FILE' ".$_ } @packagefiles));
+        "edos-debcheck $edosoptions < $sourcesfile ".join('', map {" '-base FILE' ".$_ } @$packagefiles));
 
     my $explanation="";
     my $result={};
@@ -2940,7 +2940,7 @@ sub parse_all_v3() {
 
             # does at least one binary exist in the database and is more recent - if so, we're probably just outdated, ignore the source package
             for my $bin (@{$pkgs->{'binary'}}) {
-                if ($binary->{$bin} and vercmp($pkgs->{'version'}, $binary->{$bin}) < 0) {
+                if ($binary->{$bin} and vercmp($pkgs->{'version'}, $binary->{$bin}->{'version'}) < 0) {
                     print "$logstr skipped because binaries (assumed to be) overwritten\n" if $verbose || $simulate;
                     next SRCS;
                 }
@@ -2999,6 +2999,7 @@ sub parse_all_v3() {
             next SRCS;
         }
         next if $pkgs->{'version'} eq $pkg->{'version'};
+        next if isin( $pkg->{'state'}, qw(Not-For-Us Failed-Removed));
 
         if (defined( $pkg->{'state'} ) && isin( $pkg->{'state'}, qw(Building Built Build-Attempted))) {
             send_mail( $pkg->{'builder'},
