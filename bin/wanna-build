@@ -2966,7 +2966,7 @@ sub parse_all_v3() {
                     $change++;
                 }
             }
-            if (isin($pkgs->{'status'}, qw (related))) {
+            if (isin($pkgs->{'status'}, qw (related)) and $pkg->{'notes'} ne "related") {
                 $pkg->{'notes'} = "related";
                 $change++;
             }
