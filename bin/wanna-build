@@ -3031,8 +3031,8 @@ sub parse_all_v3() {
         $pkg->{'dep'} = $pkgs->{'depends'};
         $pkg->{'conf'} = $pkgs->{'conflicts'};
         delete $pkg->{'builder'};
-        delete $pkg->{'binary_nmu_version'};
-        delete $pkg->{'binary_nmu_changelog'};
+        delete $pkg->{'binary_nmu_version'} unless $pkgs->{'binnmu'};
+        delete $pkg->{'binary_nmu_changelog'} unless $pkgs->{'binnmu'};
         log_ta( $pkg, "--merge-v3: needs-build" ) unless $simulate;
         update_source_info($pkg) unless $simulate;
         print "$logstr set to needs-builds\n" if $simulate || $verbose;
