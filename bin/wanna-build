@@ -64,6 +64,7 @@ our ($verbose, $mail_logs, $list_order, $list_state,
     );
 our $Pas = '/org/buildd.debian.org/etc/packages-arch-specific/Packages-arch-specific';
 our $simulate = 0;
+our $simulate_edos = 0;
 our $api = 0; # allow buildds to specify an different api
 
 # global vars
@@ -111,6 +112,8 @@ elsif ($progname =~ /^list-(.*)$/) {
 my %options =
 	(# flags
 	 simulate       => { flag => \$simulate }, # this is not supported by all operations (yet)!
+	 "simulate-edos"  => { flag => \$simulate_edos },
+	 "simulate-all" => { code => sub { $simulate = 1; $simulate_edos = 1; } },
 	 api            => { arg => \$api, code => sub {
                             # official apis are numeric
                             die "$api isn't numeric" unless int($api) eq $api;
@@ -2512,6 +2515,7 @@ sub wb_edos_builddebcheck {
 
 
 sub call_edos_depcheck {
+    return if $simulate_edos;
     my $args = shift;
     my $srcs = $args->{'srcs'};
     my $key;
@@ -2954,7 +2958,7 @@ sub parse_all_v3() {
             ($pkg->{'binary_nmu_version'} ? ";b".$pkg->{'binary_nmu_version'} : "").
             ", $pkg->{'state'}):";
 
-        if (isin($pkgs->{'status'}, qw (installed related)) && $pkg->{'binary_nmu_version'} && $pkgs->{'binnmu'} < $pkg->{'binary_nmu_version'}) {
+        if (isin($pkgs->{'status'}, qw (installed related)) && $pkg->{'binary_nmu_version'} && $pkgs->{'binnmu'} < int($pkg->{'binary_nmu_version'})) {
                 $pkgs->{'status'} = 'out-of-date';
         }
         if (isin($pkgs->{'status'}, qw (installed related))) {
@@ -3003,7 +3007,8 @@ sub parse_all_v3() {
             print "$logstr package in unknown state: $pkgs->{'status'}\n";
             next SRCS;
         }
-        next if $pkgs->{'version'} eq $pkg->{'version'};
+        next if $pkgs->{'version'} eq $pkg->{'version'} and $pkgs->{'binnmu'} >= int($pkg->{'binary_nmu_version'});
+        next if $pkgs->{'version'} eq $pkg->{'version'} and !isin( $pkg->{'state'}, qw(Installed));
         next if isin( $pkg->{'state'}, qw(Not-For-Us Failed-Removed));
 
         if (defined( $pkg->{'state'} ) && isin( $pkg->{'state'}, qw(Building Built Build-Attempted))) {
