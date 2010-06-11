@@ -80,6 +80,7 @@ Architecture: i386
 Version: 5.6
 
 Package: bash
+Source: bash (4.1-3)
 Priority: required
 Section: shells
 Architecture: i386

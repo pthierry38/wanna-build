@@ -3,6 +3,7 @@ package WB::QD;
 use strict;
 use IO::Uncompress::AnyInflate qw(anyinflate);
 use Dpkg::Version qw(vercmp);
+use Data::Dumper;
 
 sub readsourcebins {
     my $arch = shift;
@@ -60,12 +61,12 @@ sub readsourcebins {
         while(<$P>) {
             my $p;
             /^Version:\s*(\S+)$/mi and $p->{'version'} = $1;
+            /^Version:\s*(\S+)\+b([0-9]+)$/mi and $p->{'version'} = $1 and $p->{'binnmu'} = $2;
             /^Architecture:\s*(\S+)$/mi and $p->{'arch'} = $1;
             /^Package:\s*(\S+)$/mi and $p->{'binary'} = $1;
             /^Package:\s*(\S+)$/mi and $p->{'source'} = $1;
             /^Source:\s*(\S+)$/mi and $p->{'source'} = $1;
             /^Source:\s*(\S+)\s+\((\S+)\)$/mi and $p->{'source'} = $1 and $p->{'version'} = $2;
-            $p->{'version'} =~ /(\S+)\+b([0-9]+)/ and $p->{'version'} = $1 and $p->{'binnmu'} = $2;
 
             next unless $p->{'arch'} eq 'all' || $p->{'arch'} eq ${arch};
             $binary->{$p->{'binary'}} = { 'version' => $p->{'version'}, 'arch' => $p->{'arch'}} unless $binary->{$p->{'binary'}} and vercmp($binary->{$p->{'binary'}}->{'version'}, $p->{'version'}) < 0;

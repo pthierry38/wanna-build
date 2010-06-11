@@ -42,6 +42,7 @@ use File::Copy;
 use DBI;
 use lib '/org/wanna-build/bin';
 use lib '/org/wanna-build/lib';
+#use lib 'lib';
 use WannaBuild;
 use YAML::Tiny;
 use Data::Dumper;
@@ -2947,7 +2948,11 @@ sub parse_all_v3() {
             }
             $pkg->{'package'}  = $name;
         }
-        my $logstr = "merge-v3 $vars->{'time'} ".$name."_$pkgs->{'version'} ($vars->{'arch'}, $vars->{'suite'}, previous: $pkg->{'version'}, $pkg->{'state'}):";
+        my $logstr = "merge-v3 $vars->{'time'} ".$name."_$pkgs->{'version'}".
+            ($pkgs->{'binnmu'} ? ";b".$pkgs->{'binnmu'} : "").
+            "($vars->{'arch'}, $vars->{'suite'}, previous: $pkg->{'version'}".
+            ($pkg->{'binary_nmu_version'} ? ";b".$pkg->{'binary_nmu_version'} : "").
+            ", $pkg->{'state'}):";
 
         if (isin($pkgs->{'status'}, qw (installed related)) && $pkg->{'binary_nmu_version'} && $pkgs->{'binnmu'} < $pkg->{'binary_nmu_version'}) {
                 $pkgs->{'status'} = 'out-of-date';
