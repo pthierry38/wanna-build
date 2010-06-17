@@ -137,7 +137,7 @@ is_deeply ($$srcs, {
             'bash' => {
                         'priority' => 'required',
                         'status' => 'installed',
-                        'version' => '4.1-3',
+                        'version' => '4.1-3+b2',
                         'name' => 'bash',
                         'section' => 'shell',
                         'binnmu' => '2',

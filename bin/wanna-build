@@ -84,9 +84,6 @@ my %prognames = ( "uploaded-build"  => "set-uploaded",
 				  "give-back-build" => "set-needs-build",
 				  "dep-wait-build"  => "set-dep-wait",
 				  "forget-build"	=> "forget",
-				  "merge-quinn"		=> "merge-quinn",
-				  "merge-packages"  => "merge-packages",
-				  "merge-sources"   => "merge-sources",
 				  "build-info"		=> "info" );
 
 %short_category = ( u => "uploaded-fixed-pkg",
@@ -137,13 +134,13 @@ my %options =
 	 "dep-wait"		=> { mode => "set-dep-wait" },
 	 forget			=> { mode => "forget" },
 	 'forget-user' => { mode => 'forget-user' },
-	 "merge-quinn"  => { mode => "merge-quinn" },
-	 "merge-partial-quinn" => { mode => "merge-partial-quinn" },
-	 "merge-packages" => { mode => "merge-packages" },
-	 "merge-sources" => { mode => "merge-sources" },
+	 #"merge-quinn"  => { mode => "merge-quinn" },
+	 #"merge-partial-quinn" => { mode => "merge-partial-quinn" },
+	 #"merge-packages" => { mode => "merge-packages" },
+	 #"merge-sources" => { mode => "merge-sources" },
 	 "pretend-avail" => { short => "p", mode => "pretend-avail" },
-	 "merge-all"     => { mode => "merge-all" },
-	 "merge-all-secondary" => { mode => "merge-all-secondary" },
+	 #"merge-all"     => { mode => "merge-all" },
+	 #"merge-all-secondary" => { mode => "merge-all-secondary" },
 	 "merge-v3"      => { mode => "merge-v3" },
 	 info			=> { short => "i", mode => "info" },
 	 'binNMU' => { mode => 'set-binary-nmu', arg => \$binNMUver, 
@@ -368,7 +365,7 @@ END {
 }
 
 my $schema_suffix = '';
-if (isin( $op_mode, qw(list info)) && $distribution !~ /security/ && !(not -t and $user =~ /-/) && !($privmode eq 'yes')) {
+if (isin( $op_mode, qw(list info)) && $distribution !~ /security/ && !(not -t and $user =~ /buildd-/) && !($privmode eq 'yes')) {
 	$dbh = DBI->connect("DBI:Pg:service=wanna-build") || 
 		die "FATAL: Cannot open database: $DBI::errstr\n";
 	$schema_suffix = '_public';
@@ -546,7 +543,7 @@ sub process {
 
 		die "Unexpected operation mode $op_mode\n";
 	}
-	if (not -t and $user =~ /-/) {
+	if (not -t and $user =~ /buildd-/) {
 		my $userinfo = get_user_info($user);
 		if (!defined $userinfo)
 		{
@@ -2809,6 +2806,7 @@ sub get_all_source_info {
 
 sub update_source_info {
 	my $pkg = shift;
+        print Dumper $pkg if $verbose and $simulate;
         return if $simulate;
 
 	my $pkg2 = get_source_info($pkg->{'package'});
@@ -2953,9 +2951,7 @@ sub parse_all_v3() {
             $pkg->{'package'}  = $name;
         }
         my $logstr = "merge-v3 $vars->{'time'} ".$name."_$pkgs->{'version'}".
-            ($pkgs->{'binnmu'} ? ";b".$pkgs->{'binnmu'} : "").
-            "($vars->{'arch'}, $vars->{'suite'}, previous: $pkg->{'version'}".
-            ($pkg->{'binary_nmu_version'} ? ";b".$pkg->{'binary_nmu_version'} : "").
+            " ($vars->{'arch'}, $vars->{'suite'}, previous: $pkg->{'version'}".
             ", $pkg->{'state'}):";
 
         if (isin($pkgs->{'status'}, qw (installed related)) && $pkg->{'binary_nmu_version'} && $pkgs->{'binnmu'} < int($pkg->{'binary_nmu_version'})) {
@@ -2966,14 +2962,20 @@ sub parse_all_v3() {
             if ($pkg->{'state'} ne 'Installed') {
                 change_state( \$pkg, 'Installed');
                 delete $pkg->{'depends'};
+                delete $pkg->{'binary_nmu_version'};
+                # delete $pkg->{'binary_nmu_changelog'}; - we keep the changelog for now in case there are bugs; activate in August 2010 or later
                 $change++;
             }
-            my $attrs = { 'version' => 'version', 'installed_version' => 'version', 'binary_nmu_version' => 'binnmu', 'section' => 'section', 'priority' => 'priority' };
+            my $attrs = { 'version' => 'version', 'installed_version' => 'version', 'section' => 'section', 'priority' => 'priority' };
             foreach my $k (keys %$attrs) {
                 if ($pkg->{$k} ne $pkgs->{$attrs->{$k}}) {
                     $pkg->{$k} = $pkgs->{$attrs->{$k}};
                     $change++;
                 }
+            }
+            if ($pkg->{'binary_nmu_version'}) { # cleanup only
+                delete $pkg->{'binary_nmu_version'};
+                $change++;
             }
             if (isin($pkgs->{'status'}, qw (related)) and $pkg->{'notes'} ne "related") {
                 $pkg->{'notes'} = "related";
