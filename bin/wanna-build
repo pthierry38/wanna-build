@@ -616,6 +616,7 @@ sub add_one_building {
 
 	$ok = 1;
 	my $pkg = get_source_info($name);
+        $pkg->{'version'} =~ s/\+b[0-9]+$//;
 	if (defined($pkg)) {
 		if ($pkg->{'state'} eq "Not-For-Us") {
 			$ok = 0;
@@ -774,6 +775,7 @@ sub add_one_attempted {
 		print "$name: not registered yet.\n";
 		return;
 	}
+        $pkg->{'version'} =~ s/\+b[0-9]+$//;
 
 	if (($pkg->{'state'} ne "Building") && ($pkg->{'state'} ne "Build-Attempted")) {
 		print "$name: not taken for building (state is $pkg->{'state'}). ",
@@ -806,6 +808,7 @@ sub add_one_built {
 		print "$name: not registered yet.\n";
 		return;
 	}
+        $pkg->{'version'} =~ s/\+b[0-9]+$//;
 
         if (($pkg->{'state'} ne "Building") && ($pkg->{'state'} ne "Build-Attempted")) {
 		print "$name: not taken for building (state is $pkg->{'state'}). ",
@@ -837,6 +840,7 @@ sub add_one_uploaded {
 		print "$name: not registered yet.\n";
 		return;
 	}
+        $pkg->{'version'} =~ s/\+b[0-9]+$//;
 
 	if ($pkg->{'state'} eq "Uploaded" &&
 		pkg_version_eq($pkg,$version)) {
@@ -886,6 +890,7 @@ sub add_one_failed {
 		print "$name: not registered yet.\n";
 		return;
 	}
+        $pkg->{'version'} =~ s/\+b[0-9]+$//;
 	$state = $pkg->{'state'};
 
 	if ($state eq "Not-For-Us") {
@@ -974,6 +979,7 @@ sub add_one_notforus {
 	my $name = shift;
 	my $version = shift;
 	my $pkg = get_source_info($name);
+        $pkg->{'version'} =~ s/\+b[0-9]+$//;
 
 	if ($pkg->{'state'} eq 'Not-For-Us') {
 		# reset Not-For-Us state in case it's called twice; this is
@@ -1030,6 +1036,7 @@ sub add_one_needsbuild {
 		print "$name: not registered; can't give back.\n";
 		return;
 	}
+        $pkg->{'version'} =~ s/\+b[0-9]+$//;
 	$state = $pkg->{'state'};
 
 	if ($state eq "BD-Uninstallable") {
@@ -1107,6 +1114,7 @@ sub set_one_binnmu {
 		print "$name: not registered; can't register for binNMU.\n";
 		return;
 	}
+        $pkg->{'version'} =~ s/\+b[0-9]+$//;
 	my $db_ver = $pkg->{'version'};
 
 	if (!version_eq($db_ver, $version)) {
@@ -1182,6 +1190,7 @@ sub set_one_buildpri {
 		print "$name: not registered; can't set priority.\n";
 		return;
 	}
+        $pkg->{'version'} =~ s/\+b[0-9]+$//;
 	$state = $pkg->{'state'};
 
 	if ($state eq "Not-For-Us") {
@@ -1220,6 +1229,7 @@ sub add_one_depwait {
 		print "$name: not registered yet.\n";
 		return;
 	}
+        $pkg->{'version'} =~ s/\+b[0-9]+$//;
 	$state = $pkg->{'state'};
 
 	if ($state eq "Dep-Wait") {
@@ -2021,6 +2031,7 @@ sub list_packages {
  	my $db = get_all_source_info(state => $state, user => $user, category => $category, list_min_age => $list_min_age);
 	foreach $name (keys %$db) {
 		next if $name =~ /^_/;
+                $db->{$name}->{'version'} =~ s/\+b[0-9]+$//;
 		push @list, calculate_prio($db->{$name});
 	}
 
