@@ -616,7 +616,6 @@ sub add_one_building {
 
 	$ok = 1;
 	my $pkg = get_source_info($name);
-        $pkg->{'version'} =~ s/\+b[0-9]+$//;
 	if (defined($pkg)) {
 		if ($pkg->{'state'} eq "Not-For-Us") {
 			$ok = 0;
@@ -775,7 +774,6 @@ sub add_one_attempted {
 		print "$name: not registered yet.\n";
 		return;
 	}
-        $pkg->{'version'} =~ s/\+b[0-9]+$//;
 
 	if (($pkg->{'state'} ne "Building") && ($pkg->{'state'} ne "Build-Attempted")) {
 		print "$name: not taken for building (state is $pkg->{'state'}). ",
@@ -808,7 +806,6 @@ sub add_one_built {
 		print "$name: not registered yet.\n";
 		return;
 	}
-        $pkg->{'version'} =~ s/\+b[0-9]+$//;
 
         if (($pkg->{'state'} ne "Building") && ($pkg->{'state'} ne "Build-Attempted")) {
 		print "$name: not taken for building (state is $pkg->{'state'}). ",
@@ -840,7 +837,6 @@ sub add_one_uploaded {
 		print "$name: not registered yet.\n";
 		return;
 	}
-        $pkg->{'version'} =~ s/\+b[0-9]+$//;
 
 	if ($pkg->{'state'} eq "Uploaded" &&
 		pkg_version_eq($pkg,$version)) {
@@ -890,7 +886,6 @@ sub add_one_failed {
 		print "$name: not registered yet.\n";
 		return;
 	}
-        $pkg->{'version'} =~ s/\+b[0-9]+$//;
 	$state = $pkg->{'state'};
 
 	if ($state eq "Not-For-Us") {
@@ -979,7 +974,6 @@ sub add_one_notforus {
 	my $name = shift;
 	my $version = shift;
 	my $pkg = get_source_info($name);
-        $pkg->{'version'} =~ s/\+b[0-9]+$//;
 
 	if ($pkg->{'state'} eq 'Not-For-Us') {
 		# reset Not-For-Us state in case it's called twice; this is
@@ -1036,7 +1030,6 @@ sub add_one_needsbuild {
 		print "$name: not registered; can't give back.\n";
 		return;
 	}
-        $pkg->{'version'} =~ s/\+b[0-9]+$//;
 	$state = $pkg->{'state'};
 
 	if ($state eq "BD-Uninstallable") {
@@ -1114,7 +1107,6 @@ sub set_one_binnmu {
 		print "$name: not registered; can't register for binNMU.\n";
 		return;
 	}
-        $pkg->{'version'} =~ s/\+b[0-9]+$//;
 	my $db_ver = $pkg->{'version'};
 
 	if (!version_eq($db_ver, $version)) {
@@ -1190,7 +1182,6 @@ sub set_one_buildpri {
 		print "$name: not registered; can't set priority.\n";
 		return;
 	}
-        $pkg->{'version'} =~ s/\+b[0-9]+$//;
 	$state = $pkg->{'state'};
 
 	if ($state eq "Not-For-Us") {
@@ -1229,7 +1220,6 @@ sub add_one_depwait {
 		print "$name: not registered yet.\n";
 		return;
 	}
-        $pkg->{'version'} =~ s/\+b[0-9]+$//;
 	$state = $pkg->{'state'};
 
 	if ($state eq "Dep-Wait") {
@@ -2031,7 +2021,6 @@ sub list_packages {
  	my $db = get_all_source_info(state => $state, user => $user, category => $category, list_min_age => $list_min_age);
 	foreach $name (keys %$db) {
 		next if $name =~ /^_/;
-                $db->{$name}->{'version'} =~ s/\+b[0-9]+$//;
 		push @list, calculate_prio($db->{$name});
 	}
 
@@ -2962,7 +2951,9 @@ sub parse_all_v3() {
             $pkg->{'package'}  = $name;
         }
         my $logstr = "merge-v3 $vars->{'time'} ".$name."_$pkgs->{'version'}".
-            " ($vars->{'arch'}, $vars->{'suite'}, previous: $pkg->{'version'}".
+            ($pkgs->{'binnmu'} ? ";b".$pkgs->{'binnmu'} : "").
+            "($vars->{'arch'}, $vars->{'suite'}, previous: $pkg->{'version'}".
+            ($pkg->{'binary_nmu_version'} ? ";b".$pkg->{'binary_nmu_version'} : "").
             ", $pkg->{'state'}):";
 
         if (isin($pkgs->{'status'}, qw (installed related)) && $pkg->{'binary_nmu_version'} && $pkgs->{'binnmu'} < int($pkg->{'binary_nmu_version'})) {
@@ -2973,20 +2964,14 @@ sub parse_all_v3() {
             if ($pkg->{'state'} ne 'Installed') {
                 change_state( \$pkg, 'Installed');
                 delete $pkg->{'depends'};
-                delete $pkg->{'binary_nmu_version'};
-                # delete $pkg->{'binary_nmu_changelog'}; - we keep the changelog for now in case there are bugs; activate in August 2010 or later
                 $change++;
             }
-            my $attrs = { 'version' => 'version', 'installed_version' => 'version', 'section' => 'section', 'priority' => 'priority' };
+            my $attrs = { 'version' => 'version', 'installed_version' => 'version', 'binary_nmu_version' => 'binnmu', 'section' => 'section', 'priority' => 'priority' };
             foreach my $k (keys %$attrs) {
                 if ($pkg->{$k} ne $pkgs->{$attrs->{$k}}) {
                     $pkg->{$k} = $pkgs->{$attrs->{$k}};
                     $change++;
                 }
-            }
-            if ($pkg->{'binary_nmu_version'}) { # cleanup only
-                delete $pkg->{'binary_nmu_version'};
-                $change++;
             }
             if (isin($pkgs->{'status'}, qw (related)) and $pkg->{'notes'} ne "related") {
                 $pkg->{'notes'} = "related";

@@ -97,8 +97,9 @@ sub readsourcebins {
         delete $srcs->{$k}->{'compiled'};
         $srcs->{$k}->{'status'} = 'installed' if $srcs->{$k}->{'arch'} && $srcs->{$k}->{'arch'} eq 'all';
 
-        $srcs->{$k}->{'version'} = $srcs->{$k}->{'version'}."+b".$srcs->{$k}->{'binnmu'} if $srcs->{$k}->{'binnmu'};
-
+        #my $p = $pas->{$k};
+        #$p ||= $pas->{'%'.$k};
+        #$srcs->{$k}->{'status'} = 'not-for-us' if pasignore($p, $arch);
         if (pasignore($pas->{'%'.$k}, $arch)) {
             $srcs->{$k}->{'status'} = 'not-for-us';
             next;
