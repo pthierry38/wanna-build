@@ -29,7 +29,9 @@ create table "ARCH".packages
     depends character varying,
     rel character varying,
     bd_problem text,
-    primary key (package, distribution)
+    primary key (package, distribution),
+    extra_depends character varying,
+    extra_conflicts character varying
 );
 
 create index "idx_ARCH_state" on "ARCH".packages (state);

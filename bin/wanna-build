@@ -60,7 +60,7 @@ our ($verbose, $mail_logs, $list_order, $list_state,
     $category, %catval, %short_category,
     $short_date, $list_min_age, $dbbase, @curr_time,
     $build_priority, %new_vers, $binNMUver, %merge_srcvers, %merge_binsrc,
-    $printformat, $ownprintformat, $privmode
+    $printformat, $ownprintformat, $privmode, $extra_depends, $extra_conflicts
     );
 our $Pas = '/org/buildd.debian.org/etc/packages-arch-specific/Packages-arch-specific';
 our $simulate = 0;
@@ -134,6 +134,7 @@ my %options =
 	 "dep-wait"		=> { mode => "set-dep-wait" },
 	 forget			=> { mode => "forget" },
 	 'forget-user' => { mode => 'forget-user' },
+	 update  		=> { mode => "set-update" },
 	 #"merge-quinn"  => { mode => "merge-quinn" },
 	 #"merge-partial-quinn" => { mode => "merge-partial-quinn" },
 	 #"merge-packages" => { mode => "merge-packages" },
@@ -207,6 +208,8 @@ my %options =
          "format"       => { arg => \$printformat },
          "own-format"       => { arg => \$ownprintformat },
          "Pas"          => { arg => \$Pas },
+	 "extra-depends"=> { arg => \$extra_depends },
+	 "extra-conflicts"=> { arg => \$extra_conflicts },
 	 # special actions
 	 export         => { arg => \$export_to, mode => "export" },
 	 import         => { arg => \$import_from, mode => "import" },
@@ -606,6 +609,9 @@ sub add_packages {
 		elsif ($op_mode eq "set-binary-nmu") {
 			set_one_binnmu( $name, $version );
 		}
+		elsif ($op_mode eq "set-update") {
+			set_one_update( $name, $version );
+		}
 	}
 }
 
@@ -743,6 +749,8 @@ sub add_one_building {
             } else {
                 print "- $name:\n";
                 print "    - status: ok\n";
+                print "    - extra-depends: $pkg->{'extra_depends'}\n" if $pkg->{'extra_depends'};
+                print "    - extra-conflicts: $pkg->{'extra_conflicts'}\n" if $pkg->{'extra_conflicts'};
                 if ($pkg->{'binary_nmu_version'}) {
                     print "    - binNMU:\n";
                     print "        - version: $pkg->{'binary_nmu_version'}\n";
@@ -1280,6 +1288,21 @@ sub add_one_depwait {
 	log_ta( $pkg, "--dep-wait" );
 	update_source_info($pkg);
 	print "$name: registered as waiting for dependencies\n" if $verbose;
+}
+
+sub set_one_update {
+	my $name = shift;
+	my $version = shift;
+	my $pkg = get_source_info($name);
+
+	if (!defined($pkg)) {
+		print "$name: not registered yet.\n";
+		return;
+	}
+        $pkg->{'version'} =~ s/\+b[0-9]+$//;
+
+	log_ta( $pkg, "--update" );
+	update_source_info($pkg);
 }
 
 
@@ -2026,6 +2049,8 @@ sub list_packages {
 
         # filter components
         @list = grep { my $i = $_->{'component'}; grep { $i eq $_ } split /[, ]+/, $yamlmap->{"restrict"}{'component'} } @list;
+        # extra depends / conflicts only from api 1 on
+        @list = grep { !$_->{'extra_depends'} and !$_->{'extra_conflicts'} } @list if $api < 1 ;
 
         # first adjust ownprintformat, then set printformat accordingly
         $printformat ||= $yamlmap->{"format"}{$ownprintformat};
@@ -2097,7 +2122,9 @@ sub info_packages {
 		'permbuildpri' => 'PermBuildPri', 'rel' => 'Rel',
 		'calprio' => 'CalculatedPri', 'state_days' => 'State-Days',
                 'successtime' => 'Success-build-time',
-                'anytime' => 'Build-time'
+                'anytime' => 'Build-time',
+                'extra_depends' => 'Extra-Dependencies',
+                'extra_conflicts' => 'Extra-Conflicts',
 			 );
 	
 	foreach $name (@_) {
@@ -2552,8 +2579,12 @@ sub call_edos_depcheck {
 	print $SOURCES "Package: source---$key\n";
 	print $SOURCES "Version: $pkg->{'version'}\n";
         my $t = &filterarch($srcs->{$key}{'dep'} || $srcs->{$key}{'depends'}, $arch);
+        my $tt = &filterarch($pkg->{'extra_depends'}, $arch);
+        $t = $t ? ($tt ? "$t, $tt" : $t) : $tt;
 	print $SOURCES "Depends: $t\n" if $t;
         my $u = &filterarch($srcs->{$key}{'conf'} || $srcs->{$key}{'conflicts'}, $arch);
+        my $uu = &filterarch($pkg->{'extra_conflicts'}, $arch);
+        $u = $u ? ($uu ? "$u, $uu" : $u) : $uu;
 	print $SOURCES "Conflicts: $u\n" if $u;
 	print $SOURCES "Architecture: all\n";
 	print $SOURCES "\n";
@@ -2733,6 +2764,7 @@ sub get_readonly_source_info {
         my $q = "SELECT rel, priority, state_change, permbuildpri, section, buildpri, failed, state, binary_nmu_changelog, bd_problem, version, package, distribution, installed_version, notes, failed_category, builder, old_failed, previous_state, binary_nmu_version, depends, extract(days from date_trunc('days', now() - state_change)) as state_days"
             . ", (SELECT max(build_time) FROM ".pkg_history_table_name()." WHERE pkg_history.package = packages.package AND pkg_history.distribution = packages.distribution AND result = 'successful') AS successtime"
             . ", (SELECT max(build_time) FROM ".pkg_history_table_name()." WHERE pkg_history.package = packages.package AND pkg_history.distribution = packages.distribution ) AS anytime"
+            . ", extra_depends, extra_conflicts"
             . " FROM " .  table_name()
             . ' WHERE package = ? AND distribution = ?';
 	my $pkg = $dbh->selectrow_hashref( $q,
@@ -2756,7 +2788,7 @@ sub get_all_source_info {
         my $q = "SELECT rel, priority, state_change, permbuildpri, section, buildpri, failed, state, binary_nmu_changelog, bd_problem, version, package, distribution, installed_version, notes, failed_category, builder, old_failed, previous_state, binary_nmu_version, depends, extract(days from date_trunc('days', now() - state_change)) as state_days"
 #            . ", (SELECT max(build_time) FROM ".pkg_history_table_name()." WHERE pkg_history.package = packages.package AND pkg_history.distribution = packages.distribution AND result = 'successful') AS successtime"
 #            . ", (SELECT max(build_time) FROM ".pkg_history_table_name()." WHERE pkg_history.package = packages.package AND pkg_history.distribution = packages.distribution ) AS anytime"
-            . ", successtime.build_time as successtime, anytime.build_time as anytime"
+            . ", successtime.build_time as successtime, anytime.build_time as anytime, extra_depends, extra_conflicts"
             . " FROM " .  table_name()
                 . " left join ( "
                   . "select distinct on (package, distribution) build_time, package, distribution from ".pkg_history_table_name()." where result = 'successful' order by package, distribution, timestamp "
@@ -2806,6 +2838,10 @@ sub get_all_source_info {
 
 sub update_source_info {
 	my $pkg = shift;
+        $pkg->{'extra_depends'} = $extra_depends if defined $extra_depends;
+        undef $pkg->{'extra_depends'} unless $pkg->{'extra_depends'};
+        $pkg->{'extra_conflicts'} = $extra_conflicts if defined $extra_conflicts;
+        undef $pkg->{'extra_conflicts'} unless $pkg->{'extra_conflicts'};
         print Dumper $pkg if $verbose and $simulate;
         return if $simulate;
 
@@ -2834,6 +2870,8 @@ sub update_source_info {
 			'buildpri = ?, ' .
 			'depends = ?, ' .
 			'rel = ?, ' .
+			'extra_depends = ?, ' .
+			'extra_conflicts = ?, ' .
 			'bd_problem = ? ' .
 			'WHERE package = ? AND distribution = ?',
 		undef,
@@ -2854,6 +2892,8 @@ sub update_source_info {
 		$pkg->{'buildpri'},
 		$pkg->{'depends'},
 		$pkg->{'rel'},
+                $pkg->{'extra_depends'},
+                $pkg->{'extra_conflicts'},
 		$pkg->{'bd_problem'},
 		$pkg->{'package'},
 		$distribution) or die $dbh->errstr;
@@ -2964,6 +3004,8 @@ sub parse_all_v3() {
             if ($pkg->{'state'} ne 'Installed') {
                 change_state( \$pkg, 'Installed');
                 delete $pkg->{'depends'};
+                delete $pkg->{'extra_depends'};
+                delete $pkg->{'extra_conflicts'};
                 $change++;
             }
             my $attrs = { 'version' => 'version', 'installed_version' => 'version', 'binary_nmu_version' => 'binnmu', 'section' => 'section', 'priority' => 'priority' };
