@@ -747,15 +747,13 @@ sub add_one_building {
 		}
 		print "$name: $ok\n" if $verbose;
             } else {
-                print "- $name:\n";
-                print "    - status: ok\n";
-                print "    - extra-depends: $pkg->{'extra_depends'}\n" if $pkg->{'extra_depends'};
-                print "    - extra-conflicts: $pkg->{'extra_conflicts'}\n" if $pkg->{'extra_conflicts'};
-                if ($pkg->{'binary_nmu_version'}) {
-                    print "    - binNMU:\n";
-                    print "        - version: $pkg->{'binary_nmu_version'}\n";
-                    print "        - changelog: $pkg->{'binary_nmu_changelog'}\n";
-                }
+                print  "- $name:\n";
+                print  "    - status: ok\n";
+                printf "    - pkg-ver: %s_%s\n", $name, $version;
+                print  "    - binNMU: $pkg->{'binary_nmu_version'}\n" if $pkg->{'binary_nmu_version'};
+                print  "    - extra-changelog: $pkg->{'binary_nmu_changelog'}\n" if $pkg->{'binary_nmu_changelog'} && $pkg->{'binary_nmu_version'};
+                print  "    - extra-depends: $pkg->{'extra_depends'}\n" if $pkg->{'extra_depends'};
+                print  "    - extra-conflicts: $pkg->{'extra_conflicts'}\n" if $pkg->{'extra_conflicts'};
             }
 		change_state( \$pkg, 'Building' );
 		$pkg->{'package'} = $name;
