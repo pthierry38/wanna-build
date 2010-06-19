@@ -65,7 +65,7 @@ our ($verbose, $mail_logs, $list_order, $list_state,
 our $Pas = '/org/buildd.debian.org/etc/packages-arch-specific/Packages-arch-specific';
 our $simulate = 0;
 our $simulate_edos = 0;
-our $api = 0; # allow buildds to specify an different api
+our $api = undef; # allow buildds to specify an different api
 
 # global vars
 $ENV{'PATH'} = "/bin:/usr/bin:/usr/local/bin:/org/wanna-build/bin/";
@@ -357,6 +357,8 @@ if (not $yamlmap) {
 }
 $list_order = $yamlmap->{"list-order"}{$list_state} if !$list_order and $list_state;
 $list_order ||= $yamlmap->{"list-order"}{'default'};
+$api //= $yamlmap->{"api"};
+$api //= 0;
 
 my $dbh;
 
