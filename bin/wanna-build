@@ -51,6 +51,7 @@ use String::Format;
 use Date::Parse;
 use List::Util qw[max];
 use Dpkg::Version qw(vercmp); # TODO: change this for running with squeeze dpkg
+use Dpkg::Deps; # TODO: same
 
 our ($verbose, $mail_logs, $list_order, $list_state,
     $curr_date, $op_mode, $user, $real_user, $distribution,
@@ -2430,24 +2431,9 @@ sub build_deplist {
 }
 
 
-sub greparch {
-    my ($gapkglong, $gaarch) = @_;
-    my ($gapkg, $gaarchs) = split(/ \[/, $gapkglong);
-    if ($gaarchs) {
-        $_ = $gapkg;
-        chop($gaarchs); # take away the ]
-        my @gaarches = split(/ /, $gaarchs);
-        if (substr($gaarches[0], 0, 1) eq '!') {
-            return 0 if grep /^!$gaarch$/, @gaarches;
-        } else { # positive case
-            return 0 unless grep /^$gaarch$/, @gaarches;
-        }
-    };
-    return 1;
-}
 sub filterarch {
-    my $faarch = $_[1];
-    return join(', ', grep { &greparch($_, $faarch) } split(/, ?/, $_[0]));
+    return "" unless $_[0];
+    return Dpkg::Deps::parse($_[0], ("reduce_arch" => 1, "host_arch" => $_[1]))->dump();
 }
 
 sub wb_edos_builddebcheck {
