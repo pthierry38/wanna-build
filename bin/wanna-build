@@ -67,6 +67,7 @@ our $Pas = '/org/buildd.debian.org/etc/packages-arch-specific/Packages-arch-spec
 our $simulate = 0;
 our $simulate_edos = 0;
 our $api = undef; # allow buildds to specify an different api
+our $recorduser = undef;
 
 # global vars
 $ENV{'PATH'} = "/bin:/usr/bin:/usr/local/bin:/org/wanna-build/bin/";
@@ -371,7 +372,8 @@ END {
 }
 
 my $schema_suffix = '';
-if (isin( $op_mode, qw(list info)) && $distribution !~ /security/ && !(not -t and $user =~ /buildd-/) && !($privmode eq 'yes')) {
+$recorduser //= (not -t and $user =~ /^buildd_/);
+if (isin( $op_mode, qw(list info)) && $distribution !~ /security/ && !$recorduser) && !($privmode eq 'yes')) {
 	$dbh = DBI->connect("DBI:Pg:service=wanna-build") || 
 		die "FATAL: Cannot open database: $DBI::errstr\n";
 	$schema_suffix = '_public';
@@ -549,7 +551,7 @@ sub process {
 
 		die "Unexpected operation mode $op_mode\n";
 	}
-	if (not -t and $user =~ /buildd-/) {
+	if ($recorduser) {
 		my $userinfo = get_user_info($user);
 		if (!defined $userinfo)
 		{
