@@ -373,7 +373,7 @@ END {
 
 my $schema_suffix = '';
 $recorduser //= (not -t and $user =~ /^buildd_/);
-if (isin( $op_mode, qw(list info)) && $distribution !~ /security/ && !$recorduser) && !($privmode eq 'yes')) {
+if (isin( $op_mode, qw(list info)) && $distribution !~ /security/ && !$recorduser && !($privmode eq 'yes')) {
 	$dbh = DBI->connect("DBI:Pg:service=wanna-build") || 
 		die "FATAL: Cannot open database: $DBI::errstr\n";
 	$schema_suffix = '_public';
