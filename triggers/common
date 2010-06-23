@@ -141,6 +141,7 @@ trigger_wb_update_with_secondary() {
 
 ucat() {
     for FILE in $*; do
+      if [ -f ${FILE} ]; then
         case $FILE in
             *.gz)
                 zcat $FILE
@@ -152,5 +153,6 @@ ucat() {
                 cat $FILE
                 ;;
         esac
+      fi
     done
 }
