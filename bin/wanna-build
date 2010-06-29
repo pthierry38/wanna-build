@@ -2984,7 +2984,7 @@ sub parse_all_v3() {
             ($pkg->{'binary_nmu_version'} ? ";b".$pkg->{'binary_nmu_version'} : "").
             ", $pkg->{'state'}):";
 
-        if (isin($pkgs->{'status'}, qw (installed related)) && $pkg->{'binary_nmu_version'} && $pkgs->{'binnmu'} < int($pkg->{'binary_nmu_version'})) {
+        if (isin($pkgs->{'status'}, qw (installed related)) && $pkgs->{'version'} eq $pkg->{'version'} && $pkg->{'binary_nmu_version'} && $pkgs->{'binnmu'} < int($pkg->{'binary_nmu_version'})) {
                 $pkgs->{'status'} = 'out-of-date';
         }
         if (isin($pkgs->{'status'}, qw (installed related))) {
