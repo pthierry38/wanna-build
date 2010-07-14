@@ -52,7 +52,6 @@ grant "hurd-i386" to wb_all;
 grant wb_all to wbadm;
 
 create user aba in role wbadm;
-create user adeodato in role wbadm;
 create user aloiret in role alpha;
 create user aurel32 in role arm, armel, "kfreebsd-amd64", "kfreebsd-i386";
 create user colint in role arm, armel;
@@ -91,4 +90,5 @@ create user white in role wb_security;
 grant wb_security to dannf;
 
 create user nomeata in role wb_all;
+create user mehdi in role wb_all;
 
