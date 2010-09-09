@@ -70,6 +70,7 @@ $quinn_source_multi_section = 0;
 
 	"lenny-backports" => { },
 	"etch-backports" => { },
+	"squeeze-backports" => { },
 
 	"squeeze-edu" => { noadw => 1 },
 	"lenny-edu" => { noadw => 1 },
