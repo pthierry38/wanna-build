@@ -8,6 +8,7 @@ grant usage on schema "ARCH_public" to "ARCH", public;
 grant usage on schema "ARCH" to wb_security;
 
 create table "ARCH".packages
+(
     package character varying NOT NULL,
     distribution character varying NOT NULL,
     version character varying,
