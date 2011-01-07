@@ -797,7 +797,7 @@ sub add_one_attempted {
 	}
 	elsif ( !pkg_version_eq($pkg, $version) ) {
 		print "$name: version mismatch ".
-			  "$(pkg->{'version'} ".
+			  "($pkg->{'version'} ".
 			  "by $pkg->{'builder'})\n";
 		return;
 	}
@@ -829,7 +829,7 @@ sub add_one_built {
 	}
 	elsif ( !pkg_version_eq($pkg, $version) ) {
 		print "$name: version mismatch ".
-			  "$(pkg->{'version'} ".
+			  "($pkg->{'version'} ".
 			  "by $pkg->{'builder'})\n";
 		return;
 	}
@@ -920,7 +920,7 @@ sub add_one_failed {
 	}
 	elsif ( !pkg_version_eq($pkg, $version) ) {
 		print "$name: version mismatch ".
-			  "$(pkg->{'version'} ".
+			  "($pkg->{'version'} ".
 			  "by $pkg->{'builder'})\n";
 		return;
 	}
