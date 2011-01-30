@@ -15,8 +15,6 @@ PATH=/bin:/usr/bin:/usr/local/bin:/srv/wanna-build/bin:/srv/buildd.debian.org/bi
 
 4  0 * * *       /srv/buildd.debian.org/mbox/fix-up-permissions
 
-*/15 * * * *   TZ=UTC /srv/buildd.debian.org/web/status/mkstats.aba
-
 0 0 * * *	/usr/sbin/logrotate /srv/wanna-build/etc/logrotate.conf -s /srv/wanna-build/etc/logrotate.status
 
 */15 * * * *	/srv/buildd.debian.org/wbpy/run-mqueue
