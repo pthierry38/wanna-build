@@ -2,16 +2,16 @@
 # vim:set et ts=4 sw=4 ft=sh ai:
 
 ARCHIVE="debian"
-SUITES="stable testing" 
+SUITES="lenny squeeze wheezy" 
 # Please note that SUITES_FAST_AUTOBUILD does not pull proposed-updates
 # because there was no need for that yet.
-SUITES_FAST_AUTOBUILD="unstable experimental"
+SUITES_FAST_AUTOBUILD="sid experimental"
 
 . /org/wanna-build/triggers/common
 
 exec >> /org/wanna-build/db/merge.$ARCHIVE.log 2>&1
 
-if [ -f /org/wanna-build/NO-TRIGGERS ]
+if [ -f /org/wanna-build/NO-TRIGGERS -a -z "$1" ]
 then
     echo Trigger for $ARCHIVE skipped due to NO-TRIGGERS, aborting. >&2
     exit 0
@@ -32,8 +32,12 @@ main_sync() {
         # files for -proposed-updates itself and additionally for
         # debian-installer.
         SOURCES="${ARCHIVE_BASE}/archive/${SUITE}-proposed-updates/{main,contrib}/source/Sources.gz"
+        NFSOURCES="${ARCHIVE_BASE}/archive/${SUITE}-proposed-updates/non-free/source/Sources.gz"
         PACKAGES="${ARCHIVE_BASE}/archive/${SUITE}-proposed-updates/{main,contrib}/binary-%ARCH%/Packages.gz"
         PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/archive/${SUITE}-proposed-updates/{main,contrib}/debian-installer/binary-%ARCH%/Packages.gz"
+        NFPACKAGES="${ARCHIVE_BASE}/archive/${SUITE}-proposed-updates/non-free/binary-%ARCH%/Packages.gz"
+        NFPACKAGES="${NFPACKAGES} ${ARCHIVE_BASE}/archive/${SUITE}-proposed-updates/non-free/debian-installer/binary-%ARCH%/Packages.gz"
+        /org/wanna-build/bin/filter-nonfree /org/wanna-build/etc/non-free-include-list "`get_architectures $SUITE`" Sources.${SUITE}.non-free Packages.${SUITE}.%ARCH%.non-free ${NFSOURCES} . ${NFPACKAGES} || true
         # Now add the overlay suite as above.
         SOURCES_BASE="${ARCHIVE_BASE}/archive/${SUITE}/{main,contrib}/source/Sources.gz"
         PACKAGES_BASE="${ARCHIVE_BASE}/archive/${SUITE}/{main,contrib}/binary-%ARCH%/Packages.gz"
@@ -44,21 +48,22 @@ main_sync() {
     for SUITE in $SUITES_FAST_AUTOBUILD
     do
         SOURCES="${ARCHIVE_BASE}/archive/${SUITE}/{main,contrib}/source/Sources.gz"
-        SOURCES="${SOURCES} ${ARCHIVE_BASE}/buildd-${SUITE}/Sources.gz"
+        filter_out_nonfree "${ARCHIVE_BASE}/buildd-${SUITE}/Sources.gz" "Sources.${SUITE}.incoming-filtered.gz"
+        SOURCES="${SOURCES} Sources.${suite}.incoming-filtered.gz"
         NFSOURCES="${ARCHIVE_BASE}/archive/${SUITE}/non-free/source/Sources.gz"
         PACKAGES="${ARCHIVE_BASE}/archive/${SUITE}/{main,contrib}/binary-%ARCH%/Packages.gz"
         PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/archive/${SUITE}/{main,contrib}/debian-installer/binary-%ARCH%/Packages.gz"
         PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/buildd-${SUITE}/Packages.gz"
         NFPACKAGES="${ARCHIVE_BASE}/archive/${SUITE}/non-free/binary-%ARCH%/Packages.gz"
         NFPACKAGES="${NFPACKAGES} ${ARCHIVE_BASE}/archive/${SUITE}/non-free/debian-installer/binary-%ARCH%/Packages.gz"
-        /org/wanna-build/triggers/filter-nonfree /org/wanna-build/etc/non-free-include-list "`get_architectures $SUITE`" Sources.${SUITE}.non-free Packages.${SUITE}.%ARCH%.non-free ${NFSOURCES} . ${NFPACKAGES} || true
+        /org/wanna-build/bin/filter-nonfree /org/wanna-build/etc/non-free-include-list "`get_architectures $SUITE`" Sources.${SUITE}.non-free Packages.${SUITE}.%ARCH%.non-free ${NFSOURCES} . ${NFPACKAGES} || true
 
         if [ "$SUITE" != "experimental" ]
         then
             # The "it's not an overlay" part.
             trigger_wb_update "${SUITE}" "`get_architectures ${SUITE}`" "$SOURCES" "$PACKAGES"
         else
-            BASE_SUITE=unstable
+            BASE_SUITE=sid
             PACKAGES_BASE="${ARCHIVE_MAIN}/archive/${BASE_SUITE}/{main,contrib}/binary-%ARCH%/Packages.gz"
             PACKAGES_BASE="${PACKAGES_BASE} ${ARCHIVE_MAIN}/archive/${BASE_SUITE}/{main,contrib}/debian-installer/binary-%ARCH%/Packages.gz"
             #PACKAGES_BASE="${PACKAGES_BASE} ${ARCHIVE_MAIN}/buildd-${BASE_SUITE}/Packages.gz"

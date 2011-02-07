@@ -58,7 +58,7 @@ create user colint in role arm, armel;
 create user fs in role amd64;
 create user he in role sparc, wbadm;
 create user jurij in role wb_all;
-create user kibi in role "kfreebsd-amd64", "kfreebsd-i386", "sparc";
+create user kibi in role "kfreebsd-amd64", "kfreebsd-i386", "sparc", "alpha";
 create user kroeckx in role amd64, i386, wb_all, wbadm;
 create user lamont in role hppa, ia64;
 create user luk in role i386, wbadm;

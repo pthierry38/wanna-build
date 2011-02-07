@@ -1,0 +1,28 @@
+#!/bin/bash
+
+. /org/wanna-build/triggers/common
+
+STATS_DISTS="sid wheezy squeeze lenny"
+ALL_ARCHES=$(echo $ARCHS_lenny $ARCHS_squeeze $ARCHS_wheezy $ARCHS_unstable \
+             | tr ' ' '\n' | sort -u)
+
+#
+# Only update stats if it's been at least 20h since the last time.
+#
+interval=72000
+last=`stat --format="%Y" /srv/wanna-build/etc/graph-data`
+now=`date +%s`
+if (( $last + $interval < $now )); then
+        echo "stats start: `date`"
+	/srv/wanna-build/bin/wb-graph >> /srv/wanna-build/etc/graph-data
+	/srv/wanna-build/bin/wb-graph -p >> /srv/wanna-build/etc/graph2-data
+	/srv/buildd.debian.org/bin/makegraph
+	for a in $ALL_ARCHES; do
+	    echo Last Updated: `date -u` > /srv/buildd.debian.org/web/stats/$a.txt
+	    for d in $STATS_DISTS; do
+		/srv/wanna-build/bin/wanna-build-statistics --database=$a/build-db --dist=$d >> /srv/buildd.debian.org/web/stats/$a.txt
+	    done
+	done
+        echo "stats ended: `date`"
+fi
+

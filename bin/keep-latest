@@ -27,29 +27,48 @@ my %data;
 
 my $arch = shift @ARGV;
 
-local($/) = ""; # read in paragraph mode
-while (<>) {
-	my( $version, $name, $architecture );
-	$architecture="none"; # better to keep an entry too much than to delete an entry
-	/^Package:\s*(\S+)$/mi and $name = $1;
-	/^Version:\s*(\S+)$/mi and $version = $1;
-	/^Architecture:\s*(\S+)$/mi and $architecture = $1;
-	if (!defined $name or !defined $version) {
-		warn "Stanza without Package or Version\n";
+#Read in all data files:
+for my $file (@ARGV) {
+	if (! -f $file) {
 		next;
 	}
-	if ($arch ne "source" && defined $architecture && $architecture ne "all" && $architecture ne $arch) {
-		next;
+	my $fh;
+	if ($file =~ /.gz$/) {
+		open($fh, '-|', 'gzip', '-d', '-c', $file) 
+			or die("Can't open pipe from gzip: $!");
+	} else {
+		open($fh, '<', $file)
+			or die("Can't open $file: $!");
 	}
-	my $key = $name;
 
-	if ((!exists $version{$key}) or version_less($version{$key},$version)) {
-		$version{$key} = $version;
-		$data{$key} = $_;
+	local($/) = ""; # read in paragraph mode
+	while (<$fh>) {
+		my( $version, $name, $architecture );
+		$architecture="none"; # better to keep an entry too much than to delete an entry
+		/^Package:\s*(\S+)$/mi and $name = $1;
+		/^Version:\s*(\S+)$/mi and $version = $1;
+		/^Architecture:\s*(\S+)$/mi and $architecture = $1;
+		if (!defined $name or !defined $version) {
+			warn "Stanza without Package or Version\n";
+			next;
+		}
+		if ($arch ne "source" && defined $architecture && $architecture ne "all" && $architecture ne $arch) {
+			next;
+		}
+		my $key = $name;
+
+		if ((!exists $version{$key}) or version_less($version{$key},$version)) {
+			$version{$key} = $version;
+			$data{$key} = $_;
+		}
 	}
+
+	close($fh);
 }
+
+#Now output the shortened list:
 foreach (values %data) {
-	chomp; $_ .= "\n\n";
+	chomp; chomp; $_ .= "\n\n";
 	print;
 }
 

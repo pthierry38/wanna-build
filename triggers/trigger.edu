@@ -11,7 +11,7 @@ exec >> /org/wanna-build/db/merge.$ARCHIVE.log 2>&1
 
 if [ -f /org/wanna-build/NO-TRIGGERS ]
 then
-    echo Trigger for $ARCHIVE skipped due to NO-TRIGGERS, aborting. >2
+    echo Trigger for $ARCHIVE skipped due to NO-TRIGGERS, aborting. >&2
     exit 0
 fi
 
