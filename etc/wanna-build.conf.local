@@ -53,29 +53,5 @@ $quinn_source_multi_section = 0;
 
 @admin_users = qw(wbadm);
 
-%distributions = (
-        "unstable" => { },
-        "testing" => { },
-        "testing-security" => { noadw => 1, hidden => 1 },
-        "stable" => { },
-        "stable-security" => { noadw => 1, hidden => 1 },
-        "oldstable" => { },
-        "oldstable-security" => { noadw => 1, hidden => 1 },
-        "experimental" => { },
-
-	"unstable-non-free" => { noadw => 1 },
-
-	"lenny-volatile" => { noadw => 1 },
-	"etch-volatile" => { noadw => 1 },
-
-	"lenny-backports" => { },
-	"etch-backports" => { },
-	"squeeze-backports" => { },
-
-	"squeeze-edu" => { noadw => 1 },
-	"lenny-edu" => { noadw => 1 },
-	"etch-edu" => { noadw => 1 },
-);
-
 # don't remove this, Perl needs it:
 1;

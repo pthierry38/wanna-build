@@ -1,8 +1,0 @@
-#!/bin/sh
-#
-# This is meant to be run from the db dir with an arch param
-
-if [ -d "$1" ]; then
-	chmod 664 $1/build-db-*
-	chmod 660 $1/build-db-*-security
-fi
