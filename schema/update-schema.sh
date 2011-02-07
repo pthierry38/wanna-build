@@ -8,5 +8,6 @@ git add wanna-build.sql
 sudo -u postgres pg_dumpall --cluster 8.4/wanna-build | egrep '^(GRANT.*TO.*BY|CREATE ROLE)' > roles.sql
 git add roles.sql
 
-git commit wanna-build.sql roles.sql -m 'Auto-committed schema changes.'
+git status >/dev/null && git commit wanna-build.sql roles.sql -m 'Auto-committed schema changes.'
+git push >/dev/null
 
