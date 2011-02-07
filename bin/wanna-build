@@ -32,7 +32,6 @@ die "dbbase is empty\n" if ! $dbbase;
 die "transactlog is empty\n" if ! $transactlog;
 die "mailprog binary $conf::mailprog does not exist or isn't executable\n"
 	if !-x $conf::mailprog;
-die "no distributions defined\n" if ! %distributions;
 package main;
 
 use strict;
@@ -40,7 +39,6 @@ use POSIX;
 use FileHandle;
 use File::Copy;
 use DBI;
-use lib '/org/wanna-build/bin';
 use lib '/org/wanna-build/lib';
 #use lib 'lib';
 use WannaBuild;
@@ -61,7 +59,8 @@ our ($verbose, $mail_logs, $list_order, $list_state,
     $category, %catval, %short_category,
     $short_date, $list_min_age, $dbbase, @curr_time,
     $build_priority, %new_vers, $binNMUver, %merge_srcvers, %merge_binsrc,
-    $printformat, $ownprintformat, $privmode, $extra_depends, $extra_conflicts
+    $printformat, $ownprintformat, $privmode, $extra_depends, $extra_conflicts,
+    %distributions, %distribution_aliases
     );
 our $Pas = '/org/buildd.debian.org/etc/packages-arch-specific/Packages-arch-specific';
 our $simulate = 0;
@@ -216,6 +215,8 @@ my %options =
 	 export         => { arg => \$export_to, mode => "export" },
 	 import         => { arg => \$import_from, mode => "import" },
 	 "manual-edit"  => { mode => "manual-edit" },
+	 "distribution-architectures" => { mode => "distribution-architectures" },
+	 "distribution-aliases" => { mode => "distribution-aliases" },
 	 );
 
 while( @ARGV && $ARGV[0] =~ /^-/ ) {
@@ -259,9 +260,51 @@ while( @ARGV && $ARGV[0] =~ /^-/ ) {
 	}
 }
 
+my $dbh;
+
+END {
+	if (defined $dbh)
+	{
+		$dbh->disconnect or warn $dbh->errstr;
+	}
+}
+
+my $schema_suffix = '';
+$recorduser //= (not -t and $user =~ /^buildd_/);
+if (isin( $op_mode, qw(list info)) && $distribution !~ /security/ && !$recorduser && !($privmode eq 'yes')) {
+	$dbh = DBI->connect("DBI:Pg:service=wanna-build") || 
+		die "FATAL: Cannot open database: $DBI::errstr\n";
+	$schema_suffix = '_public';
+}
+else
+{
+	$dbh = DBI->connect("DBI:Pg:service=wanna-build-privileged") || 
+		die "FATAL: Cannot open database: $DBI::errstr\n";
+}
+
+# TODO: This shouldn't be needed, file a bug.
+$dbh->{pg_server_prepare} = 0;
+
+$dbh->begin_work or die $dbh->errstr;
+
+my $q = 'SELECT distribution, public, auto_dep_wait FROM distributions';
+my $rows = $dbh->selectall_hashref($q, 'distribution');
+foreach my $name (keys %$rows) {
+	$distributions{$name} = {};
+	$distributions{$name}->{'noadw'} = 1 if !($rows->{$name}->{'auto_dep_wait'});
+	$distributions{$name}->{'hidden'} = 1 if !($rows->{$name}->{'public'});
+}
+
+$q = 'SELECT alias, distribution FROM distribution_aliases';
+$rows = $dbh->selectall_hashref($q, 'alias');
+foreach my $name (keys %$rows) {
+	$distribution_aliases{$name} = $rows->{$name}->{'distribution'};
+}
+$distribution = $distribution_aliases{$distribution} if (isin($distribution, keys %distribution_aliases));
+
 $op_mode = $category ? "set-failed" : "set-building"
 	if !$op_mode; # default operation
-$distribution ||= "unstable";
+$distribution ||= "sid";
 if ($distribution eq 'any-priv') {
     $privmode = 'yes';
     $distribution = 'any';
@@ -275,7 +318,7 @@ if ($distribution) {
     my @dists = split(/[, ]+/, $distribution);
     foreach my $dist (@dists) {
         die "Bad distribution '$distribution'\n"
-	    if !isin($dist, keys %conf::distributions);
+	    if !isin($dist, keys %distributions);
     }
 }
 if (!isin ( $op_mode, qw(list) ) && ( !$distribution || $distribution =~ /[ ,]/)) {
@@ -300,7 +343,8 @@ if ($verbose) {
 
 if (!@ARGV && !isin( $op_mode, qw(list merge-quinn merge-partial-quinn import export
 				  merge-packages manual-edit
-				  merge-sources))) {
+				  merge-sources distribution-architectures
+				  distribution-aliases))) {
 	warn "No packages given.\n";
 	usage();
 }
@@ -361,33 +405,6 @@ $list_order = $yamlmap->{"list-order"}{$list_state} if !$list_order and $list_st
 $list_order ||= $yamlmap->{"list-order"}{'default'};
 $api //= $yamlmap->{"api"};
 $api //= 0;
-
-my $dbh;
-
-END {
-	if (defined $dbh)
-	{
-		$dbh->disconnect or warn $dbh->errstr;
-	}
-}
-
-my $schema_suffix = '';
-$recorduser //= (not -t and $user =~ /^buildd_/);
-if (isin( $op_mode, qw(list info)) && $distribution !~ /security/ && !$recorduser && !($privmode eq 'yes')) {
-	$dbh = DBI->connect("DBI:Pg:service=wanna-build") || 
-		die "FATAL: Cannot open database: $DBI::errstr\n";
-	$schema_suffix = '_public';
-}
-else
-{
-	$dbh = DBI->connect("DBI:Pg:service=wanna-build-privileged") || 
-		die "FATAL: Cannot open database: $DBI::errstr\n";
-}
-
-# TODO: This shouldn't be needed, file a bug.
-$dbh->{pg_server_prepare} = 0;
-
-$dbh->begin_work or die $dbh->errstr;
 
 process();
 
@@ -546,6 +563,14 @@ sub process {
 		};
 		/^export/ && do {
 			export_db( $export_to );
+			last SWITCH;
+		};
+		/^distribution-architectures/ && do {
+			show_distribution_architectures();
+			last SWITCH;
+		};
+		/^distribution-aliases/ && do {
+			show_distribution_aliases();
 			last SWITCH;
 		};
 
@@ -797,7 +822,7 @@ sub add_one_attempted {
 	}
 	elsif ( !pkg_version_eq($pkg, $version) ) {
 		print "$name: version mismatch ".
-			  "($pkg->{'version'} ".
+			  "$(pkg->{'version'} ".
 			  "by $pkg->{'builder'})\n";
 		return;
 	}
@@ -829,7 +854,7 @@ sub add_one_built {
 	}
 	elsif ( !pkg_version_eq($pkg, $version) ) {
 		print "$name: version mismatch ".
-			  "($pkg->{'version'} ".
+			  "$(pkg->{'version'} ".
 			  "by $pkg->{'builder'})\n";
 		return;
 	}
@@ -920,7 +945,7 @@ sub add_one_failed {
 	}
 	elsif ( !pkg_version_eq($pkg, $version) ) {
 		print "$name: version mismatch ".
-			  "($pkg->{'version'} ".
+			  "$(pkg->{'version'} ".
 			  "by $pkg->{'builder'})\n";
 		return;
 	}
@@ -1143,6 +1168,11 @@ sub set_one_binnmu {
 			$pkg->{'notes'} = 'out-of-date';
 			$pkg->{'buildpri'} = $pkg->{'permbuildpri'}
 				if (defined $pkg->{'permbuildpri'});
+			if (defined $distributions{$distribution}{noadw}) {
+				change_state( \$pkg, 'Installed' );
+			} else {
+				change_state( \$pkg, 'BD-Uninstallable' );
+			}
 		}
 		log_ta( $pkg, "--binNMU" );
 		update_source_info($pkg);
@@ -1164,7 +1194,7 @@ sub set_one_binnmu {
 		return;
 	}
 
-	if ($distribution eq "unstable") {
+	if (!defined $distributions{$distribution}{noadw}) {
 		change_state( \$pkg, 'BD-Uninstallable' );
 		$pkg->{'bd_problem'} = "Installability of build dependencies not tested yet";
 	}
@@ -2112,7 +2142,7 @@ sub info_packages {
 	my( $name, $pkg, $key, $dist );
 	my @firstkeys = qw(package version builder state section priority
 					   installed_version previous_state state_change);
-	my @dists = $info_all_dists ? keys %conf::distributions : ($distribution);
+	my @dists = $info_all_dists ? keys %distributions : ($distribution);
 	my %beautykeys = ( 'package' => 'Package', 'version' => 'Version', 'builder' => 'Builder',
 		'state' => 'State', 'section' => 'Section', 'priority' => 'Priority',
 		'installed_version' => 'Installed-Version', 'previous_state' => 'Previous-State',
@@ -2532,7 +2562,7 @@ sub call_edos_depcheck {
     my $srcs = $args->{'srcs'};
     my $key;
     
-    return if defined ($conf::distributions{$distribution}{noadw}) && not defined $args->{'depwait'};
+    return if defined ($distributions{$distribution}{noadw}) && not defined $args->{'depwait'};
 
     # We need to check all of needs-build, as any new upload could make
     # something in needs-build have uninstallable deps
@@ -2542,13 +2572,13 @@ sub call_edos_depcheck {
     my $db = get_all_source_info();
     foreach $key (keys %$db) {
 	my $pkg = $db->{$key};
-        if (defined $pkg and isin($pkg->{'state'}, qw/Needs-Build BD-Uninstallable/) and not defined ($conf::distributions{$distribution}{noadw})) {
+        if (defined $pkg and isin($pkg->{'state'}, qw/Needs-Build BD-Uninstallable/) and not defined ($distributions{$distribution}{noadw})) {
 		$interesting_packages{$key} = undef;
 	}
         if (defined $pkg and isin($pkg->{'state'}, qw/Dep-Wait/) and defined $args->{'depwait'}) {
 		$interesting_packages_depwait{$key} = undef;
                 # we always check for BD-Uninstallability in depwait - could be that depwait is satisfied but package is uninstallable
-		$interesting_packages{$key} = undef unless defined ($conf::distributions{$distribution}{noadw});
+		$interesting_packages{$key} = undef unless defined ($distributions{$distribution}{noadw});
 	}
     }
     
@@ -2822,6 +2852,22 @@ sub get_all_source_info {
 
 	my $db = $dbh->selectall_hashref($q, 'package', undef, @args);
 	return $db;
+}
+
+sub show_distribution_architectures {
+	my $q = 'SELECT distribution, spacecat_all(architecture) AS architectures '.
+		'FROM distribution_architectures '.
+		'GROUP BY distribution';
+	my $rows = $dbh->selectall_hashref($q, 'distribution');
+	foreach my $name (keys %$rows) {
+		print $name.': '.$rows->{$name}->{'architectures'}."\n";
+	}
+}
+
+sub show_distribution_aliases {
+	foreach my $alias (keys %distribution_aliases) {
+		print $alias.': '.$distribution_aliases{$alias}."\n";
+	}
 }
 
 sub update_source_info {

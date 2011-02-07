@@ -204,4 +204,18 @@ sub isin {
 	return grep( $_ eq $val, @_ );
 }
 
+#sub get_distributions {
+#	my %distributions;
+
+#	my $q = 'SELECT distribution, public, auto_dep_wait FROM distributions';
+#	my $rows = $dbh->selectall_hashref($q, 'distribution');
+#	foreach my $name (keys %$rows) {
+#		$distributions{$name} = {};
+#		$distributions{$name}->{'noadw'} = 1 if ($rows->{$name}->{'auto_dep_wait'});
+#		$distributions{$name}->{'hidden'} = 1 if ($rows->{$name}->{'public'});
+#	}
+
+#	return %distributions;
+#}
+
 1;

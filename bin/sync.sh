@@ -50,7 +50,7 @@ debian)
 	USER=cimarosa
 	BUILDD_QUEUE_OPTIONS="--include=Packages.gz --include=Sources.gz --include=**Release* --exclude=* $RSYNC_OPTIONS"
 	rsync --password-file "$PASSWORD_FILE" $MIRROR_OPTIONS $USER@ftp-master.debian.org::debian/dists/ "$TARGET/archive"
-	rsync --password-file "$PASSWORD_BASE/$1-buildd.rsync-password" $BUILDD_QUEUE_OPTIONS $USER@ftp-master.debian.org::buildd-unstable/ "$TARGET/buildd-unstable"
+	rsync --password-file "$PASSWORD_BASE/$1-buildd.rsync-password" $BUILDD_QUEUE_OPTIONS $USER@ftp-master.debian.org::buildd-sid/ "$TARGET/buildd-sid"
 	rsync --password-file "$PASSWORD_BASE/$1-buildd.rsync-password" $BUILDD_QUEUE_OPTIONS $USER@ftp-master.debian.org::buildd-experimental/ "$TARGET/buildd-experimental"
 	# Also sync the Maintainers and Uploaders files for consumption through the web interface.
 	rsync --password-file "$PASSWORD_FILE" $MIRROR_OPTIONS $USER@ftp-master.debian.org::debian/indices/Maintainers /srv/buildd.debian.org/etc/Maintainers
@@ -61,12 +61,9 @@ debian-security)
 	USER=cimarosa
 	BUILDD_QUEUE_OPTIONS="--include=Packages.gz --include=Sources.gz --include=**Release* --exclude=* $RSYNC_OPTIONS"
 	rsync $MIRROR_OPTIONS $USER@security-master.debian.org::debian-security/dists/ "$TARGET/archive"
+	rsync --password-file "$PASSWORD_BASE/$1-buildd.rsync-password" $BUILDD_QUEUE_OPTIONS $USER@security-master.debian.org::buildd-wheezy/ "$TARGET/buildd-wheezy"
 	rsync --password-file "$PASSWORD_BASE/$1-buildd.rsync-password" $BUILDD_QUEUE_OPTIONS $USER@security-master.debian.org::buildd-squeeze/ "$TARGET/buildd-squeeze"
 	rsync --password-file "$PASSWORD_BASE/$1-buildd.rsync-password" $BUILDD_QUEUE_OPTIONS $USER@security-master.debian.org::buildd-lenny/ "$TARGET/buildd-lenny"
-	rsync --password-file "$PASSWORD_BASE/$1-buildd.rsync-password" $BUILDD_QUEUE_OPTIONS $USER@security-master.debian.org::buildd-etch/ "$TARGET/buildd-etch"
-	[ -h "$TARGET/buildd-testing" ] || ln -sf buildd-squeeze "$TARGET/buildd-testing"
-	[ -h "$TARGET/buildd-stable" ] || ln -sf buildd-lenny "$TARGET/buildd-stable"
-	[ -h "$TARGET/buildd-oldstable" ] || ln -sf buildd-etch "$TARGET/buildd-oldstable"
 	;;
 debian-volatile)
 	rsync $MIRROR_OPTIONS volatile-master.debian.org::debian-volatile/dists/ "$TARGET/archive"

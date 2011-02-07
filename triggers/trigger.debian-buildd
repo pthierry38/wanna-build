@@ -26,9 +26,10 @@ main() {
     sync.sh $ARCHIVE nolock
 
     # Handle unstable as a normal suite.
-    suite=unstable
+    suite=sid
     SOURCES="${ARCHIVE_BASE}/archive/${suite}/{main,contrib}/source/Sources.gz"
-    SOURCES="${SOURCES} ${ARCHIVE_BASE}/buildd-${suite}/Sources.gz"
+    filter_out_nonfree "${ARCHIVE_BASE}/buildd-${suite}/Sources.gz" "Sources.${suite}.incoming-filtered.gz"
+    SOURCES="${SOURCES} Sources.${suite}.incoming-filtered.gz"
     PACKAGES="${ARCHIVE_BASE}/archive/${suite}/{main,contrib}/binary-%ARCH%/Packages.gz"
     PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/archive/${suite}/main/debian-installer/binary-%ARCH%/Packages.gz"
     PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/buildd-${suite}/Packages.gz"
@@ -36,9 +37,10 @@ main() {
 
     # Handle experimental as an overlay suite.
     suite=experimental
-    base_suite=unstable
+    base_suite=sid
     SOURCES="${ARCHIVE_BASE}/archive/${suite}/{main,contrib}/source/Sources.gz"
-    SOURCES="${SOURCES} ${ARCHIVE_BASE}/buildd-${suite}/Sources.gz"
+    filter_out_nonfree "${ARCHIVE_BASE}/buildd-${suite}/Sources.gz" "Sources.${suite}.incoming-filtered.gz"
+    SOURCES="${SOURCES} Sources.${suite}.incoming-filtered.gz"
     PACKAGES="${ARCHIVE_BASE}/archive/${suite}/{main,contrib}/binary-%ARCH%/Packages.gz"
     PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/buildd-${suite}/Packages.gz"
 

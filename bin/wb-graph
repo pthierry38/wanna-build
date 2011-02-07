@@ -5,7 +5,7 @@ use strict;
 use vars qw($dist);
 my $previously_built;
 
-$dist = "unstable";
+$dist = "sid";
 
 while( @ARGV && $ARGV[0] =~ /^-/ ) {
 	$_ = shift @ARGV;
@@ -19,11 +19,6 @@ while( @ARGV && $ARGV[0] =~ /^-/ ) {
 		else {
 			$dist = shift @ARGV;
 		}
-		$dist = "oldstable" if $dist eq "o";
-		$dist = "stable"    if $dist eq "s";
-		$dist = "tesing"    if $dist eq "t";
-		$dist = "unstable"  if $dist eq "u";
-		die "Bad distribution\n" if !isin($dist, qw(oldstable stable testing unstable));
 	}
 	elsif (/^--$/) {
 		last;
@@ -48,7 +43,7 @@ foreach $arch (@archs) {
 my($lastmsg, %n_state, $total, %n_builder, $pu_total);
 $pu_total = 0;
 $n_state{"Installed"} = 0;
-open( PIPE, "wanna-build --database=$arch/build-db --dist=$dist --list=all 2>&1 |" )
+open( PIPE, "wanna-build --database=$arch/build-db --dist=$dist --list=all |" )
 	or die "Cannot spawn wanna-build: $!\n";
 while( <PIPE> ) {
 	if (/^Database for $dist doesn't exist$/) {
