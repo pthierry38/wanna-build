@@ -7,6 +7,6 @@ sudo -u postgres /usr/bin/pg_dumpall --cluster 8.4/wanna-build | gzip > /org/wan
 # Expire dumps only on post-trigger saves.
 if [ "$PREFIX" = "post" ]
 then
-	(cd /org/wanna-build/dumps && /org/wanna-build/expire_dumps -d . -f "dump_*")
+	(cd /org/wanna-build/dumps && /org/wanna-build/bin/expire_dumps -d . -f "dump_*")
 fi
 
