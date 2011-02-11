@@ -269,6 +269,15 @@ END {
 	}
 }
 
+if ($distribution eq 'any-priv') {
+    $privmode = 'yes';
+    $distribution = 'any';
+}
+if ($distribution eq 'any-unpriv') {
+    $privmode = 'no';
+    $distribution = 'any';
+}
+
 my $schema_suffix = '';
 $recorduser //= (not -t and $user =~ /^buildd_/);
 if (isin( $op_mode, qw(list info)) && $distribution !~ /security/ && !$recorduser && !($privmode eq 'yes')) {
@@ -305,14 +314,6 @@ $distribution = $distribution_aliases{$distribution} if (isin($distribution, key
 $op_mode = $category ? "set-failed" : "set-building"
 	if !$op_mode; # default operation
 $distribution ||= "sid";
-if ($distribution eq 'any-priv') {
-    $privmode = 'yes';
-    $distribution = 'any';
-}
-if ($distribution eq 'any-unpriv') {
-    $privmode = 'no';
-    $distribution = 'any';
-}
 undef $distribution if $distribution eq 'any';
 if ($distribution) {
     my @dists = split(/[, ]+/, $distribution);
