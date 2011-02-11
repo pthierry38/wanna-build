@@ -269,6 +269,15 @@ END {
 	}
 }
 
+if ($distribution eq 'any-priv') {
+    $privmode = 'yes';
+    $distribution = 'any';
+}
+if ($distribution eq 'any-unpriv') {
+    $privmode = 'no';
+    $distribution = 'any';
+}
+
 my $schema_suffix = '';
 $recorduser //= (not -t and $user =~ /^buildd_/);
 if (isin( $op_mode, qw(list info)) && $distribution !~ /security/ && !$recorduser && !($privmode eq 'yes')) {
@@ -305,14 +314,6 @@ $distribution = $distribution_aliases{$distribution} if (isin($distribution, key
 $op_mode = $category ? "set-failed" : "set-building"
 	if !$op_mode; # default operation
 $distribution ||= "sid";
-if ($distribution eq 'any-priv') {
-    $privmode = 'yes';
-    $distribution = 'any';
-}
-if ($distribution eq 'any-unpriv') {
-    $privmode = 'no';
-    $distribution = 'any';
-}
 undef $distribution if $distribution eq 'any';
 if ($distribution) {
     my @dists = split(/[, ]+/, $distribution);
@@ -1937,6 +1938,13 @@ sub calculate_prio {
 	$days = $priomap->{'waitingdays'}->{'max'} if $priomap->{'waitingdays'}->{'max'} and $days > $priomap->{'waitingdays'}->{'max'};
 	my $scale = $priomap->{'waitingdays'}->{'scale'} || 1;
 	$pkg->{'calprio'} += $days * $scale;
+
+        my $btime = max($pkg->{'anytime'}, $pkg->{'successtime'});
+        my $bhours = defined($btime) ? int($btime/3600) : ($priomap->{'buildhours'}->{'default'} || 2);
+	$bhours = $priomap->{'buildhours'}->{'min'} if $priomap->{'buildhours'}->{'min'} and $bhours < $priomap->{'buildhours'}->{'min'};
+	$bhours = $priomap->{'buildhours'}->{'max'} if $priomap->{'buildhours'}->{'max'} and $bhours > $priomap->{'buildhours'}->{'max'};
+	$scale = $priomap->{'buildhours'}->{'scale'} || 1;
+        $pkg->{'calprio'} -= $bhours * $scale;
 
 	$pkg->{'calprio'} += $pkg->{'permbuildpri'} if  $pkg->{'permbuildpri'};
 	$pkg->{'calprio'} += $pkg->{'buildpri'} if  $pkg->{'buildpri'};
