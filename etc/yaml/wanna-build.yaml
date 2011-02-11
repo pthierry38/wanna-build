@@ -20,6 +20,10 @@ priority:
         min: 0
         max: 6
         scale: 2
+    buildhours:
+        default: 2
+        min: 0
+        max: 15
 list-order:
     default: PScpsn
     failed: fPcpsn
