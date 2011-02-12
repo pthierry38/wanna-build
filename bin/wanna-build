@@ -181,7 +181,7 @@ my %options =
 	 { short => "O", arg => \$list_order,
 	   code => sub {
 		   die "Bad ordering character\n"
-			   if $list_order !~ /^[PSpsncbCW]+$/;
+			   if $list_order !~ /^[PSpsncbCWT]+$/;
 	   } },
 	 message        => { short => "m", arg => \$fail_reason },
 	 # database is deprecated, use arch instead.
@@ -1901,9 +1901,9 @@ BEGIN {
 
 sub sort_list_func {
     my $map_funcs = {
-        'C' => ['<=>', sub { return (-1) * $_[0]->{'calprio'}; }],
-        'W' => ['<=>', sub { return (-1) * $_[0]->{'state_days'}; }],
-        'P' => ['<=>', sub { return (-1) * $_[0]->{'buildpri'}; }],
+        'C' => ['<->', sub { return $_[0]->{'calprio'}; }],
+        'W' => ['<->', sub { return $_[0]->{'state_days'}; }],
+        'P' => ['<->', sub { return $_[0]->{'buildpri'}; }],
         'p' => ['<=>', sub { return $prioval{$_[0]->{'priority'}}; }],
         's' => ['<=>', sub { return $sectval{$_[0]->{'section'}}; }],
         'n' => ['cmp', sub { return $_[0]->{'package'}; }],
@@ -1911,10 +1911,12 @@ sub sort_list_func {
         'c' => ['<=>', sub { return ($_[0]->{'notes'} =~ /^(out-of-date|partial)/) ? 0: ($_[0]->{'notes'} =~ /^uncompiled/) ? 2 : 1; }],
         'f' => ['<=>', sub { return $catval{ $_[0]->{'failed_category'} ? $_[0]->{'failed_category'}: "none" }; }],
         'S' => ['<=>', sub { return $prioval{$_[0]->{'priority'}} > $prioval{'standard'}; }],
+        'T' => ['<->', sub { return $_[0]->{'state_time'} % 86400;} ], # Fractions of a day
     };
 
 	foreach my $letter (split( //, $list_order )) {
             my $r;
+            $r = &{$map_funcs->{$letter}[1]}($b) <=> &{$map_funcs->{$letter}[1]}($a) if $map_funcs->{$letter}[0] eq '<->';
             $r = &{$map_funcs->{$letter}[1]}($a) <=> &{$map_funcs->{$letter}[1]}($b) if $map_funcs->{$letter}[0] eq '<=>';
             $r = &{$map_funcs->{$letter}[1]}($a) cmp &{$map_funcs->{$letter}[1]}($b) if $map_funcs->{$letter}[0] eq 'cmp';
             return $r if $r != 0;
@@ -2161,7 +2163,7 @@ sub info_packages {
 		'failed_category' => 'Failed-Category', 'notes' => 'Notes',
 		'distribution' => 'Distribution', 'old_failed' => 'Old-Failed',
 		'permbuildpri' => 'PermBuildPri', 'rel' => 'Rel',
-		'calprio' => 'CalculatedPri', 'state_days' => 'State-Days',
+		'calprio' => 'CalculatedPri', 'state_days' => 'State-Days', 'state_time' => 'State-Time',
                 'successtime' => 'Success-build-time',
                 'anytime' => 'Build-time',
                 'extra_depends' => 'Extra-Dependencies',
@@ -2787,7 +2789,7 @@ sub pkg_history_table_name {
 sub get_readonly_source_info {
 	my $name = shift;
 	# SELECT FLOOR(EXTRACT('epoch' FROM age(localtimestamp, '2010-01-22  23:45')) / 86400) -- change to that?
-        my $q = "SELECT rel, priority, state_change, permbuildpri, section, buildpri, failed, state, binary_nmu_changelog, bd_problem, version, package, distribution, installed_version, notes, failed_category, builder, old_failed, previous_state, binary_nmu_version, depends, extract(days from date_trunc('days', now() - state_change)) as state_days"
+        my $q = "SELECT rel, priority, state_change, permbuildpri, section, buildpri, failed, state, binary_nmu_changelog, bd_problem, version, package, distribution, installed_version, notes, failed_category, builder, old_failed, previous_state, binary_nmu_version, depends, extract(days from date_trunc('days', now() - state_change)) as state_days, floor(extract(epoch from now()) - extract(epoch from state_change)) as state_time"
             . ", (SELECT max(build_time) FROM ".pkg_history_table_name()." WHERE pkg_history.package = packages.package AND pkg_history.distribution = packages.distribution AND result = 'successful') AS successtime"
             . ", (SELECT max(build_time) FROM ".pkg_history_table_name()." WHERE pkg_history.package = packages.package AND pkg_history.distribution = packages.distribution ) AS anytime"
             . ", extra_depends, extra_conflicts"
@@ -2801,7 +2803,7 @@ sub get_readonly_source_info {
 sub get_source_info {
 	my $name = shift;
         return get_readonly_source_info($name) if $simulate;
-	my $pkg = $dbh->selectrow_hashref('SELECT *, extract(days from date_trunc(\'days\', now() - state_change)) as state_days FROM ' . 
+	my $pkg = $dbh->selectrow_hashref('SELECT *, extract(days from date_trunc(\'days\', now() - state_change)) as state_days, floor(extract(epoch from now()) - extract(epoch from state_change)) as state_time FROM ' . 
 		table_name() . ' WHERE package = ? AND distribution = ?' .
 		' FOR UPDATE',
 		undef, $name, $distribution);
@@ -2811,7 +2813,7 @@ sub get_source_info {
 sub get_all_source_info {
 	my %options = @_;
 
-        my $q = "SELECT rel, priority, state_change, permbuildpri, section, buildpri, failed, state, binary_nmu_changelog, bd_problem, version, package, distribution, installed_version, notes, failed_category, builder, old_failed, previous_state, binary_nmu_version, depends, extract(days from date_trunc('days', now() - state_change)) as state_days"
+        my $q = "SELECT rel, priority, state_change, permbuildpri, section, buildpri, failed, state, binary_nmu_changelog, bd_problem, version, package, distribution, installed_version, notes, failed_category, builder, old_failed, previous_state, binary_nmu_version, depends, extract(days from date_trunc('days', now() - state_change)) as state_days, floor(extract(epoch from now()) - extract(epoch from state_change)) as state_time"
 #            . ", (SELECT max(build_time) FROM ".pkg_history_table_name()." WHERE pkg_history.package = packages.package AND pkg_history.distribution = packages.distribution AND result = 'successful') AS successtime"
 #            . ", (SELECT max(build_time) FROM ".pkg_history_table_name()." WHERE pkg_history.package = packages.package AND pkg_history.distribution = packages.distribution ) AS anytime"
             . ", successtime.build_time as successtime, anytime.build_time as anytime, extra_depends, extra_conflicts"

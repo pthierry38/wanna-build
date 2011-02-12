@@ -27,7 +27,7 @@ priority:
 list-order:
     default: PScpsn
     failed: fPcpsn
-    needs-build: CWn
+    needs-build: CWTn
     building: bn
 restrict:
     component: main contrib
