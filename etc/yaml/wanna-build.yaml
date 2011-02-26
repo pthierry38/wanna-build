@@ -20,10 +20,14 @@ priority:
         min: 0
         max: 6
         scale: 2
+    buildhours:
+        default: 2
+        min: 0
+        max: 15
 list-order:
     default: PScpsn
     failed: fPcpsn
-    needs-build: CWn
+    needs-build: CWTn
     building: bn
 restrict:
     component: main contrib
