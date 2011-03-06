@@ -1121,7 +1121,7 @@ sub add_one_needsbuild {
 			  "Skipping.\n";
 		return;
 	}
-	if ($distribution eq "unstable") {
+	if (!defined $distributions{$distribution}{noadw}) {
 		change_state( \$pkg, 'BD-Uninstallable' );
 		$pkg->{'bd_problem'} = "Installability of build dependencies not tested yet";
 	} else {
