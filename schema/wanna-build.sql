@@ -2681,7 +2681,9 @@ CREATE TABLE distributions (
     distribution character varying NOT NULL,
     public boolean DEFAULT true NOT NULL,
     sort_order integer DEFAULT 0,
-    auto_dep_wait boolean DEFAULT true
+    auto_dep_wait boolean DEFAULT true,
+    build_dep_resolver character varying,
+    archive character varying
 );
 
 
