@@ -2638,37 +2638,37 @@ SET search_path = public, pg_catalog;
 -- Name: distribution_architectures; Type: VIEW; Schema: public; Owner: wbadm
 --
 
-CREATE VIEW distribution_architectures AS
-    (((((((((((((
-        SELECT DISTINCT packages.distribution, 'alpha'::character varying AS architecture, count(case when state='Needs-Build' then 1 end) as needsbuild FROM alpha.packages 
+CREATE VIEW distribution_architectures AS (((((((((((((
+        SELECT DISTINCT packages.distribution, 'alpha'::character varying AS architecture, count(case when state='Needs-Build' then 1 end) as needsbuild FROM alpha.packages group by packages.distribution
           UNION 
-        SELECT DISTINCT packages.distribution, 'amd64'::character varying AS architecture, count(case when state='Needs-Build' then 1 end) as needsbuild FROM amd64.packages
+        SELECT DISTINCT packages.distribution, 'amd64'::character varying AS architecture, count(case when state='Needs-Build' then 1 end) as needsbuild FROM amd64.packages group by packages.distribution
           ) UNION
-         SELECT DISTINCT packages.distribution, 'arm'::character varying AS architecture, count(case when state='Needs-Build' then 1 end) as needsbuild FROM arm.packages
+         SELECT DISTINCT packages.distribution, 'arm'::character varying AS architecture, count(case when state='Needs-Build' then 1 end) as needsbuild FROM arm.packages group by packages.distribution
           ) UNION
-         SELECT DISTINCT packages.distribution, 'armel'::character varying AS architecture, count(case when state='Needs-Build' then 1 end) as needsbuild FROM armel.packages
+         SELECT DISTINCT packages.distribution, 'armel'::character varying AS architecture, count(case when state='Needs-Build' then 1 end) as needsbuild FROM armel.packages group by packages.distribution
           ) UNION
-         SELECT DISTINCT packages.distribution, 'hppa'::character varying AS architecture, count(case when state='Needs-Build' then 1 end) as needsbuild FROM hppa.packages
+         SELECT DISTINCT packages.distribution, 'hppa'::character varying AS architecture, count(case when state='Needs-Build' then 1 end) as needsbuild FROM hppa.packages group by packages.distribution
           ) UNION
-         SELECT DISTINCT packages.distribution, 'hurd-i386'::character varying AS architecture, count(case when state='Needs-Build' then 1 end) as needsbuild FROM "hurd-i386".packages
+         SELECT DISTINCT packages.distribution, 'hurd-i386'::character varying AS architecture, count(case when state='Needs-Build' then 1 end) as needsbuild FROM "hurd-i386".packages group by packages.distribution
           ) UNION
-         SELECT DISTINCT packages.distribution, 'i386'::character varying AS architecture, count(case when state='Needs-Build' then 1 end) as needsbuild FROM i386.packages
+         SELECT DISTINCT packages.distribution, 'i386'::character varying AS architecture, count(case when state='Needs-Build' then 1 end) as needsbuild FROM i386.packages group by packages.distribution
           ) UNION
-         SELECT DISTINCT packages.distribution, 'ia64'::character varying AS architecture, count(case when state='Needs-Build' then 1 end) as needsbuild FROM ia64.packages
+         SELECT DISTINCT packages.distribution, 'ia64'::character varying AS architecture, count(case when state='Needs-Build' then 1 end) as needsbuild FROM ia64.packages group by packages.distribution
           ) UNION
-         SELECT DISTINCT packages.distribution, 'kfreebsd-amd64'::character varying AS architecture, count(case when state='Needs-Build' then 1 end) as needsbuild FROM "kfreebsd-amd64".packages
+         SELECT DISTINCT packages.distribution, 'kfreebsd-amd64'::character varying AS architecture, count(case when state='Needs-Build' then 1 end) as needsbuild FROM "kfreebsd-amd64".packages group by packages.distribution
           ) UNION
-         SELECT DISTINCT packages.distribution, 'kfreebsd-i386'::character varying AS architecture, count(case when state='Needs-Build' then 1 end) as needsbuild FROM "kfreebsd-i386".packages
+         SELECT DISTINCT packages.distribution, 'kfreebsd-i386'::character varying AS architecture, count(case when state='Needs-Build' then 1 end) as needsbuild FROM "kfreebsd-i386".packages group by packages.distribution
           ) UNION
-         SELECT DISTINCT packages.distribution, 'mips'::character varying AS architecture, count(case when state='Needs-Build' then 1 end) as needsbuild FROM mips.packages
+         SELECT DISTINCT packages.distribution, 'mips'::character varying AS architecture, count(case when state='Needs-Build' then 1 end) as needsbuild FROM mips.packages group by packages.distribution
           ) UNION
-         SELECT DISTINCT packages.distribution, 'mipsel'::character varying AS architecture, count(case when state='Needs-Build' then 1 end) as needsbuild FROM mipsel.packages
+         SELECT DISTINCT packages.distribution, 'mipsel'::character varying AS architecture, count(case when state='Needs-Build' then 1 end) as needsbuild FROM mipsel.packages group by packages.distribution
           ) UNION
-         SELECT DISTINCT packages.distribution, 'powerpc'::character varying AS architecture, count(case when state='Needs-Build' then 1 end) as needsbuild FROM powerpc.packages
+         SELECT DISTINCT packages.distribution, 'powerpc'::character varying AS architecture, count(case when state='Needs-Build' then 1 end) as needsbuild FROM powerpc.packages group by packages.distribution
           ) UNION
-         SELECT DISTINCT packages.distribution, 's390'::character varying AS architecture, count(case when state='Needs-Build' then 1 end) as needsbuild FROM s390.packages
+         SELECT DISTINCT packages.distribution, 's390'::character varying AS architecture, count(case when state='Needs-Build' then 1 end) as needsbuild FROM s390.packages group by packages.distribution
           ) UNION
-         SELECT DISTINCT packages.distribution, 'sparc'::character varying AS architecture, count(case when state='Needs-Build' then 1 end) as needsbuild FROM sparc.packages;
+         SELECT DISTINCT packages.distribution, 'sparc'::character varying AS architecture, count(case when state='Needs-Build' then 1 end) as needsbuild FROM sparc.packages group by packages.distribution
+         ;
 
 
 ALTER TABLE public.distribution_architectures OWNER TO wbadm;
