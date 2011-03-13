@@ -296,12 +296,14 @@ $dbh->{pg_server_prepare} = 0;
 
 $dbh->begin_work or die $dbh->errstr;
 
-my $q = 'SELECT distribution, public, auto_dep_wait FROM distributions';
+my $q = 'SELECT distribution, public, auto_dep_wait, build_dep_resolver, archive FROM distributions';
 my $rows = $dbh->selectall_hashref($q, 'distribution');
 foreach my $name (keys %$rows) {
 	$distributions{$name} = {};
 	$distributions{$name}->{'noadw'} = 1 if !($rows->{$name}->{'auto_dep_wait'});
 	$distributions{$name}->{'hidden'} = 1 if !($rows->{$name}->{'public'});
+	$distributions{$name}->{'build_dep_resolver'} = $rows->{$name}->{'build_dep_resolver'} if $rows->{$name}->{'build_dep_resolver'};
+	$distributions{$name}->{'archive'} = $rows->{$name}->{'archive'} if $rows->{$name}->{'archive'};
 }
 
 $q = 'SELECT alias, distribution FROM distribution_aliases';
@@ -785,6 +787,8 @@ sub add_one_building {
                 print  "    - extra-changelog: $pkg->{'binary_nmu_changelog'}\n" if $pkg->{'binary_nmu_changelog'} && $pkg->{'binary_nmu_version'};
                 print  "    - extra-depends: $pkg->{'extra_depends'}\n" if $pkg->{'extra_depends'};
                 print  "    - extra-conflicts: $pkg->{'extra_conflicts'}\n" if $pkg->{'extra_conflicts'};
+                print  "    - archive: $distributions{$distribution}->{'archive'}\n" if $distributions{$distribution}->{'archive'};
+                print  "    - build_dep_resolver: $distributions{$distribution}->{'build_dep_resolver'}\n" if $distributions{$distribution}->{'build_dep_resolver'};
             }
 		change_state( \$pkg, 'Building' );
 		$pkg->{'package'} = $name;
