@@ -86,6 +86,6 @@ main() {
     do_stats
 }
 
-main &
+main
 exit 0
 

@@ -52,6 +52,6 @@ main() {
     cleanup
 }
 
-main &
+main
 exit 0
 

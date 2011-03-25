@@ -1,0 +1,46 @@
+#!/bin/bash
+# vim:set et ts=4 sw=4:
+
+LOCKFILE=/org/wanna-build/triggers/lock
+
+set -eE
+
+cleanup() {
+    rm -rf "$LOCKFILE"
+}
+
+if ! lockfile -0 -r0 "$LOCKFILE" 2>/dev/null
+then
+    # Process already running.
+    exit 0
+fi
+
+# Got the lock.
+trap cleanup ERR TERM HUP INT QUIT EXIT
+
+# Do at least one run.
+work=1
+while [ $work -eq 1 ]
+do
+    # No further runs unless at least one signal is found.
+    work=0
+    find /org/wanna-build/signals -type f | while read signal
+    do
+        # Process it.
+        work=1
+        if [ "$(stat -c '%s' $signal)" -eq 0 ]
+        then
+            /org/wanna-build/triggers/trigger.$(basename $signal)
+        else
+            cat $signal | \
+                (while read args
+                 do
+                     /org/wanna-build/triggers/trigger.$(basename $signal) $args
+                 done)
+        fi
+        rm $signal
+    done
+done
+
+exit 0
+

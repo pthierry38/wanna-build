@@ -2,21 +2,23 @@
 
 [ -n "$SSH_ORIGINAL_COMMAND" ] || exit 1
 
+trigger_name=$(basename "$1")
+
 set -- $SSH_ORIGINAL_COMMAND
 
-bn=$(basename "$1")
-if [ "$bn" = "trigger.daily" ]; then
-	bin=/org/wanna-build/trigger.daily
-elif [ "$bn" = "trigger.often" ]; then
-	bin=/org/wanna-build/trigger.often
-elif [ "$bn" = "trigger.security" ]; then
-	bin=/org/wanna-build/trigger.security
+shift
+args="$*"
+
+echo "$(date): $trigger_name | $args" >> /org/wanna-build/db/signal.log
+
+if [ ! -z "$args" ]
+then
+    # Append because we might get triggered for multiple suites.
+    # (This is mainly for security currently.)
+    echo $args >> /org/wanna-build/signals/$trigger_name
 else
-	exit 1
+    touch /org/wanna-build/signals/$trigger_name
 fi
 
-shift
+exit 0
 
-[ -f "$bin" -a -x "$bin" ] || exit 1
-
-exec $bin
