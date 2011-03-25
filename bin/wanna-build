@@ -2175,6 +2175,7 @@ sub info_packages {
                 'anytime' => 'Build-time',
                 'extra_depends' => 'Extra-Dependencies',
                 'extra_conflicts' => 'Extra-Conflicts',
+                'build_arch_all' => 'Build-Arch-All',
 			 );
 	
 	foreach $name (@_) {
