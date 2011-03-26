@@ -939,7 +939,8 @@ CREATE TABLE packages (
     rel character varying,
     bd_problem text,
     extra_depends character varying,
-    extra_conflicts character varying
+    extra_conflicts character varying,
+    build_arch_all boolean DEFAULT false NOT NULL
 );
 
 
@@ -1001,7 +1002,7 @@ SET search_path = alpha_public, pg_catalog;
 --
 
 CREATE VIEW packages AS
-    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts FROM alpha.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM alpha.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
 
 
 ALTER TABLE alpha_public.packages OWNER TO wbadm;
@@ -1065,7 +1066,8 @@ CREATE TABLE packages (
     rel character varying,
     bd_problem text,
     extra_depends character varying,
-    extra_conflicts character varying
+    extra_conflicts character varying,
+    build_arch_all boolean DEFAULT false NOT NULL
 );
 
 
@@ -1127,7 +1129,7 @@ SET search_path = amd64_public, pg_catalog;
 --
 
 CREATE VIEW packages AS
-    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts FROM amd64.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM amd64.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
 
 
 ALTER TABLE amd64_public.packages OWNER TO wbadm;
@@ -1191,7 +1193,8 @@ CREATE TABLE packages (
     rel character varying,
     bd_problem text,
     extra_depends character varying,
-    extra_conflicts character varying
+    extra_conflicts character varying,
+    build_arch_all boolean DEFAULT false NOT NULL
 );
 
 
@@ -1253,7 +1256,7 @@ SET search_path = arm_public, pg_catalog;
 --
 
 CREATE VIEW packages AS
-    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts FROM arm.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM arm.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
 
 
 ALTER TABLE arm_public.packages OWNER TO wbadm;
@@ -1317,7 +1320,8 @@ CREATE TABLE packages (
     rel character varying,
     bd_problem text,
     extra_depends character varying,
-    extra_conflicts character varying
+    extra_conflicts character varying,
+    build_arch_all boolean DEFAULT false NOT NULL
 );
 
 
@@ -1379,7 +1383,7 @@ SET search_path = armel_public, pg_catalog;
 --
 
 CREATE VIEW packages AS
-    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts FROM armel.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM armel.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
 
 
 ALTER TABLE armel_public.packages OWNER TO wbadm;
@@ -1443,7 +1447,8 @@ CREATE TABLE packages (
     rel character varying,
     bd_problem text,
     extra_depends character varying,
-    extra_conflicts character varying
+    extra_conflicts character varying,
+    build_arch_all boolean DEFAULT false NOT NULL
 );
 
 
@@ -1505,7 +1510,7 @@ SET search_path = hppa_public, pg_catalog;
 --
 
 CREATE VIEW packages AS
-    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts FROM hppa.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM hppa.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
 
 
 ALTER TABLE hppa_public.packages OWNER TO wbadm;
@@ -1569,7 +1574,8 @@ CREATE TABLE packages (
     rel character varying,
     bd_problem text,
     extra_depends character varying,
-    extra_conflicts character varying
+    extra_conflicts character varying,
+    build_arch_all boolean DEFAULT false NOT NULL
 );
 
 
@@ -1631,7 +1637,7 @@ SET search_path = "hurd-i386_public", pg_catalog;
 --
 
 CREATE VIEW packages AS
-    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts FROM "hurd-i386".packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM "hurd-i386".packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
 
 
 ALTER TABLE "hurd-i386_public".packages OWNER TO wbadm;
@@ -1695,7 +1701,8 @@ CREATE TABLE packages (
     rel character varying,
     bd_problem text,
     extra_depends character varying,
-    extra_conflicts character varying
+    extra_conflicts character varying,
+    build_arch_all boolean DEFAULT false NOT NULL
 );
 
 
@@ -1757,7 +1764,7 @@ SET search_path = i386_public, pg_catalog;
 --
 
 CREATE VIEW packages AS
-    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts FROM i386.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM i386.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
 
 
 ALTER TABLE i386_public.packages OWNER TO wbadm;
@@ -1821,7 +1828,8 @@ CREATE TABLE packages (
     rel character varying,
     bd_problem text,
     extra_depends character varying,
-    extra_conflicts character varying
+    extra_conflicts character varying,
+    build_arch_all boolean DEFAULT false NOT NULL
 );
 
 
@@ -1883,7 +1891,7 @@ SET search_path = ia64_public, pg_catalog;
 --
 
 CREATE VIEW packages AS
-    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts FROM ia64.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM ia64.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
 
 
 ALTER TABLE ia64_public.packages OWNER TO wbadm;
@@ -1947,7 +1955,8 @@ CREATE TABLE packages (
     rel character varying,
     bd_problem text,
     extra_depends character varying,
-    extra_conflicts character varying
+    extra_conflicts character varying,
+    build_arch_all boolean DEFAULT false NOT NULL
 );
 
 
@@ -2009,7 +2018,7 @@ SET search_path = "kfreebsd-amd64_public", pg_catalog;
 --
 
 CREATE VIEW packages AS
-    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts FROM "kfreebsd-amd64".packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM "kfreebsd-amd64".packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
 
 
 ALTER TABLE "kfreebsd-amd64_public".packages OWNER TO wbadm;
@@ -2073,7 +2082,8 @@ CREATE TABLE packages (
     rel character varying,
     bd_problem text,
     extra_depends character varying,
-    extra_conflicts character varying
+    extra_conflicts character varying,
+    build_arch_all boolean DEFAULT false NOT NULL
 );
 
 
@@ -2135,7 +2145,7 @@ SET search_path = "kfreebsd-i386_public", pg_catalog;
 --
 
 CREATE VIEW packages AS
-    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts FROM "kfreebsd-i386".packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM "kfreebsd-i386".packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
 
 
 ALTER TABLE "kfreebsd-i386_public".packages OWNER TO wbadm;
@@ -2199,7 +2209,8 @@ CREATE TABLE packages (
     rel character varying,
     bd_problem text,
     extra_depends character varying,
-    extra_conflicts character varying
+    extra_conflicts character varying,
+    build_arch_all boolean DEFAULT false NOT NULL
 );
 
 
@@ -2261,7 +2272,7 @@ SET search_path = mips_public, pg_catalog;
 --
 
 CREATE VIEW packages AS
-    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts FROM mips.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM mips.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
 
 
 ALTER TABLE mips_public.packages OWNER TO wbadm;
@@ -2325,7 +2336,8 @@ CREATE TABLE packages (
     rel character varying,
     bd_problem text,
     extra_depends character varying,
-    extra_conflicts character varying
+    extra_conflicts character varying,
+    build_arch_all boolean DEFAULT false NOT NULL
 );
 
 
@@ -2387,7 +2399,7 @@ SET search_path = mipsel_public, pg_catalog;
 --
 
 CREATE VIEW packages AS
-    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts FROM mipsel.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM mipsel.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
 
 
 ALTER TABLE mipsel_public.packages OWNER TO wbadm;
@@ -2451,7 +2463,8 @@ CREATE TABLE packages (
     rel character varying,
     bd_problem text,
     extra_depends character varying,
-    extra_conflicts character varying
+    extra_conflicts character varying,
+    build_arch_all boolean DEFAULT false NOT NULL
 );
 
 
@@ -2513,7 +2526,7 @@ SET search_path = powerpc_public, pg_catalog;
 --
 
 CREATE VIEW packages AS
-    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts FROM powerpc.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM powerpc.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
 
 
 ALTER TABLE powerpc_public.packages OWNER TO wbadm;
@@ -2591,7 +2604,8 @@ CREATE TABLE packages (
     rel character varying,
     bd_problem text,
     extra_depends character varying,
-    extra_conflicts character varying
+    extra_conflicts character varying,
+    build_arch_all boolean DEFAULT false NOT NULL
 );
 
 
@@ -2626,7 +2640,8 @@ CREATE TABLE packages (
     rel character varying,
     bd_problem text,
     extra_depends character varying,
-    extra_conflicts character varying
+    extra_conflicts character varying,
+    build_arch_all boolean DEFAULT false NOT NULL
 );
 
 
@@ -2654,7 +2669,8 @@ CREATE TABLE distributions (
     sort_order integer DEFAULT 0,
     auto_dep_wait boolean DEFAULT true,
     build_dep_resolver character varying,
-    archive character varying
+    archive character varying,
+    suppress_successful_logs boolean DEFAULT false NOT NULL
 );
 
 
@@ -2761,7 +2777,7 @@ SET search_path = s390_public, pg_catalog;
 --
 
 CREATE VIEW packages AS
-    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts FROM s390.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM s390.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
 
 
 ALTER TABLE s390_public.packages OWNER TO wbadm;
@@ -2773,7 +2789,7 @@ SET search_path = sparc_public, pg_catalog;
 --
 
 CREATE VIEW packages AS
-    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts FROM sparc.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM sparc.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
 
 
 ALTER TABLE sparc_public.packages OWNER TO wbadm;
