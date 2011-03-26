@@ -49,7 +49,7 @@ main_sync() {
     do
         SOURCES="${ARCHIVE_BASE}/archive/${SUITE}/{main,contrib}/source/Sources.gz"
         filter_out_nonfree "${ARCHIVE_BASE}/buildd-${SUITE}/Sources.gz" "Sources.${SUITE}.incoming-filtered.gz"
-        SOURCES="${SOURCES} Sources.${suite}.incoming-filtered.gz"
+        SOURCES="${SOURCES} Sources.${SUITE}.incoming-filtered.gz"
         NFSOURCES="${ARCHIVE_BASE}/archive/${SUITE}/non-free/source/Sources.gz"
         PACKAGES="${ARCHIVE_BASE}/archive/${SUITE}/{main,contrib}/binary-%ARCH%/Packages.gz"
         PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/archive/${SUITE}/{main,contrib}/debian-installer/binary-%ARCH%/Packages.gz"
