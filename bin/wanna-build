@@ -2007,7 +2007,9 @@ sub print_format {
     my $printfmt = shift;
     my $pkg = shift;
     my $var = shift;
+
 =pod
+
 Within an format string, the following values are allowed (need to be preceded by %).
 This can be combined to e.g.
 wanna-build --format='wanna-build -A %a --give-back %p_%v' -A mipsel --list=failed
@@ -2041,6 +2043,7 @@ X the string normally between [], e.g. optional:out-of-date:calprio{61}:days{25}
 Text could contain further %. To start with !, use %!
 
 =cut
+
     return stringf($printfmt, (
         'p' => make_fmt( $pkg->{'package'}, $pkg, $var),
         'a' => make_fmt( $arch, $pkg, $var),
