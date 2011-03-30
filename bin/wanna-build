@@ -3054,7 +3054,7 @@ sub parse_all_v3 {
             ($pkg->{'binary_nmu_version'} ? ";b".$pkg->{'binary_nmu_version'} : "").
             ", $pkg->{'state'}):";
 
-        if (isin($pkgs->{'status'}, qw (installed related)) && $pkgs->{'version'} eq $pkg->{'version'} && $pkgs->{'binnmu'} && $pkg->{'binary_nmu_version'} && $pkgs->{'binnmu'} < int($pkg->{'binary_nmu_version'})) {
+        if (isin($pkgs->{'status'}, qw (installed related)) && $pkgs->{'version'} eq $pkg->{'version'} && $pkgs->{'binnmu'}//0 < int($pkg->{'binary_nmu_version'}//0)) {
                 $pkgs->{'status'} = 'out-of-date';
         }
         if (isin($pkgs->{'status'}, qw (installed related))) {
@@ -3068,7 +3068,7 @@ sub parse_all_v3 {
             }
             my $attrs = { 'version' => 'version', 'installed_version' => 'version', 'binary_nmu_version' => 'binnmu', 'section' => 'section', 'priority' => 'priority' };
             foreach my $k (keys %$attrs) {
-                if (!$pkg->{$k} or !$pkgs->{$attrs->{$k}} or $pkg->{$k} ne $pkgs->{$attrs->{$k}}) {
+                if (($pkg->{$k}//"") ne ($pkgs->{$attrs->{$k}}//"")) {
                     $pkg->{$k} = $pkgs->{$attrs->{$k}};
                     $change++;
                 }
