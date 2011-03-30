@@ -3116,7 +3116,7 @@ sub parse_all_v3 {
             print "$logstr package in unknown state: $pkgs->{'status'}\n";
             next SRCS;
         }
-        next if $pkgs->{'version'} eq $pkg->{'version'} and $pkgs->{'binnmu'} and $pkgs->{'binnmu'} >= int($pkg->{'binary_nmu_version'});
+        next if $pkgs->{'version'} eq $pkg->{'version'} and $pkgs->{'binnmu'}//0 >= int($pkg->{'binary_nmu_version'}//0);
         next if $pkgs->{'version'} eq $pkg->{'version'} and !isin( $pkg->{'state'}, qw(Installed));
         next if isin( $pkg->{'state'}, qw(Not-For-Us Failed-Removed));
 
