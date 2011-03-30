@@ -2676,7 +2676,7 @@ sub call_edos_depcheck {
 	my $change = 
 	    (defined $interesting_packages{$key} and $pkg->{'state'} eq 'Needs-Build') ||
 	    (not defined $interesting_packages{$key} and $pkg->{'state'} eq 'BD-Uninstallable');
-	my $problemchange = $interesting_packages{$key} ne $pkg->{'bd_problem'};
+	my $problemchange = ($interesting_packages{$key}//"") ne ($pkg->{'bd_problem'}//"");
 	if ($change) {
 	    if (defined $interesting_packages{$key}) {
 		    change_state( \$pkg, 'BD-Uninstallable' );
