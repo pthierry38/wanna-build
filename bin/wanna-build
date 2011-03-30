@@ -19,8 +19,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
+use strict;
+use warnings;
 
 package conf;
+
+use vars qw< $basedir $dbbase $transactlog $mailprog $buildd_domain >;
 # defaults
 $basedir ||= "/var/lib/debbuild";
 $dbbase ||= "build-db";
@@ -34,7 +38,6 @@ die "mailprog binary $conf::mailprog does not exist or isn't executable\n"
 	if !-x $conf::mailprog;
 package main;
 
-use strict;
 use POSIX;
 use FileHandle;
 use File::Copy;
@@ -517,7 +520,7 @@ sub process {
 			@ARGV = ( $ARGS[0] );
 			my $pkgs = parse_packages(0);
 			@ARGV = ( $ARGS[3] );
-			my $pkgs = parse_packages(1);
+			$pkgs = parse_packages(1);
 			@ARGV = ( $ARGS[1] );
 			parse_quinn_diff(0);
 			@ARGV = ( $ARGS[2] );
