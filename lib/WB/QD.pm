@@ -52,8 +52,9 @@ sub readsourcebins {
             if ($srcs->{$p->{'name'}}) {
                 next if (vercmp($srcs->{$p->{'name'}}->{'version'}, $p->{'version'}) > 0);
             }
-            my @a = split(/,? /, $p->{'binary'}) if $p->{'binary'};
-            $p->{'binary'} = \@a;
+            if ($p->{'binary'}) {
+                $p->{'binary'} = [ split(/,? /, $p->{'binary'}) ];
+            }
             $srcs->{$p->{'name'}} = $p;
         }
         close $S;
