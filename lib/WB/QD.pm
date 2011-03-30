@@ -15,15 +15,15 @@ sub readsourcebins {
 
     my $pas = {};
     local($/) = "\n";
-    open(my $pas, '<', $pasfile);
-    while(<$pas>) {
+    open(my $pasf, '<', $pasfile);
+    while(<$pasf>) {
         chomp;
         s,\s*#.*,,;
         next unless $_;
         my ($p, $c) = split(/:\s*/);
         $pas->{$p} = { arch => [ split(/\s+/, $c) ], mode => substr($c, 0, 1) ne '!' };
     }
-    close $pas;
+    close $pasf;
 
     my $srcs = {};
     local($/) = ""; # read in paragraph mode
