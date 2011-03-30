@@ -1456,9 +1456,9 @@ sub sort_list_func {
 
 	foreach my $letter (split( //, $list_order )) {
             my $r;
-            $r = &{$map_funcs->{$letter}[1]}($b) <=> &{$map_funcs->{$letter}[1]}($a) if $map_funcs->{$letter}[0] eq '<->';
-            $r = &{$map_funcs->{$letter}[1]}($a) <=> &{$map_funcs->{$letter}[1]}($b) if $map_funcs->{$letter}[0] eq '<=>';
-            $r = &{$map_funcs->{$letter}[1]}($a) cmp &{$map_funcs->{$letter}[1]}($b) if $map_funcs->{$letter}[0] eq 'cmp';
+            $r = (&{$map_funcs->{$letter}[1]}($b)//0 ) <=> (&{$map_funcs->{$letter}[1]}($a)//0 ) if $map_funcs->{$letter}[0] eq '<->';
+            $r = (&{$map_funcs->{$letter}[1]}($a)//0 ) <=> (&{$map_funcs->{$letter}[1]}($b)//0 ) if $map_funcs->{$letter}[0] eq '<=>';
+            $r = (&{$map_funcs->{$letter}[1]}($a)//"") cmp (&{$map_funcs->{$letter}[1]}($b)//"") if $map_funcs->{$letter}[0] eq 'cmp';
             return $r if $r != 0;
 	}
 	return 0;
