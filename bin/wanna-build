@@ -3031,7 +3031,7 @@ sub parse_all_v3() {
 
         unless ($pkg) {
             next SRCS if $pkgs->{'status'} eq 'not-for-us';
-            my $logstr = "merge-v3 $vars->{'time'} ".$name."_$pkgs->{'version'} ($vars->{'arch'}, $vars->{'suite'}):";
+            my $logstr = sprintf("merge-v3 %s %s_%s (%s, %s):", $vars->{'time'}, $name, $pkgs->{'version'}, $vars->{'arch'}, $vars->{'suite'});
 
             # does at least one binary exist in the database and is more recent - if so, we're probably just outdated, ignore the source package
             for my $bin (@{$pkgs->{'binary'}}) {
@@ -3044,7 +3044,7 @@ sub parse_all_v3() {
         }
         my $logstr = "merge-v3 $vars->{'time'} ".$name."_$pkgs->{'version'}".
             ($pkgs->{'binnmu'} ? ";b".$pkgs->{'binnmu'} : "").
-            "($vars->{'arch'}, $vars->{'suite'}, previous: $pkg->{'version'}".
+            " ($vars->{'arch'}, $vars->{'suite'}, previous: $pkg->{'version'}".
             ($pkg->{'binary_nmu_version'} ? ";b".$pkg->{'binary_nmu_version'} : "").
             ", $pkg->{'state'}):";
 
@@ -3095,7 +3095,7 @@ sub parse_all_v3() {
         }
 
         if ($pkgs->{'status'} eq 'auto-not-for-us') {
-            next if isin( $pkg->{'state'}, qw(Not-For-Us Failed Failed-Removed Dep-Wait Dep-Wait-Removed));
+            next if isin( $pkg->{'state'}, qw(Not-For-Us Failed Failed-Removed Dep-Wait Dep-Wait-Removed Auto-Not-For-Us));
             # if the package is currently current, the status is Installed, not not-for-us
 
             change_state( \$pkg, "Auto-Not-For-Us" );
