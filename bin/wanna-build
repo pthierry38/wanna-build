@@ -1444,13 +1444,13 @@ sub sort_list_func {
         'C' => ['<->', sub { return $_[0]->{'calprio'}; }],
         'W' => ['<->', sub { return $_[0]->{'state_days'}; }],
         'P' => ['<->', sub { return $_[0]->{'buildpri'}; }],
-        'p' => ['<=>', sub { return $prioval{$_[0]->{'priority'}}; }],
-        's' => ['<=>', sub { return $sectval{$_[0]->{'section'}}; }],
+        'p' => ['<=>', sub { return $prioval{$_[0]->{'priority'}//""}//0; }],
+        's' => ['<=>', sub { return $sectval{$_[0]->{'section'}//""}//0; }],
         'n' => ['cmp', sub { return $_[0]->{'package'}; }],
         'b' => ['cmp', sub { return $_[0]->{'builder'}; }],
-        'c' => ['<=>', sub { return ($_[0]->{'notes'} =~ /^(out-of-date|partial)/) ? 0: ($_[0]->{'notes'} =~ /^uncompiled/) ? 2 : 1; }],
+        'c' => ['<=>', sub { return ($_[0]->{'notes'}//"" =~ /^(out-of-date|partial)/) ? 0: ($_[0]->{'notes'}//"" =~ /^uncompiled/) ? 2 : 1; }],
         'f' => ['<=>', sub { return $catval{ $_[0]->{'failed_category'} ? $_[0]->{'failed_category'}: "none" }; }],
-        'S' => ['<=>', sub { return $prioval{$_[0]->{'priority'}} > $prioval{'standard'}; }],
+        'S' => ['<->', sub { return isin($_[0]->{'priority'}, qw(required important standard)); }],
         'T' => ['<->', sub { return $_[0]->{'state_time'} % 86400;} ], # Fractions of a day
     };
 
