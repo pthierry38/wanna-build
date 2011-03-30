@@ -3,6 +3,7 @@ package WB::QD;
 use strict;
 use IO::Uncompress::AnyInflate qw(anyinflate);
 use Dpkg::Version qw(vercmp);
+use Dpkg::Arch qw(debarch_is);
 use Data::Dumper;
 
 sub readsourcebins {
@@ -42,7 +43,9 @@ sub readsourcebins {
 
             next unless $p->{'name'} and $p->{'version'};
             next if $p->{'arch'} eq 'all';
-            # TODO: respect the architecture - or not / we already respect it via P-a-s
+            foreach my $tarch (split(/\s+/, $p->{'arch'})) {
+                $p->{'for-us'} = 1 if debarch_is($arch, $tarch);
+            }
             delete $p->{'arch'};
 
             # ignore if package already exists with higher version
@@ -96,6 +99,11 @@ sub readsourcebins {
         }
         delete $srcs->{$k}->{'compiled'};
         $srcs->{$k}->{'status'} = 'installed' if $srcs->{$k}->{'arch'} && $srcs->{$k}->{'arch'} eq 'all';
+        
+        if (!$srcs->{$k}->{'for-us'} && $srcs->{$k}->{'status'} ne 'installed') {
+            $srcs->{$k}->{'status'} = 'auto-not-for-us';
+        }
+        delete $srcs->{$k}->{'for-us'};
 
         #my $p = $pas->{$k};
         #$p ||= $pas->{'%'.$k};

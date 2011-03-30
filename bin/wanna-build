@@ -160,7 +160,7 @@ my %options =
 		   die "Unknown state to list: $list_state\n"
 			   if !isin( $list_state, qw(needs-build building uploaded
 						 built build-attempted failed installed dep-wait
-						 not-for-us all failed-removed
+						 not-for-us auto-not-for-us all failed-removed
 						 install-wait reupload-wait bd-uninstallable));} },
 	 # options with args
 	 dist           =>
@@ -2319,7 +2319,7 @@ sub check_entry {
 	die "Bad state $pkg->{'state'} of package $pkg->{Package}\n"
 		if !isin( $pkg->{'state'},
 				  qw(Needs-Build Building Built Build-Attempted Uploaded Installed Dep-Wait Dep-Wait-Removed
-					 Failed Failed-Removed Not-For-Us BD-Uninstallable
+					 Failed Failed-Removed Not-For-Us BD-Uninstallable Auto-Not-For-Us
 					 ) );
 }
 
@@ -3025,7 +3025,7 @@ sub parse_all_v3() {
     foreach my $name (keys %$srcs) {
         next if $name eq '_binary';
 
-        # state = installed, out-of-date, uncompiled, not-for-us
+        # state = installed, out-of-date, uncompiled, not-for-us, auto-not-for-us
         my $pkgs = $srcs->{$name};
         my $pkg = $db->{$name};
 
@@ -3092,6 +3092,17 @@ sub parse_all_v3() {
 
             print "$logstr should delete (not-for-us according to P-a-s)\n" if $verbose || $simulate || 1; # not implemented yet on purpose
             next;
+        }
+
+        if ($pkgs->{'status'} eq 'auto-not-for-us') {
+            next if isin( $pkg->{'state'}, qw(Not-For-Us Failed Failed-Removed Dep-Wait Dep-Wait-Removed));
+            # if the package is currently current, the status is Installed, not not-for-us
+
+            change_state( \$pkg, "Auto-Not-For-Us" );
+	    log_ta( $pkg, "--merge-v3: Auto-Not-For-Us" ) unless $simulate;
+	    update_source_info($pkg) unless $simulate;
+            print "$logstr set to auto-not-for-us\n" if $verbose || $simulate;
+            next SRCS;
         }
 
         # only uncompiled / out-of-date are left, so check if anything new

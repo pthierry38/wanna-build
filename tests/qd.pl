@@ -69,6 +69,20 @@ Build-Depends: debhelper (>= 7), docbook-xsl, ldp-docbook-xsl (>= 0.0.20040321-0
 Build-Conflicts: dash
 Architecture: all i386 amd64
 
+Package: autonfu
+Binary: autonfu
+Version: 1.41.11-1
+Priority: required
+Section: admin
+Architecture: amd64
+
+Package: autonfu1
+Binary: autonfu1
+Version: 1.41.11-1
+Priority: required
+Section: admin
+Architecture: linux-any
+
 EOF
 ;
 
@@ -167,6 +181,22 @@ is_deeply ($$srcs, {
                         'name' => 'nfu',
                         'section' => 'shell',
                              'binary' => ['nfu'],
+                      },
+            'autonfu' => {
+                        'priority' => 'required',
+                        'status' => 'auto-not-for-us',
+                        'version' => '1.41.11-1',
+                        'name' => 'autonfu',
+                        'section' => 'admin',
+                             'binary' => ['autonfu'],
+                      },
+            'autonfu1' => {
+                        'priority' => 'required',
+                        'status' => 'uncompiled',
+                        'version' => '1.41.11-1',
+                        'name' => 'autonfu1',
+                        'section' => 'admin',
+                             'binary' => ['autonfu1'],
                       },
             'pbuilder' => {
                             'priority' => 'extra',
