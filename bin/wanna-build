@@ -284,7 +284,7 @@ if ($distribution eq 'any-unpriv') {
 }
 
 my $schema_suffix = '';
-$recorduser //= (not -t and $user =~ /^buildd_/);
+$recorduser //= (not -t and $user//"" =~ /^buildd_/);
 if (isin( $op_mode, qw(list info)) && $distribution !~ /security/ && !$recorduser && !($privmode)) {
 	$dbh = DBI->connect("DBI:Pg:service=wanna-build") || 
 		die "FATAL: Cannot open database: $DBI::errstr\n";
