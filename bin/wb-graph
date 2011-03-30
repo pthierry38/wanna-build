@@ -43,9 +43,9 @@ foreach $arch (@archs) {
 my($lastmsg, %n_state, $total, %n_builder, $pu_total);
 $pu_total = 0;
 $n_state{"Installed"} = 0;
-open( PIPE, "wanna-build --database=$arch/build-db --dist=$dist --list=all |" )
+open( my $pipe, '-|', "wanna-build --database=$arch/build-db --dist=$dist --list=all" )
 	or die "Cannot spawn wanna-build: $!\n";
-while( <PIPE> ) {
+while( <$pipe> ) {
 	if (/^Database for $dist doesn't exist$/) {
 		last;
 	}
@@ -64,7 +64,7 @@ while( <PIPE> ) {
 	}
 	$lastmsg = $_;
 }
-close( PIPE );
+close( $pipe );
 if ($?) {
 	print ", 0, 0";
 } else {

@@ -2262,11 +2262,11 @@ sub read_db {
 	my $file = shift;
 
 	print "Reading ASCII database from $file..." if $verbose >= 1;
-	open( F, "<$file" ) or
+	open( my $fh, '<', $file ) or
 		die "Can't open database $file: $!\n";
 
 	local($/) = ""; # read in paragraph mode
-	while( <F> ) {
+	while( <$fh> ) {
 		my( %thispkg, $name );
 		s/[\s\n]+$//;
 		s/\n[ \t]+/\376\377/g;  # fix continuation lines
@@ -2294,7 +2294,7 @@ sub read_db {
 				or die $dbh->errstr;
 		 }
 	}
-	close( F );
+	close( $fh );
 	print "done\n" if $verbose >= 1;
 }
 
@@ -2334,7 +2334,7 @@ sub export_db {
 	my($name,$pkg,$key);
 
 	print "Writing ASCII database to $file..." if $verbose >= 1;
-	open( F, ">$file" ) or
+	open( my $fh, '>', $file ) or
 		die "Can't open export $file: $!\n";
 
         my $db = get_all_source_info();
@@ -2347,11 +2347,11 @@ sub export_db {
 			$val =~ s/\n*$//;
 			$val =~ s/^/ /mg;
 			$val =~ s/^ +$/ ./mg;
-			print F "$key: $val\n";
+			print $fh "$key: $val\n";
 		}
-		print F "\n";
+		print $fh "\n";
        }
-       close( F );
+       close( $fh );
        print "done\n" if $verbose >= 1;
 }
 
@@ -2428,13 +2428,13 @@ sub send_mail {
 	$to .= '@' . $domain if $to !~ /\@/;
 	$text =~ s/^\.$/../mg;
 	local $SIG{'PIPE'} = 'IGNORE';
-	open( PIPE,  "| $conf::mailprog -oem $to" )
+	open( my $pipe,  '|-', "$conf::mailprog -oem $to" )
 		or die "Can't open pipe to $conf::mailprog: $!\n";
 	chomp $text;
-	print PIPE "From: $from\n";
-	print PIPE "Subject: $subject\n\n";
-	print PIPE "$text\n";
-	close( PIPE );
+	print $pipe "From: $from\n";
+	print $pipe "Subject: $subject\n\n";
+	print $pipe "$text\n";
+	close( $pipe );
 }
 
 # for parsing input to dep-wait
@@ -2508,8 +2508,8 @@ sub wb_edos_builddebcheck {
 
     my $packagearch="";
     foreach my $packagefile (@$packagefiles) {
-        open(P,$packagefile);
-        while (<P>) {
+        open(my $fh,'<', $packagefile);
+        while (<$fh>) {
             next unless /^Architecture/;
             next if /^Architecture:\s*all/;
             /Architecture:\s*([^\s]*)/;
@@ -2519,7 +2519,7 @@ sub wb_edos_builddebcheck {
     	        return "Package file contains different architectures: $packagearch, $1";
             }
         }
-        close P;
+        close $fh;
     }
 
     if ( $architecture eq "" ) {
@@ -2537,14 +2537,14 @@ sub wb_edos_builddebcheck {
     }
 
     print "calling: edos-debcheck $edosoptions < $sourcesfile ".join('', map {" '-base FILE' ".$_ } @$packagefiles)."\n";
-    open(RESULT, '-|',
+    open(my $result_cmd, '-|',
         "edos-debcheck $edosoptions < $sourcesfile ".join('', map {" '-base FILE' ".$_ } @$packagefiles));
 
     my $explanation="";
     my $result={};
     my $binpkg="";
 
-    while (<RESULT>) {
+    while (<$result_cmd>) {
 # source---pulseaudio (= 0.9.15-4.1~bpo50+1): FAILED
 #   source---pulseaudio (= 0.9.15-4.1~bpo50+1) depends on missing:
 #   - libltdl-dev (>= 2.2.6a-2)
@@ -2573,7 +2573,7 @@ sub wb_edos_builddebcheck {
         }
     }
 
-    close RESULT;
+    close $result_cmd;
     $result->{$binpkg} = $explanation if $binpkg;
     return $result;
 

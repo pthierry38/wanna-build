@@ -69,9 +69,9 @@ while( @ARGV && $ARGV[0] =~ /^-/ ) {
 }
 
 my($lastmsg, %n_state, $total, %n_builder);
-open( PIPE, "wanna-build --database=$database --dist=$dist --list=all 2>&1 |" )
+open( my $pipe, '-|', "wanna-build --database=$database --dist=$dist --list=all 2>&1" )
 	or die "Cannot spawn wanna-build: $!\n";
-while( <PIPE> ) {
+while( <$pipe> ) {
 	if (/^Database for $dist doesn't exist$/) {
 		exit 1;
 	}
@@ -86,7 +86,7 @@ while( <PIPE> ) {
 	}
 	$lastmsg = $_;
 }
-close( PIPE );
+close( $pipe );
 if ($?) {
 	print "$lastmsg";
 	die "Bad exit status $? from wanna-build\n";
