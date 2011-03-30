@@ -52,7 +52,13 @@ use Hash::Merge qw ( merge );
 use String::Format;
 use Date::Parse;
 use List::Util qw[max];
-use Dpkg::Version qw(vercmp); # TODO: change this for running with squeeze dpkg
+use Dpkg::Version (); # import nothing
+if ( defined $Dpkg::Version::VERSION ) {
+    *vercmp = \&Dpkg::Version::version_compare;
+} else {
+    *vercmp = \&Dpkg::Version::vercmp;
+}
+
 use Dpkg::Deps; # TODO: same
 
 our ($verbose, $mail_logs, $list_order, $list_state,

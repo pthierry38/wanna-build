@@ -2,7 +2,12 @@ package WB::QD;
 
 use strict;
 use IO::Uncompress::AnyInflate qw(anyinflate);
-use Dpkg::Version qw(vercmp);
+use Dpkg::Version (); # import nothing
+if ( defined $Dpkg::Version::VERSION ) {
+    *vercmp = \&Dpkg::Version::version_compare;
+} else {
+    *vercmp = \&Dpkg::Version::vercmp;
+}
 use Dpkg::Arch qw(debarch_is);
 use Data::Dumper;
 
