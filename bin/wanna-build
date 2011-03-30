@@ -3002,14 +3002,13 @@ sub add_user_info {
 		or die $dbh->errstr;
 }
 
-sub lock_table()
-{
+sub lock_table {
         return if $simulate;
 	$dbh->do('LOCK TABLE ' . table_name() .
 		' IN EXCLUSIVE MODE', undef) or die $dbh->errstr;
 }
 
-sub parse_argv() {
+sub parse_argv {
 # parts the array $_[0] and $_[1] and returns the sub-array (modifies the original one)
     my @ret = ();
     my $args = shift;
@@ -3021,7 +3020,7 @@ sub parse_argv() {
     return @ret;
 }
 
-sub parse_all_v3() {
+sub parse_all_v3 {
     my $srcs = shift;
     my $vars = shift;
     my $db = get_all_source_info();
