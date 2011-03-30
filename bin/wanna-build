@@ -21,6 +21,7 @@
 #
 use strict;
 use warnings;
+use 5.010;
 
 package conf;
 
@@ -272,18 +273,19 @@ END {
 	}
 }
 
+$distribution ||= "sid";
 if ($distribution eq 'any-priv') {
-    $privmode = 'yes';
+    $privmode = 1;
     $distribution = 'any';
 }
 if ($distribution eq 'any-unpriv') {
-    $privmode = 'no';
+    $privmode = 0;
     $distribution = 'any';
 }
 
 my $schema_suffix = '';
 $recorduser //= (not -t and $user =~ /^buildd_/);
-if (isin( $op_mode, qw(list info)) && $distribution !~ /security/ && !$recorduser && !($privmode eq 'yes')) {
+if (isin( $op_mode, qw(list info)) && $distribution !~ /security/ && !$recorduser && !($privmode)) {
 	$dbh = DBI->connect("DBI:Pg:service=wanna-build") || 
 		die "FATAL: Cannot open database: $DBI::errstr\n";
 	$schema_suffix = '_public';
@@ -319,7 +321,6 @@ $distribution = $distribution_aliases{$distribution} if (isin($distribution, key
 
 $op_mode = $category ? "set-failed" : "set-building"
 	if !$op_mode; # default operation
-$distribution ||= "sid";
 undef $distribution if $distribution eq 'any';
 if ($distribution) {
     my @dists = split(/[, ]+/, $distribution);
@@ -395,7 +396,7 @@ my $yamlmap = ();
 my $yamldir = "/org/wanna-build/etc/yaml";
 my @files = ('wanna-build.yaml');
 if ((getpwuid($>))[7]) { push (@files, ((getpwuid($>))[7])."/.wanna-build.yaml"); }
-if ($user =~ /(buildd.*)-/) { push (@files, "$1.yaml") };
+if ($user && $user =~ /(buildd.*)-/) { push (@files, "$1.yaml") };
 if ($user) { push ( @files, "$user.yaml"); }
 foreach my $file (@files) {
         my $cfile = File::Spec->rel2abs( $file, $yamldir );
@@ -1951,8 +1952,8 @@ sub calculate_prio {
 	my $scale = $priomap->{'waitingdays'}->{'scale'} || 1;
 	$pkg->{'calprio'} += $days * $scale;
 
-        my $btime = max($pkg->{'anytime'}, $pkg->{'successtime'});
-        my $bhours = defined($btime) ? int($btime/3600) : ($priomap->{'buildhours'}->{'default'} || 2);
+        my $btime = max($pkg->{'anytime'}//0, $pkg->{'successtime'}//0);
+        my $bhours = $btime ? int($btime/3600) : ($priomap->{'buildhours'}->{'default'} || 2);
 	$bhours = $priomap->{'buildhours'}->{'min'} if $priomap->{'buildhours'}->{'min'} and $bhours < $priomap->{'buildhours'}->{'min'};
 	$bhours = $priomap->{'buildhours'}->{'max'} if $priomap->{'buildhours'}->{'max'} and $bhours > $priomap->{'buildhours'}->{'max'};
 	$scale = $priomap->{'buildhours'}->{'scale'} || 1;
@@ -2057,7 +2058,7 @@ Text could contain further %. To start with !, use %!
         'u' => make_fmt( $pkg->{'builder'}, $pkg, $var),
         'X' => make_fmt( sub {
             my $c = "$pkg->{'priority'}:$pkg->{'notes'}";
-            $c .= ":PREV-FAILED" if $pkg->{'previous_state'} =~ /^Failed/;
+            $c .= ":PREV-FAILED" if $pkg->{'previous_state'} && $pkg->{'previous_state'} =~ /^Failed/;
             $c .= ":bp{" . $pkg->{'buildpri'} . "}" if defined $pkg->{'buildpri'};
             $c .= ":binNMU{" . $pkg->{'binary_nmu_version'} . "}" if defined $pkg->{'binary_nmu_version'};
             $c .= ":calprio{". $pkg->{'calprio'}."}";
@@ -2085,8 +2086,8 @@ Text could contain further %. To start with !, use %!
         'O' => make_fmt( sub { return seconds2time ( $pkg->{'successtime'}); }, $pkg, $var),
         'q' => make_fmt( $pkg->{'anytime'}, $pkg, $var),
         'Q' => make_fmt( sub { return seconds2time ( $pkg->{'anytime'}); }, $pkg, $var),
-        'r' => make_fmt( sub { return max($pkg->{'successtime'}, $pkg->{'anytime'}); }, $pkg, $var),
-        'R' => make_fmt( sub { return seconds2time ( max($pkg->{'successtime'}, $pkg->{'anytime'})); }, $pkg, $var),
+        'r' => make_fmt( sub { my $c = max($pkg->{'successtime'}//0, $pkg->{'anytime'}//0); return $c if $c; return; }, $pkg, $var),
+        'R' => make_fmt( sub { return seconds2time ( max($pkg->{'successtime'}//0, $pkg->{'anytime'}//0)); }, $pkg, $var),
     ));
 }
 
@@ -2109,10 +2110,10 @@ sub list_packages {
         @list = grep { !$_->{'extra_depends'} and !$_->{'extra_conflicts'} } @list if $api < 1 ;
 
         # first adjust ownprintformat, then set printformat accordingly
-        $printformat ||= $yamlmap->{"format"}{$ownprintformat};
+        $printformat ||= $yamlmap->{"format"}{$ownprintformat} if $ownprintformat;
         $printformat ||= $yamlmap->{"format"}{"default"}{$state};
         $printformat ||= $yamlmap->{"format"}{"default"}{"default"};
-        undef $printformat if ($ownprintformat eq 'none');
+        undef $printformat if ($ownprintformat && $ownprintformat eq 'none');
 
 	foreach $pkg (sort sort_list_func @list) {
                 if ($printformat) {
@@ -2369,8 +2370,8 @@ sub change_state {
 	if (defined($$state) and $$state eq 'Failed') {
 		$pkg->{'old_failed'} =
 			"-"x20 . " $pkg->{'version'} " . "-"x20 . "\n" .
-			$pkg->{'failed'} . "\n" .
-			$pkg->{'old_failed'};
+			($pkg->{'failed'} // ""). "\n" .
+			($pkg->{'old_failed'} // "");
 		delete $pkg->{'failed'};
 		delete $pkg->{'failed_category'};
 	}
@@ -2864,12 +2865,12 @@ sub get_all_source_info {
 		push @args, "FAILED";
 	}
 
-	if ($options{list_min_age} > 0) {
+	if ($options{list_min_age} && $options{list_min_age} > 0) {
 		$q .= ' AND age(state_change) > ? ';
 		push @args, $options{list_min_age} . " days";
 	}
 
-	if ($options{list_min_age} < 0) {
+	if ($options{list_min_age} && $options{list_min_age} < 0) {
 		$q .= ' AND age(state_change) < ? ';
 		push @args, -$options{list_min_age} . " days";
 	}
@@ -3047,13 +3048,13 @@ sub parse_all_v3 {
             }
             $pkg->{'package'}  = $name;
         }
-        my $logstr = "merge-v3 $vars->{'time'} ".$name."_$pkgs->{'version'}".
+        my $logstr = sprintf("merge-v3 %s %s_%s", $vars->{'time'}, $name, $pkgs->{'version'}).
             ($pkgs->{'binnmu'} ? ";b".$pkgs->{'binnmu'} : "").
-            " ($vars->{'arch'}, $vars->{'suite'}, previous: $pkg->{'version'}".
+            sprintf(" (%s, %s, previous: %s", $vars->{'arch'}, $vars->{'suite'}, $pkg->{'version'}//"").
             ($pkg->{'binary_nmu_version'} ? ";b".$pkg->{'binary_nmu_version'} : "").
             ", $pkg->{'state'}):";
 
-        if (isin($pkgs->{'status'}, qw (installed related)) && $pkgs->{'version'} eq $pkg->{'version'} && $pkg->{'binary_nmu_version'} && $pkgs->{'binnmu'} < int($pkg->{'binary_nmu_version'})) {
+        if (isin($pkgs->{'status'}, qw (installed related)) && $pkgs->{'version'} eq $pkg->{'version'} && $pkgs->{'binnmu'} && $pkg->{'binary_nmu_version'} && $pkgs->{'binnmu'} < int($pkg->{'binary_nmu_version'})) {
                 $pkgs->{'status'} = 'out-of-date';
         }
         if (isin($pkgs->{'status'}, qw (installed related))) {
@@ -3067,7 +3068,7 @@ sub parse_all_v3 {
             }
             my $attrs = { 'version' => 'version', 'installed_version' => 'version', 'binary_nmu_version' => 'binnmu', 'section' => 'section', 'priority' => 'priority' };
             foreach my $k (keys %$attrs) {
-                if ($pkg->{$k} ne $pkgs->{$attrs->{$k}}) {
+                if (!$pkg->{$k} or !$pkgs->{$attrs->{$k}} or $pkg->{$k} ne $pkgs->{$attrs->{$k}}) {
                     $pkg->{$k} = $pkgs->{$attrs->{$k}};
                     $change++;
                 }
@@ -3077,7 +3078,7 @@ sub parse_all_v3 {
                 $change++;
             }
             if ($change) {
-                print "$logstr set to installed/".$pkg->{'notes'}."\n" if $verbose || $simulate;
+                print "$logstr set to installed/".($pkg->{'notes'}//"")."\n" if $verbose || $simulate;
                 log_ta( $pkg, "--merge-v3: installed" ) unless $simulate;
                 update_source_info($pkg) unless $simulate;
             }
@@ -3115,7 +3116,7 @@ sub parse_all_v3 {
             print "$logstr package in unknown state: $pkgs->{'status'}\n";
             next SRCS;
         }
-        next if $pkgs->{'version'} eq $pkg->{'version'} and $pkgs->{'binnmu'} >= int($pkg->{'binary_nmu_version'});
+        next if $pkgs->{'version'} eq $pkg->{'version'} and $pkgs->{'binnmu'} and $pkgs->{'binnmu'} >= int($pkg->{'binary_nmu_version'});
         next if $pkgs->{'version'} eq $pkg->{'version'} and !isin( $pkg->{'state'}, qw(Installed));
         next if isin( $pkg->{'state'}, qw(Not-For-Us Failed-Removed));
 
