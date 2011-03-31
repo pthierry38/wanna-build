@@ -68,7 +68,7 @@ our ($verbose, $mail_logs, $list_order, $list_state,
     %prioval, %sectval,
     $info_all_dists, $arch,
     $category, %catval, %short_category,
-    $short_date, $list_min_age, $dbbase, @curr_time,
+    $short_date, $list_min_age, $list_max_age, $dbbase, @curr_time,
     $build_priority, %new_vers, $binNMUver, %merge_srcvers, %merge_binsrc,
     $printformat, $ownprintformat, $privmode, $extra_depends, $extra_conflicts,
     %distributions, %distribution_aliases
@@ -193,7 +193,7 @@ GetOptions(
           if not $category ~~ [ values %short_category ];
     },
     'min-age|a=i'       => \$list_min_age,
-    'max-age=i'         => \$list_min_age,
+    'max-age=i'         => \$list_max_age,
     'format=s'          => \$printformat,
     'own-format=s'      => \$ownprintformat,
     'Pas=s'             => \$Pas,
@@ -207,6 +207,7 @@ GetOptions(
     'distribution-architectures' => \&_set_mode,
     'distribution-aliases'       => \&_set_mode,
 ) or usage();
+$list_min_age = -1 * $list_max_age if $list_max_age;
 
 my $dbh;
 
