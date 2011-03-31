@@ -146,7 +146,6 @@ my %options =
 	 forget			=> { mode => "forget" },
 	 'forget-user' => { mode => 'forget-user' },
 	 update  		=> { mode => "set-update" },
-	 "pretend-avail" => { short => "p", mode => "pretend-avail" },
 	 "merge-v3"      => { mode => "merge-v3" },
 	 info			=> { short => "i", mode => "info" },
 	 'binNMU' => { mode => 'set-binary-nmu', arg => \$binNMUver, 
@@ -453,10 +452,6 @@ sub process {
 		};
 		/^forget/ && do {
 			forget_packages( @ARGV );
-			last SWITCH;
-		};
-		/^pretend-avail/ && do {
-			pretend_avail( @ARGV );
 			last SWITCH;
 		};
 		/^merge-v3/ && do {
@@ -1278,84 +1273,6 @@ sub set_one_update {
 
 	log_ta( $pkg, "--update" );
 	update_source_info($pkg);
-}
-
-
-sub pretend_avail {
-	my ($package, $name, $version, $installed);
-	
-	foreach $package (@_) {
-		$package =~ s,^.*/,,; # strip path
-		$package =~ s/\.(dsc|diff\.gz|tar\.gz|deb)$//; # strip extension
-		$package =~ s/_[\w\d]+\.changes$//; # strip extension
-		if ($package =~ /^([\w\d.+-]+)_([\w\d:.+~-]+)/) {
-			($name,$version) = ($1,$2);
-		}
-		else {
-			warn "$package: can't extract package name and version ".
-				 "(bad format)\n";
-			next;
-		}
-		$installed->{$name}{'version'} = $version;
-	}
-
-	check_dep_wait( "--pretend-avail", $installed );
-}
-
-sub check_dep_wait {
-	my $action = shift;
-	my $installed = shift;
-	
-	# check all packages in state Dep-Wait if dependencies are all
-	# available now
-	my $name;
-	my $db = get_all_source_info();
-        foreach $name (keys %$db) {
-		next if $name =~ /^_/;
-		my $pkg = $db->{$name};
-		next if $pkg->{'state'} ne "Dep-Wait";
-		my $deps = $pkg->{'depends'};
-		if (!$deps) {
-			print "$name: was in state Dep-Wait, but with empty ",
-				  "dependencies!\n";
-			goto make_needs_build;
-		}
-		my $deplist = parse_deplist($deps);
-		my $new_deplist;
-		my $allok = 1;
-		my @removed_deps;
-		foreach (keys %$deplist) {
-			if (!exists $installed->{$_} ||
-				($deplist->{$_}->{'rel'} && $deplist->{$_}->{'version'} &&
-				 !version_compare( $installed->{$_}{'version'},
-								   $deplist->{$_}->{'rel'},
-								   $deplist->{$_}->{'version'}))) {
-				$allok = 0;
-				$new_deplist->{$_} = $deplist->{$_};
-			}
-			else {
-				push( @removed_deps, $_ );
-			}
-		}
-		if ($allok) {
-		  make_needs_build:
-			change_state( \$pkg, 'Needs-Build' );
-			log_ta( $pkg, $action );
-			delete $pkg->{'builder'};
-			delete $pkg->{'depends'};
-			print "$name ($pkg->{'version'}) has all ",
-				  "dependencies available now\n" if $verbose;
-			$new_vers{$name}++;
-			update_source_info($pkg);
-		}
-		elsif (@removed_deps) {
-			$pkg->{'depends'} = build_deplist( $new_deplist );
-			print "$name ($pkg->{'version'}): some dependencies ",
-				  "(@removed_deps) available now, but not all yet\n"
-				if $verbose;
-			update_source_info($pkg);
-		}
-	}
 }
 
 
@@ -2274,8 +2191,6 @@ Options:
 	 BD-Uninstallable, until the installability of its Build-Dependencies
 	 were verified. This happens at each call of --merge-all, usually
 	 every 15 minutes.
-    --pretend-avail: Pretend that given packages are available now and give
-        free packages waiting for them
     -i SRC_PKG, --info SRC_PKG: Show information for source package
     -l STATE, --list=STATE: List all packages in state STATE; can be
         combined with -U to restrict to a specific user; STATE can
