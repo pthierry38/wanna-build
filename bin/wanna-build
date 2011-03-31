@@ -67,7 +67,6 @@ our ($verbose, $mail_logs, $list_order, $list_state,
     $fail_reason, $opt_override, $import_from, $export_to, $opt_create_db,
     %prioval, %sectval,
     $info_all_dists, $arch,
-    $category, %catval, %short_category,
     $short_date, $list_min_age, $list_max_age, $dbbase, @curr_time,
     $build_priority, %new_vers, $binNMUver, %merge_srcvers, %merge_binsrc,
     $printformat, $ownprintformat, $privmode, $extra_depends, $extra_conflicts,
@@ -88,16 +87,6 @@ $mail_logs = "";
 $curr_date = strftime("%Y %b %d %H:%M:%S",@curr_time);
 $short_date = strftime("%m/%d/%y",@curr_time);
 $| = 1;
-
-%short_category = ( u => "uploaded-fixed-pkg",
-				    f => "fix-expected",
-					r => "reminder-sent",
-					n => "nmu-offered",
-					e => "easy",
-					m => "medium",
-					h => "hard",
-					c => "compiler-error",
-					"" => "none" );
 
 # set mode of operation based on command line switch. Should be used
 # by GetOptions below.
@@ -185,13 +174,6 @@ GetOptions(
     },
     'arch|A=s'     => \$arch,
     'user|U=s'     => \$user,
-    'category|c=s' => sub {
-        $category = $_[1];
-        $category = $short_category{$category}
-          if exists $short_category{$category};
-        die "Unknown category: $category\n"
-          if not $category ~~ [ values %short_category ];
-    },
     'min-age|a=i'       => \$list_min_age,
     'max-age=i'         => \$list_max_age,
     'format=s'          => \$printformat,
@@ -264,8 +246,7 @@ foreach my $name (keys %$rows) {
 }
 $distribution = $distribution_aliases{$distribution} if (isin($distribution, keys %distribution_aliases));
 
-$op_mode = $category ? "set-failed" : "set-building"
-	if !$op_mode; # default operation
+$op_mode ||= "set-building";
 undef $distribution if $distribution eq 'any';
 if ($distribution) {
     my @dists = split(/[, ]+/, $distribution);
@@ -308,7 +289,7 @@ die "Can't determine your user name\n"
 	   !($user = $real_user);
 
 if (!$fail_reason) {
-	if ($op_mode eq "set-failed" && !$category) {
+	if ($op_mode eq "set-failed" ) {
 		print "Enter reason for failing (end with '.' alone on ".
 		      "its line):\n";
 		my $line;
@@ -798,7 +779,7 @@ sub add_one_uploaded {
 sub add_one_failed {
 	my $name = shift;
 	my $version = shift;
-	my ($state, $cat);
+	my $state;
 	my $pkg = get_source_info($name);
 
 	if (!defined($pkg)) {
@@ -833,17 +814,6 @@ sub add_one_failed {
 		return;
 	}
 
-	$cat = $category;
-	if (!$cat && $fail_reason =~ /^\[([^\]]+)\]/) {
-		$cat = $1;
-		$cat = $short_category{$cat} if exists $short_category{$cat};
-		if (!isin( $cat, values %short_category )) {
-			print "$name: Warning: unknown category $cat; discarded\n";
-			$cat = "";
-		}
-		$fail_reason =~ s/^\[[^\]]+\][ \t]*\n*//;
-	}
-
 	if ($state eq "Needs-Build") {
 		print "$name: Warning: not registered for building previously, ".
 			  "but processing anyway.\n";
@@ -863,22 +833,12 @@ sub add_one_failed {
 	elsif ($state eq "Failed") {
 		print "$name: already registered as failed; will append new message\n"
 			if $fail_reason;
-		print "$name: already registered as failed; changing category\n"
-			if $cat;
-	}
-
-	if (($cat eq "reminder-sent" || $cat eq "nmu-offered") &&
-		defined $pkg->{'failed_category'} &&
-		$pkg->{'failed_category'} ne $cat) {
-		(my $action = $cat) =~ s/-/ /;
-		$fail_reason .= "\n$short_date: $action";
 	}
 
 	change_state( \$pkg, 'Failed' );
 	$pkg->{'builder'} = $user;
 	$pkg->{'failed'} .= "\n" if $pkg->{'failed'};
 	$pkg->{'failed'} .= $fail_reason;
-	$pkg->{'failed_category'} = $cat if $cat;
 	if (defined $pkg->{'permbuildpri'}) {
 		$pkg->{'buildpri'} = $pkg->{'permbuildpri'};
 	} else {
@@ -1291,15 +1251,6 @@ BEGIN {
 	}
 	$sectval{'unknown'}	= -165;
 
-	%catval =  ( "none"			      => -20,
-				 "uploaded-fixed-pkg" => -19,
-				 "fix-expected"       => -18,
-				 "reminder-sent"      => -17,
-				 "nmu-offered"        => -16,
-				 "easy"               => -15,
-				 "medium"		      => -14,
-				 "hard"		          => -13,
-				 "compiler-error"     => -12 );
 }
 
 sub sort_list_func {
@@ -1312,7 +1263,6 @@ sub sort_list_func {
         'n' => ['cmp', sub { return $_[0]->{'package'}; }],
         'b' => ['cmp', sub { return $_[0]->{'builder'}; }],
         'c' => ['<=>', sub { return ($_[0]->{'notes'}//"" =~ /^(out-of-date|partial)/) ? 0: ($_[0]->{'notes'}//"" =~ /^uncompiled/) ? 2 : 1; }],
-        'f' => ['<=>', sub { return $catval{ $_[0]->{'failed_category'} ? $_[0]->{'failed_category'}: "none" }; }],
         'S' => ['<->', sub { return isin($_[0]->{'priority'}, qw(required important standard)); }],
         'T' => ['<->', sub { return $_[0]->{'state_time'} % 86400;} ], # Fractions of a day
     };
@@ -1491,7 +1441,7 @@ sub list_packages {
 	my %scnt;
 	my $ctime = time;
 
- 	my $db = get_all_source_info(state => $state, user => $user, category => $category, list_min_age => $list_min_age);
+ 	my $db = get_all_source_info(state => $state, user => $user, list_min_age => $list_min_age);
 	foreach $name (keys %$db) {
 		next if $name =~ /^_/;
 		push @list, calculate_prio($db->{$name});
@@ -1522,9 +1472,6 @@ sub list_packages {
 			if $pkg->{'state'} ne "Needs-Build";
 		print print_format(" [%X]\n", $pkg, {});
 		print "  Reasons for failing:\n",
-			  "    [Category: ",
-			  defined $pkg->{'failed_category'} ? $pkg->{'failed_category'} : "none",
-			  "]\n    ",
 			  join("\n    ",split("\n",$pkg->{'failed'})), "\n"
 			if $pkg->{'state'} =~ /^Failed/;
 		print "  Dependencies: $pkg->{'depends'}\n"
@@ -1567,7 +1514,7 @@ sub info_packages {
 		'bd_problem' => 'BD-Problem', 
 		'binary_nmu_changelog' => 'Binary-NMU-Changelog', 'binary_nmu_version' => 'Binary-NMU-Version',
 		'buildpri' => 'BuildPri', 'depends' => 'Depends', 'failed' => 'Failed',
-		'failed_category' => 'Failed-Category', 'notes' => 'Notes',
+		'notes' => 'Notes',
 		'distribution' => 'Distribution', 'old_failed' => 'Old-Failed',
 		'permbuildpri' => 'PermBuildPri', 'rel' => 'Rel',
 		'calprio' => 'CalculatedPri', 'state_days' => 'State-Days', 'state_time' => 'State-Time',
@@ -1766,7 +1713,6 @@ sub change_state {
 			($pkg->{'failed'} // ""). "\n" .
 			($pkg->{'old_failed'} // "");
 		delete $pkg->{'failed'};
-		delete $pkg->{'failed_category'};
 	}
 	if (defined($$state) and $$state eq 'BD-Uninstallable') {
 		delete $pkg->{'bd_problem'};
@@ -2193,7 +2139,7 @@ sub pkg_history_table_name {
 sub get_readonly_source_info {
 	my $name = shift;
 	# SELECT FLOOR(EXTRACT('epoch' FROM age(localtimestamp, '2010-01-22  23:45')) / 86400) -- change to that?
-        my $q = "SELECT rel, priority, state_change, permbuildpri, section, buildpri, failed, state, binary_nmu_changelog, bd_problem, version, package, distribution, installed_version, notes, failed_category, builder, old_failed, previous_state, binary_nmu_version, depends, extract(days from date_trunc('days', now() - state_change)) as state_days, floor(extract(epoch from now()) - extract(epoch from state_change)) as state_time"
+        my $q = "SELECT rel, priority, state_change, permbuildpri, section, buildpri, failed, state, binary_nmu_changelog, bd_problem, version, package, distribution, installed_version, notes, builder, old_failed, previous_state, binary_nmu_version, depends, extract(days from date_trunc('days', now() - state_change)) as state_days, floor(extract(epoch from now()) - extract(epoch from state_change)) as state_time"
             . ", (SELECT max(build_time) FROM ".pkg_history_table_name()." WHERE pkg_history.package = packages.package AND pkg_history.distribution = packages.distribution AND result = 'successful') AS successtime"
             . ", (SELECT max(build_time) FROM ".pkg_history_table_name()." WHERE pkg_history.package = packages.package AND pkg_history.distribution = packages.distribution ) AS anytime"
             . ", extra_depends, extra_conflicts, build_arch_all"
@@ -2217,7 +2163,7 @@ sub get_source_info {
 sub get_all_source_info {
 	my %options = @_;
 
-        my $q = "SELECT rel, priority, state_change, permbuildpri, section, buildpri, failed, state, binary_nmu_changelog, bd_problem, version, package, distribution, installed_version, notes, failed_category, builder, old_failed, previous_state, binary_nmu_version, depends, extract(days from date_trunc('days', now() - state_change)) as state_days, floor(extract(epoch from now()) - extract(epoch from state_change)) as state_time"
+        my $q = "SELECT rel, priority, state_change, permbuildpri, section, buildpri, failed, state, binary_nmu_changelog, bd_problem, version, package, distribution, installed_version, notes, builder, old_failed, previous_state, binary_nmu_version, depends, extract(days from date_trunc('days', now() - state_change)) as state_days, floor(extract(epoch from now()) - extract(epoch from state_change)) as state_time"
 #            . ", (SELECT max(build_time) FROM ".pkg_history_table_name()." WHERE pkg_history.package = packages.package AND pkg_history.distribution = packages.distribution AND result = 'successful') AS successtime"
 #            . ", (SELECT max(build_time) FROM ".pkg_history_table_name()." WHERE pkg_history.package = packages.package AND pkg_history.distribution = packages.distribution ) AS anytime"
             . ", successtime.build_time as successtime, anytime.build_time as anytime, extra_depends, extra_conflicts"
@@ -2246,12 +2192,6 @@ sub get_all_source_info {
 		#this basically means "this user, or no user at all":
 		$q .= " AND (builder = ? OR upper(state) = 'NEEDS-BUILD')";
 		push @args, $options{user};
-	}
-
-	if ($options{category}) {
-		$q .= ' AND failed_category <> ? AND upper(state) = ? ';
-		push @args, $options{category};
-		push @args, "FAILED";
 	}
 
 	if ($options{list_min_age} && $options{list_min_age} > 0) {
@@ -2313,7 +2253,6 @@ sub update_source_info {
 			'old_failed = ?, ' .
 			'binary_nmu_version = ?, ' .
 			'binary_nmu_changelog = ?, ' .
-			'failed_category = ?, ' .
 			'permbuildpri = ?, ' .
 			'buildpri = ?, ' .
 			'depends = ?, ' .
@@ -2335,7 +2274,6 @@ sub update_source_info {
 		$pkg->{'old_failed'},
 		$pkg->{'binary_nmu_version'},
 		$pkg->{'binary_nmu_changelog'},
-		$pkg->{'failed_category'},
 		$pkg->{'permbuildpri'},
 		$pkg->{'buildpri'},
 		$pkg->{'depends'},
