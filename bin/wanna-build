@@ -88,15 +88,6 @@ $curr_date = strftime("%Y %b %d %H:%M:%S",@curr_time);
 $short_date = strftime("%m/%d/%y",@curr_time);
 $| = 1;
 
-# map program invocation names to operation modes
-my %prognames = ( "uploaded-build"  => "set-uploaded",
-				  "failed-build"    => "set-failed",
-				  "no-build"		=> "set-not-for-us",
-				  "give-back-build" => "set-needs-build",
-				  "dep-wait-build"  => "set-dep-wait",
-				  "forget-build"	=> "forget",
-				  "build-info"		=> "info" );
-
 %short_category = ( u => "uploaded-fixed-pkg",
 				    f => "fix-expected",
 					r => "reminder-sent",
@@ -106,16 +97,6 @@ my %prognames = ( "uploaded-build"  => "set-uploaded",
 					h => "hard",
 					c => "compiler-error",
 					"" => "none" );
-
-my $progname;
-($progname = $0) =~ s,.*/,,;
-if ($prognames{$progname}) {
-	$op_mode = $prognames{$progname};
-}
-elsif ($progname =~ /^list-(.*)$/) {
-	$op_mode = "list";
-	$list_state = ($1 eq "all") ? "" : $1;
-}
 
 my %options =
 	(# flags
