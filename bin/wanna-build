@@ -1586,6 +1586,7 @@ Text could contain further %. To start with !, use %!
         'S' => make_fmt( $pkg->{'state'}, $pkg, $var),
         'u' => make_fmt( $pkg->{'builder'}, $pkg, $var),
         'X' => make_fmt( sub {
+            no warnings;
             my $c = "$pkg->{'priority'}:$pkg->{'notes'}";
             $c .= ":PREV-FAILED" if $pkg->{'previous_state'} && $pkg->{'previous_state'} =~ /^Failed/;
             $c .= ":bp{" . $pkg->{'buildpri'} . "}" if defined $pkg->{'buildpri'};
@@ -2584,17 +2585,23 @@ sub parse_all_v3 {
         if (isin($pkgs->{'status'}, qw (installed related)) && $pkgs->{'version'} eq $pkg->{'version'} && $pkgs->{'binnmu'}//0 < int($pkg->{'binary_nmu_version'}//0)) {
                 $pkgs->{'status'} = 'out-of-date';
         }
-        if (isin($pkgs->{'status'}, qw (installed related))) {
+        if (isin($pkgs->{'status'}, qw (installed related auto-not-for-us))) {
             my $change = 0;
-            if ($pkg->{'state'} ne 'Installed') {
-                change_state( \$pkg, 'Installed');
-                delete $pkg->{'depends'};
-                delete $pkg->{'extra_depends'};
-                delete $pkg->{'extra_conflicts'};
+            my $tstate = {'installed' => 'Installed', 'related' => 'Installed', 'auto-not-for-us' => 'Auto-Not-For-Us'}->{$pkgs->{'status'}};
+            next if isin( $pkg->{'state'}, qw<Not-For-Us Failed Failed-Removed Dep-Wait Dep-Wait-Removed>) && isin( $tstate, qw<Auto-Not-For-Us>);
+            # if the package is currently current, the status is Installed, not not-for-us
+            if ($pkg->{'state'} ne $tstate) {
+                change_state( \$pkg, $tstate);
+                if (isin( $tstate, qw<Installed>)) {
+                    delete $pkg->{'depends'};
+                    delete $pkg->{'extra_depends'};
+                    delete $pkg->{'extra_conflicts'};
+                }
                 $change++;
             }
             my $attrs = { 'version' => 'version', 'installed_version' => 'version', 'binary_nmu_version' => 'binnmu', 'section' => 'section', 'priority' => 'priority' };
             foreach my $k (keys %$attrs) {
+                next if isin( $tstate, qw<Auto-Not-For-Us>) && isin( $k, qw<installed_version binary_nmu_version>);
                 if (($pkg->{$k}//"") ne ($pkgs->{$attrs->{$k}}//"")) {
                     $pkg->{$k} = $pkgs->{$attrs->{$k}};
                     $change++;
@@ -2605,8 +2612,8 @@ sub parse_all_v3 {
                 $change++;
             }
             if ($change) {
-                print "$logstr set to installed/".($pkg->{'notes'}//"")."\n" if $verbose || $simulate;
-                log_ta( $pkg, "--merge-v3: installed" ) unless $simulate;
+                print "$logstr set to $tstate/".($pkg->{'notes'}//"")."\n" if $verbose || $simulate;
+                log_ta( $pkg, "--merge-v3: $tstate" ) unless $simulate;
                 update_source_info($pkg) unless $simulate;
             }
             next;
@@ -2625,17 +2632,6 @@ sub parse_all_v3 {
 
             print "$logstr should delete (not-for-us according to P-a-s)\n" if $verbose || $simulate || 1; # not implemented yet on purpose
             next;
-        }
-
-        if ($pkgs->{'status'} eq 'auto-not-for-us') {
-            next if isin( $pkg->{'state'}, qw(Not-For-Us Failed Failed-Removed Dep-Wait Dep-Wait-Removed Auto-Not-For-Us));
-            # if the package is currently current, the status is Installed, not not-for-us
-
-            change_state( \$pkg, "Auto-Not-For-Us" );
-	    log_ta( $pkg, "--merge-v3: Auto-Not-For-Us" ) unless $simulate;
-	    update_source_info($pkg) unless $simulate;
-            print "$logstr set to auto-not-for-us\n" if $verbose || $simulate;
-            next SRCS;
         }
 
         # only uncompiled / out-of-date are left, so check if anything new
