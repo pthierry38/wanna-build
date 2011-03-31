@@ -43,6 +43,7 @@ use POSIX;
 use FileHandle;
 use File::Copy;
 use DBI;
+use Getopt::Long qw ( :config gnu_getopt );
 use lib '/org/wanna-build/lib';
 #use lib 'lib';
 use WannaBuild;
@@ -98,151 +99,114 @@ $| = 1;
 					c => "compiler-error",
 					"" => "none" );
 
-my %options =
-	(# flags
-	 simulate       => { flag => \$simulate }, # this is not supported by all operations (yet)!
-	 "simulate-edos"  => { flag => \$simulate_edos },
-	 "simulate-all" => { code => sub { $simulate = 1; $simulate_edos = 1; } },
-	 api            => { arg => \$api, code => sub {
-                            # official apis are numeric
-                            die "$api isn't numeric" unless int($api) eq $api;
-                            die "$api too large" unless $api <= 1;
-                            } },
-	 verbose        => { short => "v", flag => \$verbose },
-	 override		=> { short => "o", flag => \$opt_override },
-	 "create-db"	=> { flag => \$opt_create_db },
-	 "correct-compare" => { flag => \$WannaBuild::opt_correct_version_cmp },
-	 # TODO: remove after buildds no longer pass to wanna-build
-	 "no-propagation" => { short => "N" },
-	 "no-down-propagation" => { short => "D" },
-	 # normal actions
-	 take			=> { mode => "set-building" },
-	 failed			=> { short => "f", mode => "set-failed" },
-	 uploaded		=> { short => "u", mode => "set-uploaded" },
-	 "no-build"		=> { short => "n", mode => "set-not-for-us" },
-	 built			=> { mode => "set-built" },
-	 attempted		=> { mode => "set-attempted" },
-	 "give-back"	        => { mode => "set-needs-build" },
-	 "dep-wait"		=> { mode => "set-dep-wait" },
-	 forget			=> { mode => "forget" },
-	 'forget-user' => { mode => 'forget-user' },
-	 update  		=> { mode => "set-update" },
-	 "merge-v3"      => { mode => "merge-v3" },
-	 info			=> { short => "i", mode => "info" },
-	 'binNMU' => { mode => 'set-binary-nmu', arg => \$binNMUver, 
-			     code => sub { die "Invalid binNMU version: $binNMUver\n"
-				if $binNMUver !~ /^([\d]*)$/ and $1 >= 0; } },
-	 'perm-build-priority'    => { mode => "set-permanent-build-priority", arg => \$build_priority,
-	 		      code => sub { die "Invalid build priority: $build_priority\n"
-				if $build_priority !~ /^-?[\d]+$/; } },
-	 'build-priority'    => { mode => "set-build-priority", arg => \$build_priority,
-	 		      code => sub { die "Invalid build priority: $build_priority\n"
-				if $build_priority !~ /^-?[\d]+$/; } },
-	 list			=>
-	 { short => "l", mode => "list", arg => \$list_state,
-	   code => sub {
-		   die "Unknown state to list: $list_state\n"
-			   if !isin( $list_state, qw(needs-build building uploaded
-						 built build-attempted failed installed dep-wait
-						 not-for-us auto-not-for-us all failed-removed
-						 install-wait reupload-wait bd-uninstallable));} },
-	 # options with args
-	 dist           =>
-	 { short => "d", arg => \$distribution,
-	   code => sub {
-		   if ($distribution eq "a" || $distribution eq "all") {
-			   $info_all_dists = 1;
-			   $distribution = "";
-		   }
-		   else {
-			   $distribution = "oldstable"   if $distribution eq "o";
-			   $distribution = "stable"   if $distribution eq "s";
-			   $distribution = "testing"  if $distribution eq "t";
-			   $distribution = "unstable" if $distribution eq "u";
-		   }
-	   } },
-	 order          =>
-	 { short => "O", arg => \$list_order,
-	   code => sub {
-		   die "Bad ordering character\n"
-			   if $list_order !~ /^[PSpsncbCWT]+$/;
-	   } },
-	 message        => { short => "m", arg => \$fail_reason },
-	 # database is deprecated, use arch instead.
-	 database       => { short => "b", arg => \$conf::dbbase },
-	 arch           => { short => "A", arg => \$arch },
-	 user           => { short => "U", arg => \$user },
-	 category		=> { short => "c", arg => \$category,
-						 code => sub {
-							 $category = $short_category{$category}
-								 if exists $short_category{$category};
-							 die "Unknown category: $category\n"
-								 if !isin( $category, values %short_category );
-						 } },
-	 "min-age"      => { short => "a", arg => \$list_min_age,
-						 code => sub {
-							 die "Argument of --min-age must be a non-zero number\n"
-								 if $list_min_age == 0;
-						 } },
-	 "max-age"      => { arg => \$list_min_age,
-						 code => sub {
-							 die "Argument of --max-age must be a non-zero number\n"
-								 if $list_min_age == 0;
-							 $list_min_age *= -1;
-						 } },
-         "format"       => { arg => \$printformat },
-         "own-format"       => { arg => \$ownprintformat },
-         "Pas"          => { arg => \$Pas },
-	 "extra-depends"=> { arg => \$extra_depends },
-	 "extra-conflicts"=> { arg => \$extra_conflicts },
-	 # special actions
-	 export         => { arg => \$export_to, mode => "export" },
-	 import         => { arg => \$import_from, mode => "import" },
-	 "manual-edit"  => { mode => "manual-edit" },
-	 "distribution-architectures" => { mode => "distribution-architectures" },
-	 "distribution-aliases" => { mode => "distribution-aliases" },
-	 );
+# set mode of operation based on command line switch. Should be used
+# by GetOptions below.
+sub _set_mode_set { $op_mode = "set-$_[0]" }
+sub _set_mode { $op_mode = "$_[0]" }
 
-while( @ARGV && $ARGV[0] =~ /^-/ ) {
-	$_ = shift @ARGV;
-	last if $_ eq "--";
-	my($opt, $optname, $arg);
-	if (/^--([^=]+)(=|$)/) {
-		$optname = $1;
-		$opt = $options{$optname};
-		$arg = $1 if /^--\Q$optname\E=((.|\n)*)$/;
-	}
-	else {
-		$optname = substr( $_, 1, 1 );
-		$opt = (grep { defined($_->{short}) ? $_->{short} eq $optname : 0} values %options)[0];
-		$arg = $1 if /^-$optname(.+)$/;
-	}
-	if (!$opt) {
-		warn "Unknown option: --$1\n";
-		usage();
-	}
-	if ($opt->{arg}) {
-		if (!defined $arg) {
-			die "$optname option missing argument\n" if !@ARGV;
-			$arg = shift @ARGV;
-		}
-		${$opt->{arg}} = $arg;
-	}
-	elsif (defined $arg) {
-		die "Option $optname takes no argument\n";
-	}
-	
-	if ($opt->{mode}) {
-		die "Conflicting operation modes\n" if $op_mode;
-		$op_mode = $opt->{mode};
-	}
-	if ($opt->{flag}) {
-		${$opt->{flag}}++;
-	}
-	if ($opt->{code}) {
-		&{$opt->{code}};
-	}
-}
+sub _option_deprecated { warn "Option $_[0] is deprecated" }
+
+GetOptions(
+    # this is not supported by all operations (yet)!
+    'simulate'      => \$simulate,
+    'simulate-edos' => \$simulate_edos,
+    'simulate-all'  => sub { $simulate = 1; $simulate_edos = 1; },
+    'api=i'         => sub {
+        $api = $_[1];
+        die "$api too large" unless $api <= 1;
+    },
+    'verbose|v'       => \$verbose,
+    'override|o'      => \$opt_override,
+    'create-db'       => \$opt_create_db,
+    'correct-compare' => \$WannaBuild::opt_correct_version_cmp,
+
+    # TODO: remove after buildds no longer pass to wanna-build
+    'no-propagation|N'      => \&_option_deprecated,
+    'no-down-propagation|D' => \&_option_deprecated,
+
+    # normal actions
+    'building|take'         => \&_set_mode_set,
+    'failed|f'              => \&_set_mode_set,
+    'uploaded|u'            => \&_set_mode_set,
+    'not-for-us|no-build|n' => \&_set_mode_set,
+    'built'                 => \&_set_mode_set,
+    'attempted'             => \&_set_mode_set,
+    'needs-build|give-back' => \&_set_mode_set,
+    'dep-wait'              => \&_set_mode_set,
+    'update'                => \&_set_mode_set,
+    'forget'                => \&_set_mode,
+    'forget-user'           => \&_set_mode,
+    'merge-v3'              => \&_set_mode,
+    'info|i'                => \&_set_mode,
+    'binary-nmu|binNMU=i'   => sub {
+        _set_mode_set(@_);
+        $binNMUver = $_[1];
+    },
+    'permanent-build-priority|perm-build-priority=i' => sub {
+        _set_mode_set(@_);
+        $build_priority = $_[1];
+    },
+    'build-priority=i' => sub {
+        _set_mode_set(@_);
+        $build_priority = $_[1];
+    },
+    'list|l=s' => sub {
+        _set_mode(@_);
+        $list_state = $_[1];
+        die "Unknown state to list: $list_state\n"
+          if not $list_state ~~ [
+              qw( needs-build building uploaded built
+                  build-attempted failed installed
+                  dep-wait not-for-us auto-not-for-us
+                  all failed-removed install-wait
+                  reupload-wait bd-uninstallable ) ];
+    },
+    'dist|d=s' => sub {
+        given ( $_[1] ) {
+            when ( [qw< a all >] ) {
+                $info_all_dists = 1;
+                $distribution   = '';
+            }
+            when ('o') { $distribution = 'oldstable'; }
+            when ('s') { $distribution = 'stable'; }
+            when ('t') { $distribution = 'testing'; }
+            when ('u') { $distribution = 'unstable'; }
+        }
+    },
+    'order|O=s' => sub {
+        $list_order = $_[1];
+        die "Bad ordering character\n"
+          if $list_order !~ /^[PSpsncbCWT]+$/;
+    },
+    'message|m=s'  => \$fail_reason,
+    'database|b=s' => sub {
+        warn "database is deprecated, please use 'arch' instead.\n";
+        $conf::dbbase = $_[1];
+    },
+    'arch|A=s'     => \$arch,
+    'user|U=s'     => \$user,
+    'category|c=s' => sub {
+        $category = $_[1];
+        $category = $short_category{$category}
+          if exists $short_category{$category};
+        die "Unknown category: $category\n"
+          if not $category ~~ [ values %short_category ];
+    },
+    'min-age|a=i'       => \$list_min_age,
+    'max-age=i'         => \$list_min_age,
+    'format=s'          => \$printformat,
+    'own-format=s'      => \$ownprintformat,
+    'Pas=s'             => \$Pas,
+    'extra-depends=s'   => \$extra_depends,
+    'extra-conflicts=s' => \$extra_conflicts,
+
+    # special actions
+    'export' => sub { _set_mode(@_); $export_to   = $_[1]; },
+    'import' => sub { _set_mode(@_); $import_from = $_[1]; },
+    'manual-edit'                => \&_set_mode,
+    'distribution-architectures' => \&_set_mode,
+    'distribution-aliases'       => \&_set_mode,
+) or usage();
 
 my $dbh;
 
