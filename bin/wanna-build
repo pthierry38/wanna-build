@@ -150,6 +150,7 @@ GetOptions(
                   reupload-wait bd-uninstallable ) ];
     },
     'dist|d=s' => sub {
+        $distribution = $_[1];
         given ( $_[1] ) {
             when ( [qw< a all >] ) {
                 $info_all_dists = 1;
