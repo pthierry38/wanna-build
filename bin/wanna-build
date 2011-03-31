@@ -64,7 +64,7 @@ use Dpkg::Deps; # TODO: same
 
 our ($verbose, $mail_logs, $list_order, $list_state,
     $curr_date, $op_mode, $user, $real_user, $distribution,
-    $fail_reason, $opt_override, $import_from, $export_to, $opt_create_db,
+    $fail_reason, $opt_override, $import_from, $export_to,
     %prioval, %sectval,
     $info_all_dists, $arch,
     $short_date, $list_min_age, $list_max_age, $dbbase, @curr_time,
@@ -106,7 +106,6 @@ GetOptions(
     },
     'verbose|v'       => \$verbose,
     'override|o'      => \$opt_override,
-    'create-db'       => \$opt_create_db,
     'correct-compare' => \$WannaBuild::opt_correct_version_cmp,
 
     # TODO: remove after buildds no longer pass to wanna-build
