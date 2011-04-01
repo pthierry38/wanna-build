@@ -183,13 +183,15 @@ GetOptions(
     'extra-conflicts=s' => \$extra_conflicts,
 
     # special actions
-    'export' => sub { _set_mode(@_); $export_to   = $_[1]; },
-    'import' => sub { _set_mode(@_); $import_from = $_[1]; },
+    'export=s' => sub { _set_mode(@_); $export_to   = $_[1]; },
+    'import=s' => sub { _set_mode(@_); $import_from = $_[1]; },
     'manual-edit'                => \&_set_mode,
     'distribution-architectures' => \&_set_mode,
     'distribution-aliases'       => \&_set_mode,
 ) or usage();
 $list_min_age = -1 * $list_max_age if $list_max_age;
+print "export: $export_to\n";
+print "mode: $op_mode\n";
 
 my $dbh;
 
@@ -1280,7 +1282,7 @@ sub sort_list_func {
 sub calculate_prio {
 	my $priomap = $yamlmap->{priority};
 	my $pkg = shift;
-        my @s=split("/", $pkg->{'section'});
+        my @s=split("/", $pkg->{'section'}//"");
         $pkg->{'component'} = $s[0] if $s[1];
         $pkg->{'component'} ||= 'main';
 	$pkg->{'calprio'} = 0;
@@ -1564,6 +1566,7 @@ sub info_packages {
 }
 
 sub forget_packages {
+        no warnings;
 	my( $name, $pkg, $key, $data );
 	
 	foreach $name (@_) {
