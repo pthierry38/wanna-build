@@ -190,8 +190,6 @@ GetOptions(
     'distribution-aliases'       => \&_set_mode,
 ) or usage();
 $list_min_age = -1 * $list_max_age if $list_max_age;
-print "export: $export_to\n";
-print "mode: $op_mode\n";
 
 my $dbh;
 
@@ -1461,6 +1459,7 @@ sub list_packages {
         undef $printformat if ($ownprintformat && $ownprintformat eq 'none');
 
 	foreach $pkg (sort sort_list_func @list) {
+                no warnings;
                 if ($printformat) {
                     print print_format($printformat, $pkg, {'cnt' => $cnt, 'scnt' => \%scnt})."\n";
 		    ++$cnt;
