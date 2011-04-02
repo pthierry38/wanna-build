@@ -77,6 +77,8 @@ sub readsourcebins {
             /^Source:\s*(\S+)$/mi and $p->{'source'} = $1;
             /^Source:\s*(\S+)\s+\((\S+)\)$/mi and $p->{'source'} = $1 and $p->{'version'} = $2;
 
+            # consider packages as non-existant if it's all but outdated
+            next if $p->{'arch'} eq 'all' && $srcs->{$p->{'source'}} && $srcs->{$p->{'source'}}->{'version'} && vercmp($srcs->{$p->{'source'}}->{'version'}, $p->{'version'}) > 0;
             next unless $p->{'arch'} eq 'all' || $p->{'arch'} eq ${arch};
             $binary->{$p->{'binary'}} = { 'version' => $p->{'version'}, 'arch' => $p->{'arch'}} unless $binary->{$p->{'binary'}} and vercmp($binary->{$p->{'binary'}}->{'version'}, $p->{'version'}) < 0;
 

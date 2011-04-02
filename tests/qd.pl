@@ -83,6 +83,13 @@ Priority: required
 Section: admin
 Architecture: linux-any
 
+Package: lv2core
+Binary: lv2core
+Version: 4.0-5
+Priority: optional
+Section: sound
+Architecture: any
+
 EOF
 ;
 
@@ -123,6 +130,13 @@ Priority: extra
 Section: devel
 Architecture: all
 Version: 0.196
+
+Package: lv2core
+Priority: optional
+Section: sound
+Installed-Size: 112
+Architecture: all
+Version: 3.0-3
 
 EOF
 ;
@@ -211,6 +225,16 @@ is_deeply ($$srcs, {
                             'depends' => 'debhelper (>= 7), docbook-xsl, ldp-docbook-xsl (>= 0.0.20040321-0.1), xsltproc, dpkg-dev (>= 1.13.19), dblatex, debconf | debconf-2.0, po-debconf, po4a',
                             'conflicts' => 'dash'
                           },
+            'lv2core' => {
+                'priority' => 'optional',
+                'status' => 'uncompiled',
+                'version' => '4.0-5',
+                'binary' => [
+                        'lv2core'
+                      ],
+                'name' => 'lv2core',
+                'section' => 'sound'
+            },
             '_binary' => {
                 'e2fsprogs' => {'version' => '1.41.11-1', 'arch' => 'i386'},
                 'bash' => {'version' => '4.1-3', 'arch' => 'i386'},

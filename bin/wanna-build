@@ -2377,6 +2377,8 @@ sub parse_all_v3 {
             }
             $pkg->{'package'}  = $name;
         }
+        $pkg->{'version'} ||= "";
+        $pkg->{'state'} ||= "";
         my $logstr = sprintf("merge-v3 %s %s_%s", $vars->{'time'}, $name, $pkgs->{'version'}).
             ($pkgs->{'binnmu'} ? ";b".$pkgs->{'binnmu'} : "").
             sprintf(" (%s, %s, previous: %s", $vars->{'arch'}, $vars->{'suite'}, $pkg->{'version'}//"").
