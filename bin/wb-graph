@@ -41,8 +41,8 @@ for arch in $ARCHS_unstable; do
 
 my($lastmsg, %n_state, $total, %n_builder, $pu_total);
 $pu_total = 0;
-$n_state{"Installed"} = 0;
-open( my $pipe, '-|', "wanna-build --database=$arch/build-db --dist=$dist --list=all" )
+$n_state{"Installed"} = 0; 
+open( my $pipe, '-|', "wanna-build -A $arch --dist=$dist --list=all" )
 	or die "Cannot spawn wanna-build: $!\n";
 while( <$pipe> ) {
 	if (/^Database for $dist doesn't exist$/) {
