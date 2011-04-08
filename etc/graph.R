@@ -12,10 +12,8 @@ readdata <- function (file,start) {
 	"powerpc","pt","s390","st","amd64","amdt","sparc","spt","armel","aret",
 	"kfreebsd-amd64", "kfreebsd-amd64-t", "kfreebsd-i386", "kfreebsd-i386-t"))
 	ts(as.matrix(data.frame(
-	t[1]/t[2]*100,	#alpha
 	t[23]/t[24]*100, #amd64
 	t[27]/t[28]*100, #armel
-	t[5]/t[6]*100, #hppa
 	t[9]/t[10]*100, #i386
 	t[11]/t[12]*100, #ia64
 	t[29]/t[30]*100, #fkfreebsd-amd64
