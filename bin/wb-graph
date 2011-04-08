@@ -35,10 +35,9 @@ my $date=`date -u "+%m/%d/%Y %T"`;
 chop($date);
 print "$date";
 
-my @archs = qw(alpha arm hppa hurd-i386 i386 ia64 m68k mips mipsel powerpc s390 amd64 sparc armel kfreebsd-amd64 kfreebsd-i386);
-my $arch;
+. /org/wanna-build/triggers/common
 
-foreach $arch (@archs) {
+for arch in $ARCHS_unstable; do
 
 my($lastmsg, %n_state, $total, %n_builder, $pu_total);
 $pu_total = 0;
@@ -75,7 +74,7 @@ if ($?) {
 		print ", ".$n_state{"Installed"}.", ".$total;
 	}
 }
-}
+done
 print "\n";
 
 exit 0;
