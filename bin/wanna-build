@@ -2411,13 +2411,13 @@ sub parse_all_v3 {
                 }
             }
             if (isin($pkgs->{'status'}, qw <related not-for-us>)) {
-                my $tnotes = {'related' => 'related', 'not-for-us' => 'Packages-arch-specific'}->{$pkgs->{'status'}};
+                my $tnotes = {'related' => 'related', 'not-for-us' => 'packages-arch-specific'}->{$pkgs->{'status'}};
                 if ($pkg->{'notes'} && $pkg->{'notes'} ne $tnotes) {
                     $pkg->{'notes'} = $tnotes;
                     $change++;
                 }
             }
-            if ($pkgs->{'notes'} && ($pkg->{'notes'}//"" ne $pkgs->{'notes'})) {
+            if ($pkgs->{'notes'} && (($pkg->{'notes'}//"") ne $pkgs->{'notes'})) {
                 $pkg->{'notes'} = $pkgs->{'notes'};
                 $change++;
             }
