@@ -121,11 +121,19 @@ sub readsourcebins {
             next;
         }
         for my $bin (@{$srcs->{$k}->{'binary'}}) {
+            $srcs->{$k}->{'pas'} = 1 if pasignore($pas->{$bin}, $arch);
             next if pasignore($pas->{$bin}, $arch);
             next if $binary->{$bin} and $binary->{$bin}->{'arch'} eq 'all';
             next SRCS;
         }
-        $srcs->{$k}->{'status'} = 'not-for-us';
+        if ($srcs->{$k}->{'pas'}) {
+            $srcs->{$k}->{'status'} = 'not-for-us';
+            $srcs->{$k}->{'notes'} = 'packages-arch-specific';
+        } else {
+            $srcs->{$k}->{'status'} = 'auto-not-for-us';
+            $srcs->{$k}->{'notes'} = 'overwritten-by-arch-all';
+        }
+        delete $srcs->{$k}->{'pas'};
     }
     $srcs->{'_binary'} = $binary;
     local($/) = "\n";

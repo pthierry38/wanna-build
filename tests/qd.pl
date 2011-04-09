@@ -90,6 +90,20 @@ Priority: optional
 Section: sound
 Architecture: any
 
+Package: haskell-haxr
+Binary: libghc6-haxr-prof
+Version: 3000.2.1-2
+Priority: extra
+Section: haskell
+Architecture: any
+
+Package: haskall-dummy
+Binary: libghc6-haxr-prof
+Version: 1:3
+Priority: extra
+Section: haskell
+Architecture: all
+
 EOF
 ;
 
@@ -137,6 +151,12 @@ Section: sound
 Installed-Size: 112
 Architecture: all
 Version: 3.0-3
+
+Package: libghc6-haxr-prof
+Version: 1:3
+Priority: extra
+Section: haskell
+Architecture: all
 
 EOF
 ;
@@ -215,6 +235,7 @@ is_deeply ($$srcs, {
             'pbuilder' => {
                             'priority' => 'extra',
                             'status' => 'not-for-us',
+                            'notes' => 'packages-arch-specific',
                             'version' => '0.196',
                             'binary' => [
                                           'pbuilder',
@@ -235,6 +256,17 @@ is_deeply ($$srcs, {
                 'name' => 'lv2core',
                 'section' => 'sound'
             },
+            'haskell-haxr' => {
+                'priority' => 'extra',
+                'status' => 'auto-not-for-us',
+                'notes' => 'arch-all',
+                'version' => '3000.2.1-2',
+                'binary' => [
+                        'libghc6-haxr-prof'
+                      ],
+                'name' => 'haskell-haxr',
+                'section' => 'haskell'
+            },
             '_binary' => {
                 'e2fsprogs' => {'version' => '1.41.11-1', 'arch' => 'i386'},
                 'bash' => {'version' => '4.1-3', 'arch' => 'i386'},
@@ -242,5 +274,6 @@ is_deeply ($$srcs, {
                 'bash-static' => {'version' => '4.1-3', 'arch' => 'i386'},
                 'all' => {'version' => '4.1-3', 'arch' => 'all'},
                 'pbuilder' => { 'arch' => 'all', 'version' => '0.196' },
+                'libghc6-haxr-prof' => { 'arch' => 'all', 'version' => '1:3' },
             },
 }, 'reading packages');
