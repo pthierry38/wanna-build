@@ -1,4 +1,4 @@
-arch <- c("alpha", "amd64", "armel", "hppa", "i386", "ia64", "kfreebsd-amd64",
+arch <- c("amd64", "armel", "i386", "ia64", "kfreebsd-amd64",
 	"kfreebsd-i386", "mips", "mipsel", "powerpc", "s390", "sparc")
 palette(c("black", "turquoise", "red", "OrangeRed", "green3", "cyan", 
 	"blue", "yellow", "magenta",
