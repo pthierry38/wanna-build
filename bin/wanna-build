@@ -2388,7 +2388,7 @@ sub parse_all_v3 {
         if (isin($pkgs->{'status'}, qw (installed related)) && $pkgs->{'version'} eq $pkg->{'version'} && ($pkgs->{'binnmu'}//0) < int($pkg->{'binary_nmu_version'}//0)) {
                 $pkgs->{'status'} = 'out-of-date';
         }
-        if (isin($pkgs->{'status'}, qw <installed related auto-not-for-us >)) {
+        if (isin($pkgs->{'status'}, qw <installed related auto-not-for-us not-for-us>)) {
             my $change = 0;
             my $tstate = {'installed' => 'Installed', 'related' => 'Installed', 'auto-not-for-us' => 'Auto-Not-For-Us', 'not-for-us' => 'Auto-Not-For-Us'}->{$pkgs->{'status'}};
             next if isin( $pkg->{'state'}, qw<Not-For-Us Failed Failed-Removed Dep-Wait Dep-Wait-Removed>) && isin( $tstate, qw<Auto-Not-For-Us>);
