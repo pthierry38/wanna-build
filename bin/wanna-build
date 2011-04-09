@@ -2360,12 +2360,13 @@ sub parse_all_v3 {
     foreach my $name (keys %$srcs) {
         next if $name eq '_binary';
 
-        # state = installed, out-of-date, uncompiled, not-for-us, auto-not-for-us
+        # state = installed, out-of-date, uncompiled, packages-arch-specific, overwritten-by-arch-all, arch-not-in-arch-list, arch-all-only
         my $pkgs = $srcs->{$name};
+        next if isin($pkgs->{'status'}, qw <arch-all-only>);
         my $pkg = $db->{$name};
 
         unless ($pkg) {
-            next SRCS if $pkgs->{'status'} eq 'not-for-us';
+            next SRCS if $pkgs->{'status'} eq 'packages-arch-specific';
             my $logstr = sprintf("merge-v3 %s %s_%s (%s, %s):", $vars->{'time'}, $name, $pkgs->{'version'}, $vars->{'arch'}, $vars->{'suite'});
 
             # does at least one binary exist in the database and is more recent - if so, we're probably just outdated, ignore the source package
@@ -2383,14 +2384,16 @@ sub parse_all_v3 {
             ($pkgs->{'binnmu'} ? ";b".$pkgs->{'binnmu'} : "").
             sprintf(" (%s, %s, previous: %s", $vars->{'arch'}, $vars->{'suite'}, $pkg->{'version'}//"").
             ($pkg->{'binary_nmu_version'} ? ";b".$pkg->{'binary_nmu_version'} : "").
-            ", $pkg->{'state'}):";
+            ", $pkg->{'state'}".($pkg->{'notes'} ? "/".$pkg->{'notes'} : "")."):";
 
         if (isin($pkgs->{'status'}, qw (installed related)) && $pkgs->{'version'} eq $pkg->{'version'} && ($pkgs->{'binnmu'}//0) < int($pkg->{'binary_nmu_version'}//0)) {
                 $pkgs->{'status'} = 'out-of-date';
         }
-        if (isin($pkgs->{'status'}, qw (installed related auto-not-for-us))) {
+        if (isin($pkgs->{'status'}, qw <installed related arch-not-in-arch-list packages-arch-specific overwritten-by-arch-all arch-all-only>)) {
             my $change = 0;
-            my $tstate = {'installed' => 'Installed', 'related' => 'Installed', 'auto-not-for-us' => 'Auto-Not-For-Us'}->{$pkgs->{'status'}};
+            my $tstate = {'installed' => 'Installed', 'related' => 'Installed', 
+                'arch-not-in-arch-list' => 'Auto-Not-For-Us', 'packages-arch-specific' => 'Auto-Not-For-Us', 'overwritten-by-arch-all' => 'Auto-Not-For-Us', 'arch-all-only' => 'Auto-Not-For-Us',
+                }->{$pkgs->{'status'}};
             next if isin( $pkg->{'state'}, qw<Not-For-Us Failed Failed-Removed Dep-Wait Dep-Wait-Removed>) && isin( $tstate, qw<Auto-Not-For-Us>);
             # if the package is currently current, the status is Installed, not not-for-us
             if ($pkg->{'state'} ne $tstate) {
@@ -2410,30 +2413,18 @@ sub parse_all_v3 {
                     $change++;
                 }
             }
-            if (isin($pkgs->{'status'}, qw (related)) and $pkg->{'notes'} ne "related") {
-                $pkg->{'notes'} = "related";
-                $change++;
+            if (isin($pkgs->{'status'}, qw <related packages-arch-specific overwritten-by-arch-all arch-not-in-arch-list arch-all-only>)) {
+                my $tnotes = $pkgs->{'status'};
+                if (($pkg->{'notes'}//"") ne $tnotes) {
+                    $pkg->{'notes'} = $tnotes;
+                    $change++;
+                }
             }
             if ($change) {
                 print "$logstr set to $tstate/".($pkg->{'notes'}//"")."\n" if $verbose || $simulate;
                 log_ta( $pkg, "--merge-v3: $tstate" ) unless $simulate;
                 update_source_info($pkg) unless $simulate;
             }
-            next;
-        }
-
-        if ($pkgs->{'status'} eq 'not-for-us') {
-            next if isin( $pkg->{'state'}, qw(Not-For-Us Installed Failed-Removed));
-
-            if (isin( $pkg->{'state'}, qw(Failed Build-Attempted Built))) {
-                change_state( \$pkg, "Failed-Removed" );
-		log_ta( $pkg, "--merge-v3: Failed-Removed" ) unless $simulate;
-		update_source_info($pkg) unless $simulate;
-                print "$logstr (virtually) deleted from database\n" if $verbose || $simulate;
-                next;
-            }
-
-            print "$logstr should delete (not-for-us according to P-a-s)\n" if $verbose || $simulate || 1; # not implemented yet on purpose
             next;
         }
 

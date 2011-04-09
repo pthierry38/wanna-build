@@ -47,11 +47,9 @@ sub readsourcebins {
             /^Build-Conflicts:\s*(.*)$/mi and $p->{'conflicts'} = $1;
 
             next unless $p->{'name'} and $p->{'version'};
-            next if $p->{'arch'} eq 'all';
             foreach my $tarch (split(/\s+/, $p->{'arch'})) {
                 $p->{'for-us'} = 1 if debarch_is($arch, $tarch);
             }
-            delete $p->{'arch'};
 
             # ignore if package already exists with higher version
             if ($srcs->{$p->{'name'}}) {
@@ -109,23 +107,33 @@ sub readsourcebins {
         $srcs->{$k}->{'status'} = 'installed' if $srcs->{$k}->{'arch'} && $srcs->{$k}->{'arch'} eq 'all';
         
         if (!$srcs->{$k}->{'for-us'} && $srcs->{$k}->{'status'} ne 'installed') {
-            $srcs->{$k}->{'status'} = 'auto-not-for-us';
+            $srcs->{$k}->{'status'} = 'arch-not-in-arch-list';
         }
         delete $srcs->{$k}->{'for-us'};
 
-        #my $p = $pas->{$k};
-        #$p ||= $pas->{'%'.$k};
-        #$srcs->{$k}->{'status'} = 'not-for-us' if pasignore($p, $arch);
+        if ($srcs->{$k}->{'arch'} eq 'all') {
+            $srcs->{$k}->{'status'} = 'arch-all-only';
+            delete $srcs->{$k}->{'arch'};
+            next;
+        }
+        delete $srcs->{$k}->{'arch'};
+        
         if (pasignore($pas->{'%'.$k}, $arch)) {
-            $srcs->{$k}->{'status'} = 'not-for-us';
+            $srcs->{$k}->{'status'} = 'packages-arch-specific';
             next;
         }
         for my $bin (@{$srcs->{$k}->{'binary'}}) {
+            $srcs->{$k}->{'pas'} = 1 if pasignore($pas->{$bin}, $arch);
             next if pasignore($pas->{$bin}, $arch);
             next if $binary->{$bin} and $binary->{$bin}->{'arch'} eq 'all';
             next SRCS;
         }
-        $srcs->{$k}->{'status'} = 'not-for-us';
+        if ($srcs->{$k}->{'pas'}) {
+            $srcs->{$k}->{'status'} = 'packages-arch-specific';
+        } else {
+            $srcs->{$k}->{'status'} = 'overwritten-by-arch-all';
+        }
+        delete $srcs->{$k}->{'pas'};
     }
     $srcs->{'_binary'} = $binary;
     local($/) = "\n";
