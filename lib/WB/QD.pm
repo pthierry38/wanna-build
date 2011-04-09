@@ -109,7 +109,7 @@ sub readsourcebins {
         $srcs->{$k}->{'status'} = 'installed' if $srcs->{$k}->{'arch'} && $srcs->{$k}->{'arch'} eq 'all';
         
         if (!$srcs->{$k}->{'for-us'} && $srcs->{$k}->{'status'} ne 'installed') {
-            $srcs->{$k}->{'status'} = 'auto-not-for-us';
+            $srcs->{$k}->{'status'} = 'arch-not-in-arch-list';
         }
         delete $srcs->{$k}->{'for-us'};
 
@@ -117,7 +117,7 @@ sub readsourcebins {
         #$p ||= $pas->{'%'.$k};
         #$srcs->{$k}->{'status'} = 'not-for-us' if pasignore($p, $arch);
         if (pasignore($pas->{'%'.$k}, $arch)) {
-            $srcs->{$k}->{'status'} = 'not-for-us';
+            $srcs->{$k}->{'status'} = 'packages-arch-specific';
             next;
         }
         for my $bin (@{$srcs->{$k}->{'binary'}}) {
@@ -127,11 +127,9 @@ sub readsourcebins {
             next SRCS;
         }
         if ($srcs->{$k}->{'pas'}) {
-            $srcs->{$k}->{'status'} = 'not-for-us';
-            $srcs->{$k}->{'notes'} = 'packages-arch-specific';
+            $srcs->{$k}->{'status'} = 'packages-arch-specific';
         } else {
-            $srcs->{$k}->{'status'} = 'auto-not-for-us';
-            $srcs->{$k}->{'notes'} = 'overwritten-by-arch-all';
+            $srcs->{$k}->{'status'} = 'overwritten-by-arch-all';
         }
         delete $srcs->{$k}->{'pas'};
     }

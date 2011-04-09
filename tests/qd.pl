@@ -210,7 +210,7 @@ is_deeply ($$srcs, {
                       },
             'nfu' => {
                         'priority' => 'optional',
-                        'status' => 'not-for-us',
+                        'status' => 'packages-arch-specific',
                         'version' => '4.1-3',
                         'name' => 'nfu',
                         'section' => 'shell',
@@ -218,7 +218,7 @@ is_deeply ($$srcs, {
                       },
             'autonfu' => {
                         'priority' => 'required',
-                        'status' => 'auto-not-for-us',
+                        'status' => 'arch-not-in-arch-list',
                         'version' => '1.41.11-1',
                         'name' => 'autonfu',
                         'section' => 'admin',
@@ -234,8 +234,7 @@ is_deeply ($$srcs, {
                       },
             'pbuilder' => {
                             'priority' => 'extra',
-                            'status' => 'not-for-us',
-                            'notes' => 'packages-arch-specific',
+                            'status' => 'packages-arch-specific',
                             'version' => '0.196',
                             'binary' => [
                                           'pbuilder',
@@ -258,8 +257,7 @@ is_deeply ($$srcs, {
             },
             'haskell-haxr' => {
                 'priority' => 'extra',
-                'status' => 'auto-not-for-us',
-                'notes' => 'arch-all',
+                'status' => 'overwritten-by-arch-all',
                 'version' => '3000.2.1-2',
                 'binary' => [
                         'libghc6-haxr-prof'
