@@ -47,11 +47,9 @@ sub readsourcebins {
             /^Build-Conflicts:\s*(.*)$/mi and $p->{'conflicts'} = $1;
 
             next unless $p->{'name'} and $p->{'version'};
-            next if $p->{'arch'} eq 'all';
             foreach my $tarch (split(/\s+/, $p->{'arch'})) {
                 $p->{'for-us'} = 1 if debarch_is($arch, $tarch);
             }
-            delete $p->{'arch'};
 
             # ignore if package already exists with higher version
             if ($srcs->{$p->{'name'}}) {
@@ -113,9 +111,13 @@ sub readsourcebins {
         }
         delete $srcs->{$k}->{'for-us'};
 
-        #my $p = $pas->{$k};
-        #$p ||= $pas->{'%'.$k};
-        #$srcs->{$k}->{'status'} = 'not-for-us' if pasignore($p, $arch);
+        if ($srcs->{$k}->{'arch'} eq 'all') {
+            $srcs->{$k}->{'status'} = 'arch-all-only';
+            delete $srcs->{$k}->{'arch'};
+            next;
+        }
+        delete $srcs->{$k}->{'arch'};
+        
         if (pasignore($pas->{'%'.$k}, $arch)) {
             $srcs->{$k}->{'status'} = 'packages-arch-specific';
             next;

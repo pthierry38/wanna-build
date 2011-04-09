@@ -200,6 +200,36 @@ is_deeply ($$srcs, {
                               'depends' => 'debhelper [i386 amd64], bash [!kfreebsd-i386], perl [!i386 !amd64]',
                              'binary' => ['base-files'],
                             },
+            'haskall-dummy' => {
+                                 'priority' => 'extra',
+                                 'status' => 'arch-all-only',
+                                 'version' => '1:3',
+                                 'binary' => [
+                                               'libghc6-haxr-prof'
+                                             ],
+                                 'name' => 'haskall-dummy',
+                                 'section' => 'haskell'
+                               },
+            'all' => {
+                       'priority' => 'optional',
+                       'status' => 'arch-all-only',
+                       'version' => '4.1-3',
+                       'binary' => [
+                                     'all'
+                                   ],
+                       'name' => 'all',
+                       'section' => 'shell'
+                     },
+            'allbin' => {
+                          'priority' => 'optional',
+                          'status' => 'arch-all-only',
+                          'version' => '4.1-3',
+                          'binary' => [
+                                        'allbin'
+                                      ],
+                          'name' => 'allbin',
+                          'section' => 'shell'
+                        },
             'test' => {
                         'priority' => 'optional',
                         'status' => 'uncompiled',
