@@ -69,6 +69,7 @@ if ($?) {
 	print ", 0, 0";
 } else {
 #	$total -= $n_state{"Not-For-Us"};
+	$total -= $n_state{"Auto-Not-For-Us"};
 	if ( $previously_built ) {
 		print ", ".$n_state{"Installed"}.", ".$pu_total;
 	} else {
