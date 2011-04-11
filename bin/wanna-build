@@ -839,11 +839,6 @@ sub add_one_failed {
 	$pkg->{'builder'} = $user;
 	$pkg->{'failed'} .= "\n" if $pkg->{'failed'};
 	$pkg->{'failed'} .= $fail_reason;
-	if (defined $pkg->{'permbuildpri'}) {
-		$pkg->{'buildpri'} = $pkg->{'permbuildpri'};
-	} else {
-		delete $pkg->{'buildpri'};
-	}
 	log_ta( $pkg, "--failed" );
 	update_source_info($pkg);
 	print "$name: registered as failed\n" if $verbose;
@@ -881,7 +876,6 @@ sub add_one_notforus {
 		$pkg->{'package'} = $name;
 		delete $pkg->{'builder'};
 		delete $pkg->{'depends'};
-		delete $pkg->{'buildpri'};
 		delete $pkg->{'binary_nmu_version'};
 		delete $pkg->{'binary_nmu_changelog'};
 		log_ta( $pkg, "--no-build" );
@@ -1002,6 +996,7 @@ sub set_one_binnmu {
 			delete $pkg->{'depends'};
 			delete $pkg->{'binary_nmu_version'};
 			delete $pkg->{'binary_nmu_changelog'};
+                        delete $pkg->{'buildpri'};
 		} elsif ($binNMUver <= $pkg->{'binary_nmu_version'}) {
 			print "$name: already building binNMU $pkg->{'binary_nmu_version'}\n";
 			return;
@@ -1009,8 +1004,7 @@ sub set_one_binnmu {
 			$pkg->{'binary_nmu_version'} = $binNMUver;
 			$pkg->{'binary_nmu_changelog'} = $fail_reason;
 			$pkg->{'notes'} = 'out-of-date';
-			$pkg->{'buildpri'} = $pkg->{'permbuildpri'}
-				if (defined $pkg->{'permbuildpri'});
+                        delete $pkg->{'buildpri'};
 			if (defined $distributions{$distribution}{noadw}) {
 				change_state( \$pkg, 'Installed' );
 			} else {
@@ -1050,6 +1044,7 @@ sub set_one_binnmu {
 	$pkg->{'binary_nmu_version'} = $binNMUver;
 	$pkg->{'binary_nmu_changelog'} = $fail_reason;
 	$pkg->{'notes'} = 'out-of-date';
+        delete $pkg->{'buildpri'};
 	log_ta( $pkg, "--binNMU" );
 	update_source_info($pkg);
 	print "${name}: registered for binNMU $fullver\n" if $verbose;
@@ -1081,13 +1076,8 @@ sub set_one_buildpri {
 		return;
 	}
 	if ( $build_priority == 0 ) {
-		delete $pkg->{'buildpri'}
-			if $key eq 'permbuildpri' and defined $pkg->{'buildpri'}
-			and $pkg->{'buildpri'} == $pkg->{$key};
 		delete $pkg->{$key};
 	} else {
-		$pkg->{'buildpri'} = $build_priority
-			if $key eq 'permbuildpri';
 		$pkg->{$key} = $build_priority;
 	}
 	update_source_info($pkg);
@@ -1149,11 +1139,6 @@ sub add_one_depwait {
 	}
 	change_state( \$pkg, 'Dep-Wait' );
 	$pkg->{'builder'} = $user;
-	if (defined $pkg->{'permbuildpri'}) {
-		$pkg->{'buildpri'} = $pkg->{'permbuildpri'};
-	} else {
-		delete $pkg->{'buildpri'};
-	}
 	my $deplist = parse_deplist( $pkg->{'depends'} );
 	my $new_deplist = parse_deplist( $fail_reason );
 	# add new dependencies, maybe overwriting old entries
@@ -1257,7 +1242,7 @@ sub sort_list_func {
     my $map_funcs = {
         'C' => ['<->', sub { return $_[0]->{'calprio'}; }],
         'W' => ['<->', sub { return $_[0]->{'state_days'}; }],
-        'P' => ['<->', sub { return $_[0]->{'buildpri'}; }],
+        'P' => ['<->', sub { return ($_[0]->{'buildpri'}//0) + ($_[0]->{'permbuildpri'}//0); }],
         'p' => ['<=>', sub { return $prioval{$_[0]->{'priority'}//""}//0; }],
         's' => ['<=>', sub { return $sectval{$_[0]->{'section'}//""}//0; }],
         'n' => ['cmp', sub { return $_[0]->{'package'}; }],
@@ -1402,7 +1387,7 @@ Text could contain further %. To start with !, use %!
             no warnings;
             my $c = "$pkg->{'priority'}:$pkg->{'notes'}";
             $c .= ":PREV-FAILED" if $pkg->{'previous_state'} && $pkg->{'previous_state'} =~ /^Failed/;
-            $c .= ":bp{" . $pkg->{'buildpri'} . "}" if defined $pkg->{'buildpri'};
+            $c .= ":bp{" . (($pkg->{'buildpri'}//0)+($pkg->{'permbuildpri'}//0)) . "}" if (($pkg->{'buildpri'}//0)+($pkg->{'permbuildpri'}//0));
             $c .= ":binNMU{" . $pkg->{'binary_nmu_version'} . "}" if defined $pkg->{'binary_nmu_version'};
             $c .= ":calprio{". $pkg->{'calprio'}."}";
             $c .= ":days{". $pkg->{'state_days'}."}";
@@ -2459,6 +2444,7 @@ sub parse_all_v3 {
         delete $pkg->{'builder'};
         delete $pkg->{'binary_nmu_version'} unless $pkgs->{'binnmu'};
         delete $pkg->{'binary_nmu_changelog'} unless $pkgs->{'binnmu'};
+        delete $pkg->{'buildpri'};
         log_ta( $pkg, "--merge-v3: needs-build" ) unless $simulate;
         update_source_info($pkg) unless $simulate;
         print "$logstr set to needs-builds\n" if $simulate || $verbose;
