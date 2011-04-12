@@ -70,7 +70,7 @@ our ($verbose, $mail_logs, $list_order, $list_state,
     $short_date, $list_min_age, $list_max_age, $dbbase, @curr_time,
     $build_priority, %new_vers, $binNMUver, %merge_srcvers, %merge_binsrc,
     $printformat, $ownprintformat, $privmode, $extra_depends, $extra_conflicts,
-    %distributions, %distribution_aliases
+    %distributions, %distribution_aliases, $actions
     );
 our $Pas = '/org/buildd.debian.org/etc/packages-arch-specific/Packages-arch-specific';
 our $simulate = 0;
@@ -449,77 +449,105 @@ sub process {
 	}
 }
 
-sub add_packages {
-	my $newstate = shift;
-	my( $package, $name, $version, $ok, $reason );
-	
-	foreach $package (@_) {
-		$package =~ s,^.*/,,; # strip path
-		$package =~ s/\.(dsc|diff\.gz|tar\.gz|deb)$//; # strip extension
-		$package =~ s/_[a-zA-Z\d-]+\.changes$//; # strip extension
-		if ($package =~ /^([\w\d.+-]+)_([\w\d:.+~-]+)/) {
-			($name,$version) = ($1,$2);
-		}
-		else {
-			warn "$package: can't extract package name and version ".
-				 "(bad format)\n";
-			next;
-		}
-	        my $pkg = get_source_info($name);
-	        if (!isin($op_mode, qw<set-building>) && (!defined($pkg))) {
-		    print "$name: not registered yet.\n";
-                    next;
-                }
-                if (isin($op_mode, qw<set-built set-attempted set-uploaded set-dep-wait>)) {
-                    if ($pkg->{'builder'} && $user ne $pkg->{'builder'}) {
-                        print "$pkg->{'package'}: not taken by you, but by $pkg->{'builder'}. Skipping.\n";
-                        next;
-                    }
-                }
-                if (!isin($op_mode, qw<set-building set-uploaded set-update>)) {
-                    if ( !pkg_version_eq($pkg,$version)) {
-                        print "$pkg->{package}: version mismatch ($pkg->{'version'} by $pkg->{'builder'})\n";
-                        next;
-                    }
-                }
 
-		if ($op_mode eq "set-building") {
-			add_one_building( $name, $version, $pkg );
-		}
-		elsif ($op_mode eq "set-built") {
-			add_one_built( $pkg );
-		}
-		elsif ($op_mode eq "set-attempted") {
-			add_one_attempted( $pkg );
-		}
-		elsif ($op_mode eq "set-uploaded") {
-			add_one_uploaded( $name, $version, $pkg );
-		}
-		elsif ($op_mode eq "set-failed") {
-			add_one_failed( $pkg );
-		}
-		elsif ($op_mode eq "set-not-for-us") {
-			add_one_notforus( $pkg );
-		}
-		elsif ($op_mode eq "set-needs-build") {
-			add_one_needsbuild( $pkg );
-		}
-		elsif ($op_mode eq "set-dep-wait") {
-			add_one_depwait( $pkg );
-		}
-		elsif ($op_mode eq "set-build-priority") {
-			set_one_buildpri( 'buildpri', $pkg );
-		}
-		elsif ($op_mode eq "set-permanent-build-priority") {
-			set_one_buildpri( 'permbuildpri', $pkg );
-		}
-		elsif ($op_mode eq "set-binary-nmu") {
-			set_one_binnmu( $name, $version, $pkg );
-		}
-		elsif ($op_mode eq "set-update") {
-			set_one_update( $pkg );
-		}
+BEGIN {
+    $actions = {
+        'set-building'  => { 'noversion' => 1, 'nopkgdef' => 1, },
+        'set-built'     => { 'builder' => 1, to => 'Built', action => 'built', 'from' => [qw<Building Build-Attempted>]},
+        'set-attempted' => { 'builder' => 1, to => 'Build-Attempted', action => 'attempted', 'from' => [qw<Building Build-Attempted>]},
+        'set-uploaded'  => { 'builder' => 1, 'noversion' => 1 },
+        'set-dep-wait'  => { 'builder' => 1, },
+        'set-update'    => { 'noversion' => 1, }
+
+    };
+}
+
+sub add_packages {
+    my $newstate = shift;
+    my( $package, $name, $version, $ok, $reason );
+
+    foreach $package (@_) {
+        $package =~ s,^.*/,,; # strip path
+        $package =~ s/\.(dsc|diff\.gz|tar\.gz|deb)$//; # strip extension
+        $package =~ s/_[a-zA-Z\d-]+\.changes$//; # strip extension
+        if ($package =~ /^([\w\d.+-]+)_([\w\d:.+~-]+)/) {
+            ($name,$version) = ($1,$2);
+        } else {
+	    warn "$package: can't extract package name and version (bad format)\n";
+	    next;
 	}
+
+	my $pkg = get_source_info($name);
+        if (!($actions->{$op_mode}) || !($actions->{$op_mode}->{'nopkgdef'})) {
+            if (!defined($pkg)) {
+                print "$name: not registered yet.\n";
+                next;
+            }
+        }
+        if ($actions->{$op_mode} && $actions->{$op_mode}->{'builder'}) {
+            if ($pkg->{'builder'} && $user ne $pkg->{'builder'}) {
+                print "$pkg->{'package'}: not taken by you, but by $pkg->{'builder'}. Skipping.\n";
+                next;
+            }
+        }
+        if (!($actions->{$op_mode}) || !($actions->{$op_mode}->{'noversion'})) {
+            if ( !pkg_version_eq($pkg,$version)) {
+                print "$pkg->{package}: version mismatch ($pkg->{'version'} by $pkg->{'builder'})\n";
+                next;
+            }
+        }
+
+        if ($actions->{$op_mode} && $actions->{$op_mode}->{'from'}) {
+            if (!isin($pkg->{'state'}, @{$actions->{$op_mode}->{'from'}})) {
+                print "$name: skiping: state is $pkg->{'state'}, not in ".join(", ",@{$actions->{$op_mode}->{'from'}})."\n";
+                next;
+            }
+        }
+
+        if ($op_mode eq "set-building") {
+            add_one_building( $name, $version, $pkg );
+        }
+        elsif ($op_mode eq "set-built") {
+            1;
+        }
+        elsif ($op_mode eq "set-attempted") {
+            1;
+        }
+        elsif ($op_mode eq "set-uploaded") {
+            add_one_uploaded( $name, $version, $pkg );
+        }
+        elsif ($op_mode eq "set-failed") {
+            add_one_failed( $pkg );
+        }
+        elsif ($op_mode eq "set-not-for-us") {
+            add_one_notforus( $pkg );
+        }
+        elsif ($op_mode eq "set-needs-build") {
+            add_one_needsbuild( $pkg );
+        }
+        elsif ($op_mode eq "set-dep-wait") {
+            add_one_depwait( $pkg );
+        }
+        elsif ($op_mode eq "set-build-priority") {
+            set_one_buildpri( 'buildpri', $pkg );
+        }
+        elsif ($op_mode eq "set-permanent-build-priority") {
+            set_one_buildpri( 'permbuildpri', $pkg );
+        }
+        elsif ($op_mode eq "set-binary-nmu") {
+            set_one_binnmu( $name, $version, $pkg );
+        }
+        elsif ($op_mode eq "set-update") {
+            set_one_update( $pkg );
+        }
+
+        if ($actions->{$op_mode} && $actions->{$op_mode}->{'action'} && $actions->{$op_mode}->{'to'}) {
+	    change_state( \$pkg, $actions->{$op_mode}->{'to'} );
+	    log_ta( $pkg, "--".$actions->{$op_mode}->{'action'} );
+	    update_source_info($pkg);
+	    print "$name: registered as ".$actions->{$op_mode}->{'action'}."\n" if $verbose;
+        }
+    }
 }
 
 sub add_one_building {
@@ -682,39 +710,6 @@ sub add_one_building {
 	}
 }
 
-sub add_one_attempted {
-	my $pkg = shift;
-	my $state = $pkg->{'state'};
-        my $name = $pkg->{'package'};
-
-	if (($pkg->{'state'} ne "Building") && ($pkg->{'state'} ne "Build-Attempted")) {
-		print "$name: not taken for building (state is $pkg->{'state'}). ",
-			  "Skipping.\n";
-		return;
-	}
-
-	change_state( \$pkg, 'Build-Attempted' );
-	log_ta( $pkg, "--attempted" );
-	update_source_info($pkg);
-	print "$name: registered as uploaded\n" if $verbose;
-}
-
-sub add_one_built {
-	my $pkg = shift;
-	my $state = $pkg->{'state'};
-        my $name = $pkg->{'package'};
-
-        if (($pkg->{'state'} ne "Building") && ($pkg->{'state'} ne "Build-Attempted")) {
-		print "$name: not taken for building (state is $pkg->{'state'}). ",
-			  "Skipping.\n";
-		return;
-	}
-
-	change_state( \$pkg, 'Built' );
-	log_ta( $pkg, "--built" );
-	update_source_info($pkg);
-	print "$name: registered as built\n" if $verbose;
-}
 
 sub add_one_uploaded {
 	my $name = shift;
