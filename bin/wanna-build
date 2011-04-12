@@ -465,42 +465,59 @@ sub add_packages {
 				 "(bad format)\n";
 			next;
 		}
+	        my $pkg = get_source_info($name);
+	        if (!isin($op_mode, qw<set-building>) && (!defined($pkg))) {
+		    print "$name: not registered yet.\n";
+                    next;
+                }
+                if (isin($op_mode, qw<set-built set-attempted set-uploaded set-dep-wait>)) {
+                    if ($pkg->{'builder'} && $user ne $pkg->{'builder'}) {
+                        print "$pkg->{'package'}: not taken by you, but by $pkg->{'builder'}. Skipping.\n";
+                        next;
+                    }
+                }
+                if (!isin($op_mode, qw<set-building set-uploaded set-update>)) {
+                    if ( !pkg_version_eq($pkg,$version)) {
+                        print "$pkg->{package}: version mismatch ($pkg->{'version'} by $pkg->{'builder'})\n";
+                        next;
+                    }
+                }
 
 		if ($op_mode eq "set-building") {
-			add_one_building( $name, $version );
+			add_one_building( $name, $version, $pkg );
 		}
 		elsif ($op_mode eq "set-built") {
-			add_one_built( $name, $version );
+			add_one_built( $pkg );
 		}
 		elsif ($op_mode eq "set-attempted") {
-			add_one_attempted( $name, $version );
+			add_one_attempted( $pkg );
 		}
 		elsif ($op_mode eq "set-uploaded") {
-			add_one_uploaded( $name, $version );
+			add_one_uploaded( $name, $version, $pkg );
 		}
 		elsif ($op_mode eq "set-failed") {
-			add_one_failed( $name, $version );
+			add_one_failed( $pkg );
 		}
 		elsif ($op_mode eq "set-not-for-us") {
-			add_one_notforus( $name, $version );
+			add_one_notforus( $pkg );
 		}
 		elsif ($op_mode eq "set-needs-build") {
-			add_one_needsbuild( $name, $version );
+			add_one_needsbuild( $pkg );
 		}
 		elsif ($op_mode eq "set-dep-wait") {
-			add_one_depwait( $name, $version );
+			add_one_depwait( $pkg );
 		}
 		elsif ($op_mode eq "set-build-priority") {
-			set_one_buildpri( $name, $version, 'buildpri' );
+			set_one_buildpri( 'buildpri', $pkg );
 		}
 		elsif ($op_mode eq "set-permanent-build-priority") {
-			set_one_buildpri( $name, $version, 'permbuildpri' );
+			set_one_buildpri( 'permbuildpri', $pkg );
 		}
 		elsif ($op_mode eq "set-binary-nmu") {
-			set_one_binnmu( $name, $version );
+			set_one_binnmu( $name, $version, $pkg );
 		}
 		elsif ($op_mode eq "set-update") {
-			set_one_update( $name, $version );
+			set_one_update( $pkg );
 		}
 	}
 }
@@ -511,7 +528,7 @@ sub add_one_building {
 	my( $ok, $reason );
 
 	$ok = 1;
-	my $pkg = get_source_info($name);
+	my $pkg = shift;
 	if (defined($pkg)) {
 		if ($pkg->{'state'} eq "Not-For-Us") {
 			$ok = 0;
@@ -666,28 +683,13 @@ sub add_one_building {
 }
 
 sub add_one_attempted {
-	my $name = shift;
-	my $version = shift;
-	my $pkg = get_source_info($name);
-
-	if (!defined($pkg)) {
-		print "$name: not registered yet.\n";
-		return;
-	}
+	my $pkg = shift;
+	my $state = $pkg->{'state'};
+        my $name = $pkg->{'package'};
 
 	if (($pkg->{'state'} ne "Building") && ($pkg->{'state'} ne "Build-Attempted")) {
 		print "$name: not taken for building (state is $pkg->{'state'}). ",
 			  "Skipping.\n";
-		return;
-	}
-	if ($pkg->{'builder'} ne $user) {
-		print "$name: not taken by you, but by $pkg->{'builder'}. Skipping.\n";
-		return;
-	}
-	elsif ( !pkg_version_eq($pkg, $version) ) {
-		print "$name: version mismatch ".
-			  "$(pkg->{'version'} ".
-			  "by $pkg->{'builder'})\n";
 		return;
 	}
 
@@ -698,30 +700,16 @@ sub add_one_attempted {
 }
 
 sub add_one_built {
-	my $name = shift;
-	my $version = shift;
-	my $pkg = get_source_info($name);
-
-	if (!defined($pkg)) {
-		print "$name: not registered yet.\n";
-		return;
-	}
+	my $pkg = shift;
+	my $state = $pkg->{'state'};
+        my $name = $pkg->{'package'};
 
         if (($pkg->{'state'} ne "Building") && ($pkg->{'state'} ne "Build-Attempted")) {
 		print "$name: not taken for building (state is $pkg->{'state'}). ",
 			  "Skipping.\n";
 		return;
 	}
-	if ($pkg->{'builder'} ne $user) {
-		print "$name: not taken by you, but by $pkg->{'builder'}. Skipping.\n";
-		return;
-	}
-	elsif ( !pkg_version_eq($pkg, $version) ) {
-		print "$name: version mismatch ".
-			  "$(pkg->{'version'} ".
-			  "by $pkg->{'builder'})\n";
-		return;
-	}
+
 	change_state( \$pkg, 'Built' );
 	log_ta( $pkg, "--built" );
 	update_source_info($pkg);
@@ -731,12 +719,7 @@ sub add_one_built {
 sub add_one_uploaded {
 	my $name = shift;
 	my $version = shift;
-	my $pkg = get_source_info($name);
-
-	if (!defined($pkg)) {
-		print "$name: not registered yet.\n";
-		return;
-	}
+	my $pkg = shift;
 
 	if ($pkg->{'state'} eq "Uploaded" &&
 		pkg_version_eq($pkg,$version)) {
@@ -746,10 +729,6 @@ sub add_one_uploaded {
 	if (!isin( $pkg->{'state'}, qw(Building Built Build-Attempted))) {
 		print "$name: not taken for building (state is $pkg->{'state'}). ",
 			  "Skipping.\n";
-		return;
-	}
-	if ($pkg->{'builder'} ne $user) {
-		print "$name: not taken by you, but by $pkg->{'builder'}. Skipping.\n";
 		return;
 	}
 	# strip epoch -- buildd-uploader used to go based on the filename.
@@ -777,16 +756,9 @@ sub add_one_uploaded {
 }
 
 sub add_one_failed {
-	my $name = shift;
-	my $version = shift;
-	my $state;
-	my $pkg = get_source_info($name);
-
-	if (!defined($pkg)) {
-		print "$name: not registered yet.\n";
-		return;
-	}
-	$state = $pkg->{'state'};
+	my $pkg = shift;
+	my $state = $pkg->{'state'};
+        my $name = $pkg->{'package'};
 
 	if ($state eq "Not-For-Us") {
 		print "$name: not suitable for this architecture anyway. Skipping.\n";
@@ -807,28 +779,9 @@ sub add_one_failed {
 			  "$pkg->{'builder'}. Skipping.\n";
 		return;
 	}
-	elsif ( !pkg_version_eq($pkg, $version) ) {
-		print "$name: version mismatch ".
-			  "$(pkg->{'version'} ".
-			  "by $pkg->{'builder'})\n";
-		return;
-	}
 
-	if ($state eq "Needs-Build") {
-		print "$name: Warning: not registered for building previously, ".
-			  "but processing anyway.\n";
-	}
-	elsif ($state eq "Uploaded") {
-		print "$name: Warning: marked as uploaded previously, ".
-			  "but processing anyway.\n";
-	}
-	elsif ($state eq "Dep-Wait") {
-		print "$name: Warning: marked as waiting for dependencies, ".
-			  "but processing anyway.\n";
-	}
-	elsif ($state eq "BD-Uninstallable") {
-		print "$name: Warning: marked as having uninstallable build-dependencies, ".
-			  "but processing anyway.\n";
+	if (isin($state, qw<Needs-Build Uploaded Dep-Wait BD-Uninstallable>)) {
+		print "add_one_failed: $name: Warning: not registered for building previously (but $state), processing anyway.\n";
 	}
 	elsif ($state eq "Failed") {
 		print "$name: already registered as failed; will append new message\n"
@@ -845,9 +798,9 @@ sub add_one_failed {
 }
 
 sub add_one_notforus {
-	my $name = shift;
-	my $version = shift;
-	my $pkg = get_source_info($name);
+	my $pkg = shift;
+	my $state = $pkg->{'state'};
+        my $name = $pkg->{'package'};
 
 	if ($pkg->{'state'} eq 'Not-For-Us') {
 		# reset Not-For-Us state in case it's called twice; this is
@@ -894,16 +847,9 @@ sub add_one_notforus {
 }
 
 sub add_one_needsbuild {
-	my $name = shift;
-	my $version = shift;
-	my $state;
-	my $pkg = get_source_info($name);
-
-	if (!defined($pkg)) {
-		print "$name: not registered; can't give back.\n";
-		return;
-	}
-	$state = $pkg->{'state'};
+	my $pkg = shift;
+	my $state = $pkg->{'state'};
+        my $name = $pkg->{'package'};
 
 	if ($state eq "BD-Uninstallable") {
 		if ($opt_override) {
@@ -952,11 +898,6 @@ sub add_one_needsbuild {
 			  "$pkg->{'builder'}. Skipping.\n";
 		return;
 	}
-	if (!pkg_version_eq($pkg, $version)) {
-		print "$name: version mismatch ($pkg->{'version'} registered). ",
-			  "Skipping.\n";
-		return;
-	}
 	if (!defined $distributions{$distribution}{noadw}) {
 		change_state( \$pkg, 'BD-Uninstallable' );
 		$pkg->{'bd_problem'} = "Installability of build dependencies not tested yet";
@@ -973,21 +914,8 @@ sub add_one_needsbuild {
 sub set_one_binnmu {
 	my $name = shift;
 	my $version = shift;
-	my $pkg = get_source_info($name);
-	my $state;
-
-	if (!defined($pkg)) {
-		print "$name: not registered; can't register for binNMU.\n";
-		return;
-	}
-	my $db_ver = $pkg->{'version'};
-
-	if (!version_eq($db_ver, $version)) {
-		print "$name: version mismatch ($db_ver registered). ",
-			  "Skipping.\n";
-		return;
-	}
-	$state = $pkg->{'state'};
+	my $pkg = shift;
+	my $state = $pkg->{'state'};
 
 	if (defined $pkg->{'binary_nmu_version'}) {
 		if ($binNMUver == 0) {
@@ -1051,17 +979,10 @@ sub set_one_binnmu {
 }
 
 sub set_one_buildpri {
-	my $name = shift;
-	my $version = shift;
 	my $key = shift;
-	my $pkg = get_source_info($name);
-	my $state;
-
-	if (!defined($pkg)) {
-		print "$name: not registered; can't set priority.\n";
-		return;
-	}
-	$state = $pkg->{'state'};
+	my $pkg = shift;
+	my $state = $pkg->{'state'};
+        my $name = $pkg->{'package'};
 
 	if ($state eq "Not-For-Us") {
 		print "$name: not suitable for this architecture. Skipping.\n";
@@ -1070,31 +991,19 @@ sub set_one_buildpri {
 		print "$name: failed previously and doesn't need building. Skipping.\n";
 		return;
         }
-	if (!pkg_version_eq($pkg, $version)) {
-		print "$name: version mismatch ($pkg->{'version'} registered). ",
-			  "Skipping.\n";
-		return;
-	}
-	if ( $build_priority == 0 ) {
-		delete $pkg->{$key};
-	} else {
+	if ( $build_priority ) {
 		$pkg->{$key} = $build_priority;
+	} else {
+		delete $pkg->{$key};
 	}
 	update_source_info($pkg);
 	print "$name: set to build priority $build_priority\n" if $verbose;
 }
 
 sub add_one_depwait {
-	my $name = shift;
-	my $version = shift;
-	my $state;
-	my $pkg = get_source_info($name);
-
-	if (!defined($pkg)) {
-		print "$name: not registered yet.\n";
-		return;
-	}
-	$state = $pkg->{'state'};
+	my $pkg = shift;
+	my $state = $pkg->{'state'};
+        my $name = $pkg->{'package'};
 
 	if ($state eq "Dep-Wait") {
 		print "$name: merging with previously registered dependencies\n";
@@ -1104,35 +1013,13 @@ sub add_one_depwait {
 		print "$name: Warning: not registered for building previously, ".
 			  "but processing anyway.\n";
 	}
-	elsif ($state eq "Not-For-Us") {
-		print "$name: not suitable for this architecture anyway. Skipping.\n";
-		return;
-	}
-	elsif ($state eq "Failed-Removed") {
-		print "$name: failed previously and doesn't need building. Skipping.\n";
-		return;
-	}
-	elsif ($state eq "Installed") {
-		print "$name: Is already installed in archive. Skipping.\n";
-		return;
-	}
-	elsif ($state eq "Uploaded") {
-		print "$name: Is already uploaded. Skipping.\n";
-		return;
-	}
-	elsif ($pkg->{'builder'} &&
-		   $user ne $pkg->{'builder'}) {
-		print "$name: not taken by you, but by ".
-			  "$pkg->{'builder'}. Skipping.\n";
-		return;
-	}
-	elsif ( !pkg_version_eq($pkg,$version)) {
-		print "$name: version mismatch ".
-			  "($pkg->{'version'} ".
-			  "by $pkg->{'builder'})\n";
-		return;
-	}
-	elsif ($fail_reason =~ /^\s*$/ ||
+
+	if (isin( $state, qw<Installed Not-For-Us>)) {
+            print "add_one_depwait: $name: skiping in state $state\n";
+            return;
+        }
+        
+	if ($fail_reason =~ /^\s*$/ ||
 		   !parse_deplist( $fail_reason, 1 )) {
 		print "$name: Bad dependency list\n";
 		return;
@@ -1146,26 +1033,18 @@ sub add_one_depwait {
 		$deplist->{$_} = $new_deplist->{$_};
 	}
 	$pkg->{'depends'} = build_deplist($deplist);
-	log_ta( $pkg, "--dep-wait" );
-	update_source_info($pkg);
-	print "$name: registered as waiting for dependencies\n" if $verbose;
+	log_ta( $pkg, "--dep-wait" ) unless $simulate;
+	update_source_info($pkg) unless $simulate;
+	print "$name: registered as waiting for dependencies\n" if $verbose || $simulate;
 }
 
 sub set_one_update {
-	my $name = shift;
-	my $version = shift;
-	my $pkg = get_source_info($name);
-
-	if (!defined($pkg)) {
-		print "$name: not registered yet.\n";
-		return;
-	}
+	my $pkg = shift;
         $pkg->{'version'} =~ s/\+b[0-9]+$//;
 
 	log_ta( $pkg, "--update" );
 	update_source_info($pkg);
 }
-
 
 # for sorting priorities and sections
 BEGIN {
@@ -1770,6 +1649,7 @@ sub parse_deplist {
     my $verify = shift;
     my %result;
     
+    return $verify ? 0 : \%result unless $deps;
     foreach (split( /\s*,\s*/, $deps )) {
         if ($verify) {
             # verification requires > starting prompts, no | crap
