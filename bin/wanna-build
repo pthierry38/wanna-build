@@ -1295,15 +1295,15 @@ Text could contain further %. To start with !, use %!
 
 sub list_packages {
 	my $state = shift;
-	my( $name, $pkg, @list );
+	my @list;
 	my $cnt = 0;
 	my %scnt;
 	my $ctime = time;
 
- 	my $db = get_all_source_info(state => $state, user => $user, list_min_age => $list_min_age);
-	foreach $name (keys %$db) {
-		next if $name =~ /^_/;
-		push @list, calculate_prio($db->{$name});
+ 	my $db = get_all_source_info(state => $state, user => $user, list_min_age => $list_min_age, multisuite => 1);
+	foreach my $key (keys %$db) {
+		next if $key =~ /^_/;
+		push @list, calculate_prio($db->{$key});
 	}
 
         # filter components
@@ -1317,7 +1317,7 @@ sub list_packages {
         $printformat ||= $yamlmap->{"format"}{"default"}{"default"};
         undef $printformat if ($ownprintformat && $ownprintformat eq 'none');
 
-	foreach $pkg (sort sort_list_func @list) {
+	foreach my $pkg (sort sort_list_func @list) {
                 no warnings;
                 if ($printformat) {
                     print print_format($printformat, $pkg, {'cnt' => $cnt, 'scnt' => \%scnt})."\n";
@@ -2066,7 +2066,20 @@ sub get_all_source_info {
 		push @args, -$options{list_min_age} . " days";
 	}
 
-	my $db = $dbh->selectall_hashref($q, 'package', undef, @args);
+	my $db;
+        if (($options{multisuite}) && (!$distribution || $distribution =~ / /)) {
+            # return packages in multiple suites - only for those functions marked as clean for that api change
+            $db = $dbh->selectall_hashref($q, [qw<package distribution>], undef, @args);
+            my $dbk = {};
+            foreach my $p ( keys %$db ) {
+                foreach my $d (keys %{$db->{$p}}) {
+                    $dbk->{"$p/$d"} = $db->{$p}->{$d};
+                }
+            }
+            $db = $dbk;
+        } else {
+            $db = $dbh->selectall_hashref($q, [qw<package>], undef, @args);
+        }
 	return $db;
 }
 
