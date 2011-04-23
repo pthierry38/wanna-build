@@ -456,7 +456,8 @@ BEGIN {
         'set-built'     => { 'builder' => 1, to => 'Built', action => 'built', 'from' => [qw<Building Build-Attempted>]},
         'set-attempted' => { 'builder' => 1, to => 'Build-Attempted', action => 'attempted', 'from' => [qw<Building Build-Attempted>]},
         'set-uploaded'  => { 'builder' => 1, 'noversion' => 1 },
-        'set-dep-wait'  => { 'builder' => 1, },
+        'set-failed'    => { 'builder' => 1, to => 'Failed', action => 'failed', from => [qw<Building Built Build-Attempted Dep-Wait Failed>], warnfrom => [qw<Needs-Build Uploaded Dep-Wait BD-Uninstallable>], },
+        'set-dep-wait'  => { 'builder' => 1, warnfrom => [qw<Needs-Build Failed BD-Uninstallable>], },
         'set-update'    => { 'noversion' => 1, }
 
     };
@@ -492,32 +493,36 @@ sub add_packages {
         }
         if (!($actions->{$op_mode}) || !($actions->{$op_mode}->{'noversion'})) {
             if ( !pkg_version_eq($pkg,$version)) {
-                print "$pkg->{package}: version mismatch ($pkg->{'version'} by $pkg->{'builder'})\n";
+                print "$pkg->{package}: version mismatch ($pkg->{'version'}";
+                print " by $pkg->{'builder'}" if $pkg->{'builder'};
+                print ")\n";
                 next;
             }
         }
 
         if ($actions->{$op_mode} && $actions->{$op_mode}->{'from'}) {
-            if (!isin($pkg->{'state'}, @{$actions->{$op_mode}->{'from'}})) {
-                print "$name: skiping: state is $pkg->{'state'}, not in ".join(", ",@{$actions->{$op_mode}->{'from'}})."\n";
+            if (!isin($pkg->{'state'}, @{$actions->{$op_mode}->{'from'}}, @{$actions->{$op_mode}->{'warnfrom'}})) {
+                print "$name: skiping: state is $pkg->{'state'}, not in ".join(", ",@{$actions->{$op_mode}->{'from'}}, @{$actions->{$op_mode}->{'warnfrom'}})."\n";
                 next;
+            }
+        }
+        if ($actions->{$op_mode} && $actions->{$op_mode}->{'warnfrom'}) {
+            if (isin($pkg->{'state'}, @{$actions->{$op_mode}->{'warnfrom'}})) {
+                print "$name: warning: state is $pkg->{'state'}, processing anyways.\n";
             }
         }
 
         if ($op_mode eq "set-building") {
             add_one_building( $name, $version, $pkg );
         }
-        elsif ($op_mode eq "set-built") {
-            1;
-        }
-        elsif ($op_mode eq "set-attempted") {
-            1;
-        }
         elsif ($op_mode eq "set-uploaded") {
             add_one_uploaded( $name, $version, $pkg );
         }
         elsif ($op_mode eq "set-failed") {
-            add_one_failed( $pkg );
+	    print "$pkg->{'package'}: already registered as failed; will append new message\n" if $pkg->{'state'} eq "Failed";
+	    $pkg->{'builder'} = $user;
+	    $pkg->{'failed'} .= "\n" if $pkg->{'failed'};
+	    $pkg->{'failed'} .= $fail_reason;
         }
         elsif ($op_mode eq "set-not-for-us") {
             add_one_notforus( $pkg );
@@ -538,7 +543,10 @@ sub add_packages {
             set_one_binnmu( $name, $version, $pkg );
         }
         elsif ($op_mode eq "set-update") {
-            set_one_update( $pkg );
+            $pkg->{'version'} =~ s/\+b[0-9]+$//;
+
+	    log_ta( $pkg, "--update" );
+	    update_source_info($pkg);
         }
 
         if ($actions->{$op_mode} && $actions->{$op_mode}->{'action'} && $actions->{$op_mode}->{'to'}) {
@@ -734,13 +742,11 @@ sub add_one_uploaded {
 	if ($pkg->{'binary_nmu_version'} ) {
 		my $nmuver = binNMU_version($pkgver, $pkg->{'binary_nmu_version'});
 		if (!version_eq( $nmuver, $version )) {
-			print "$name: version mismatch ($nmuver registered). ",
-				  "Skipping.\n";
+			print "$name: version mismatch ($nmuver registered). Skipping.\n";
 			return;
 		}
 	} elsif (!version_eq($pkgver, $version)) {
-		print "$name: version mismatch ($pkg->{'version'} registered). ",
-			  "Skipping.\n";
+		print "$name: version mismatch ($pkg->{'version'} registered). Skipping.\n";
 		return;
 	}
 
@@ -748,48 +754,6 @@ sub add_one_uploaded {
 	log_ta( $pkg, "--uploaded" );
 	update_source_info($pkg);
 	print "$name: registered as uploaded\n" if $verbose;
-}
-
-sub add_one_failed {
-	my $pkg = shift;
-	my $state = $pkg->{'state'};
-        my $name = $pkg->{'package'};
-
-	if ($state eq "Not-For-Us") {
-		print "$name: not suitable for this architecture anyway. Skipping.\n";
-		return;
-	}
-	elsif ($state eq "Failed-Removed") {
-		print "$name: failed previously and doesn't need building. Skipping.\n";
-		return;
-	}
-	elsif ($state eq "Installed") {
-		print "$name: Is already installed in archive. Skipping.\n";
-		return;
-	}
-	elsif ($pkg->{'builder'} &&
-		   (($user ne $pkg->{'builder'}) &&
-		    !($pkg->{'builder'} =~ /^(\w+)-\w+/ && $1 eq $user))) {
-		print "$name: not taken by you, but by ".
-			  "$pkg->{'builder'}. Skipping.\n";
-		return;
-	}
-
-	if (isin($state, qw<Needs-Build Uploaded Dep-Wait BD-Uninstallable>)) {
-		print "add_one_failed: $name: Warning: not registered for building previously (but $state), processing anyway.\n";
-	}
-	elsif ($state eq "Failed") {
-		print "$name: already registered as failed; will append new message\n"
-			if $fail_reason;
-	}
-
-	change_state( \$pkg, 'Failed' );
-	$pkg->{'builder'} = $user;
-	$pkg->{'failed'} .= "\n" if $pkg->{'failed'};
-	$pkg->{'failed'} .= $fail_reason;
-	log_ta( $pkg, "--failed" );
-	update_source_info($pkg);
-	print "$name: registered as failed\n" if $verbose;
 }
 
 sub add_one_notforus {
@@ -893,12 +857,7 @@ sub add_one_needsbuild {
 			  "$pkg->{'builder'}. Skipping.\n";
 		return;
 	}
-	if (!defined $distributions{$distribution}{noadw}) {
-		change_state( \$pkg, 'BD-Uninstallable' );
-		$pkg->{'bd_problem'} = "Installability of build dependencies not tested yet";
-	} else {
-		change_state( \$pkg, 'Needs-Build' );
-	}
+	change_state( \$pkg, 'BD-Uninstallable' );
 	$pkg->{'builder'} = undef;
 	$pkg->{'depends'} = undef;
 	log_ta( $pkg, "--give-back" );
@@ -928,11 +887,7 @@ sub set_one_binnmu {
 			$pkg->{'binary_nmu_changelog'} = $fail_reason;
 			$pkg->{'notes'} = 'out-of-date';
                         delete $pkg->{'buildpri'};
-			if (defined $distributions{$distribution}{noadw}) {
-				change_state( \$pkg, 'Installed' );
-			} else {
-				change_state( \$pkg, 'BD-Uninstallable' );
-			}
+			change_state( \$pkg, 'BD-Uninstallable' );
 		}
 		log_ta( $pkg, "--binNMU" );
 		update_source_info($pkg);
@@ -954,14 +909,7 @@ sub set_one_binnmu {
 		return;
 	}
 
-	if (!defined $distributions{$distribution}{noadw}) {
-		change_state( \$pkg, 'BD-Uninstallable' );
-		$pkg->{'bd_problem'} = "Installability of build dependencies not tested yet";
-	}
-	else
-	{
-		change_state( \$pkg, 'Needs-Build' );
-	}
+	change_state( \$pkg, 'BD-Uninstallable' );
 	delete $pkg->{'builder'};
 	delete $pkg->{'depends'};
 	$pkg->{'binary_nmu_version'} = $binNMUver;
@@ -976,16 +924,8 @@ sub set_one_binnmu {
 sub set_one_buildpri {
 	my $key = shift;
 	my $pkg = shift;
-	my $state = $pkg->{'state'};
         my $name = $pkg->{'package'};
 
-	if ($state eq "Not-For-Us") {
-		print "$name: not suitable for this architecture. Skipping.\n";
-		return;
-	} elsif ($state eq "Failed-Removed") {
-		print "$name: failed previously and doesn't need building. Skipping.\n";
-		return;
-        }
 	if ( $build_priority ) {
 		$pkg->{$key} = $build_priority;
 	} else {
@@ -1004,11 +944,6 @@ sub add_one_depwait {
 		print "$name: merging with previously registered dependencies\n";
 	}
 	
-	if (isin( $state, qw(Needs-Build Failed BD-Uninstallable))) {
-		print "$name: Warning: not registered for building previously, ".
-			  "but processing anyway.\n";
-	}
-
 	if (isin( $state, qw<Installed Not-For-Us>)) {
             print "add_one_depwait: $name: skiping in state $state\n";
             return;
@@ -1033,13 +968,6 @@ sub add_one_depwait {
 	print "$name: registered as waiting for dependencies\n" if $verbose || $simulate;
 }
 
-sub set_one_update {
-	my $pkg = shift;
-        $pkg->{'version'} =~ s/\+b[0-9]+$//;
-
-	log_ta( $pkg, "--update" );
-	update_source_info($pkg);
-}
 
 # for sorting priorities and sections
 BEGIN {
@@ -1563,6 +1491,7 @@ sub change_state {
 	my $newstate = shift;
 	my $state = \$pkg->{'state'};
 	
+        $newstate = 'Needs-Build' if $newstate eq 'BD-Uninstallable' && $distributions{$distribution}{noadw};
 	return if defined($$state) and $$state eq $newstate;
         $pkg->{'previous_state'} = $$state if defined($$state);
 	$pkg->{'state_change'} = $curr_date;
@@ -1575,9 +1504,8 @@ sub change_state {
 			($pkg->{'old_failed'} // "");
 		delete $pkg->{'failed'};
 	}
-	if (defined($$state) and $$state eq 'BD-Uninstallable') {
-		delete $pkg->{'bd_problem'};
-	}
+	delete $pkg->{'bd_problem'} if ($$state//"") eq 'BD-Uninstallable';
+        $pkg->{'bd_problem'} = "Installability of build dependencies not tested yet" if $newstate eq 'BD-Uninstallable';
 	$$state = $newstate;
 }
 
