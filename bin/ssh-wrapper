@@ -11,6 +11,7 @@ if [ "$bn" != "wanna-build" ]; then
 	exit 1
 fi
 
+echo -- $@ | grep -q -- --dist=.*-security || \
 logger -i -p user.debug -t ssh-wrapper -- $@
 
 shift
