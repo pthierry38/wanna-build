@@ -455,11 +455,10 @@ BEGIN {
         'set-building'  => { 'noversion' => 1, 'nopkgdef' => 1, },
         'set-built'     => { 'builder' => 1, to => 'Built', action => 'built', 'from' => [qw<Building Build-Attempted>]},
         'set-attempted' => { 'builder' => 1, to => 'Build-Attempted', action => 'attempted', 'from' => [qw<Building Build-Attempted>]},
-        'set-uploaded'  => { 'builder' => 1, 'noversion' => 1 },
+        'set-uploaded'  => { 'builder' => 1, to => 'Uploaded', action => 'uploaded', 'from' => [qw<Building Built Build-Attempted>], binversion => 1, },
         'set-failed'    => { 'builder' => 1, to => 'Failed', action => 'failed', from => [qw<Building Built Build-Attempted Dep-Wait Failed>], warnfrom => [qw<Needs-Build Uploaded Dep-Wait BD-Uninstallable>], },
         'set-dep-wait'  => { 'builder' => 1, warnfrom => [qw<Needs-Build Failed BD-Uninstallable>], },
         'set-update'    => { 'noversion' => 1, }
-
     };
 }
 
@@ -492,8 +491,9 @@ sub add_packages {
             }
         }
         if (!($actions->{$op_mode}) || !($actions->{$op_mode}->{'noversion'})) {
-            if ( !pkg_version_eq($pkg,$version)) {
-                print "$pkg->{package}: version mismatch ($pkg->{'version'}";
+            my $nmuver = binNMU_version($pkg->{version}, $pkg->{'binary_nmu_version'});
+            if ((!pkg_version_eq($pkg,$version) || $actions->{$op_mode}->{'binversion'}) && !version_eq( $nmuver, $version )) {
+                print "$pkg->{package}: version mismatch ($nmuver";
                 print " by $pkg->{'builder'}" if $pkg->{'builder'};
                 print ")\n";
                 next;
@@ -514,9 +514,6 @@ sub add_packages {
 
         if ($op_mode eq "set-building") {
             add_one_building( $name, $version, $pkg );
-        }
-        elsif ($op_mode eq "set-uploaded") {
-            add_one_uploaded( $name, $version, $pkg );
         }
         elsif ($op_mode eq "set-failed") {
 	    print "$pkg->{'package'}: already registered as failed; will append new message\n" if $pkg->{'state'} eq "Failed";
@@ -718,43 +715,6 @@ sub add_one_building {
 	}
 }
 
-
-sub add_one_uploaded {
-	my $name = shift;
-	my $version = shift;
-	my $pkg = shift;
-
-	if ($pkg->{'state'} eq "Uploaded" &&
-		pkg_version_eq($pkg,$version)) {
-		print "$name: already uploaded\n";
-		return;
-	}
-	if (!isin( $pkg->{'state'}, qw(Building Built Build-Attempted))) {
-		print "$name: not taken for building (state is $pkg->{'state'}). ",
-			  "Skipping.\n";
-		return;
-	}
-	# strip epoch -- buildd-uploader used to go based on the filename.
-	# (to remove at some point)
-	my $pkgver;
-	($pkgver = $pkg->{'version'}) =~ s/^\d+://;
-	$version =~ s/^\d+://; # for command line use
-	if ($pkg->{'binary_nmu_version'} ) {
-		my $nmuver = binNMU_version($pkgver, $pkg->{'binary_nmu_version'});
-		if (!version_eq( $nmuver, $version )) {
-			print "$name: version mismatch ($nmuver registered). Skipping.\n";
-			return;
-		}
-	} elsif (!version_eq($pkgver, $version)) {
-		print "$name: version mismatch ($pkg->{'version'} registered). Skipping.\n";
-		return;
-	}
-
-	change_state( \$pkg, 'Uploaded' );
-	log_ta( $pkg, "--uploaded" );
-	update_source_info($pkg);
-	print "$name: registered as uploaded\n" if $verbose;
-}
 
 sub add_one_notforus {
 	my $pkg = shift;

@@ -170,7 +170,8 @@ sub binNMU_version {
 	my $v = shift;
 	my $binNMUver = shift;
 
-	return "$v+b$binNMUver";
+	return "$v+b$binNMUver" if $binNMUver;
+        return $v;
 }
 
 
