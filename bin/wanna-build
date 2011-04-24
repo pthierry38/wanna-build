@@ -458,7 +458,8 @@ BEGIN {
         'set-uploaded'  => { 'builder' => 1, to => 'Uploaded', action => 'uploaded', 'from' => [qw<Building Built Build-Attempted>], binversion => 1, },
         'set-failed'    => { 'builder' => 1, to => 'Failed', action => 'failed', from => [qw<Building Built Build-Attempted Dep-Wait Failed>], warnfrom => [qw<Needs-Build Uploaded Dep-Wait BD-Uninstallable>], },
         'set-dep-wait'  => { 'builder' => 1, warnfrom => [qw<Needs-Build Failed BD-Uninstallable>], },
-        'set-update'    => { 'noversion' => 1, }
+        'set-update'    => { 'noversion' => 1, },
+        'set-needs-build' => { builder => 1, to => 'BD-Uninstallable', action => 'give-back'},
     };
 }
 
@@ -485,7 +486,9 @@ sub add_packages {
             }
         }
         if ($actions->{$op_mode} && $actions->{$op_mode}->{'builder'}) {
-            if ($pkg->{'builder'} && $user ne $pkg->{'builder'}) {
+            if (($pkg->{'builder'} && $user ne $pkg->{'builder'}) &&
+		!($pkg->{'builder'} =~ /^(\w+)-\w+/ && $1 eq $user) &&
+		!$opt_override) {
                 print "$pkg->{'package'}: not taken by you, but by $pkg->{'builder'}. Skipping.\n";
                 next;
             }
@@ -525,7 +528,46 @@ sub add_packages {
             add_one_notforus( $pkg );
         }
         elsif ($op_mode eq "set-needs-build") {
-            add_one_needsbuild( $pkg );
+	    my $state = $pkg->{'state'};
+
+	    if ($state eq "BD-Uninstallable") {
+            	if ($opt_override) {
+            		print "$name: Forcing uninstallability mark to be removed. This is not permanent and might be reset with the next trigger run\n";
+
+            		change_state( \$pkg, 'Needs-Build' );
+            		delete $pkg->{'builder'};
+            		delete $pkg->{'depends'};
+            		log_ta( $pkg, "--give-back" );
+            		update_source_info($pkg);
+            		print "$name: given back\n" if $verbose;
+            		next;
+            	}
+            	else {
+            		print "$name: has uninstallable build-dependencies. Skipping\n  (use --override to clear dependency list and give back anyway)\n";
+            		next;
+            	}
+            }
+            elsif ($state eq "Dep-Wait") {
+            	if ($opt_override) {
+            		print "$name: Forcing source dependency list to be cleared\n";
+            	}
+            	else {
+            		print "$name: waiting for source dependencies. Skipping\n  (use --override to clear dependency list and give back anyway)\n";
+            		next;
+            	}
+            }
+            elsif (!isin( $state, qw(Building Built Build-Attempted))) {
+            	print "$name: not taken for building (state is $state).";
+            	if ($opt_override) {
+            		print "\n$name: Forcing give-back\n";
+            	}
+            	else {
+            		print " Skipping.\n";
+            		next;
+            	}
+            }
+            $pkg->{'builder'} = undef;
+            $pkg->{'depends'} = undef;
         }
         elsif ($op_mode eq "set-dep-wait") {
             add_one_depwait( $pkg );
@@ -763,66 +805,6 @@ sub add_one_notforus {
 			if $conf::notforus_maint;
 	}
 	update_source_info($pkg);
-}
-
-sub add_one_needsbuild {
-	my $pkg = shift;
-	my $state = $pkg->{'state'};
-        my $name = $pkg->{'package'};
-
-	if ($state eq "BD-Uninstallable") {
-		if ($opt_override) {
-			print "$name: Forcing uninstallability mark to be removed. This is not permanent and might be reset with the next trigger run\n";
-
-			change_state( \$pkg, 'Needs-Build' );
-			delete $pkg->{'builder'};
-			delete $pkg->{'depends'};
-			log_ta( $pkg, "--give-back" );
-			update_source_info($pkg);
-			print "$name: given back\n" if $verbose;
-			return;
-		}
-		else {
-			print "$name: has uninstallable build-dependencies. Skipping\n",
-				  "  (use --override to clear dependency list and ",
-				  "give back anyway)\n";
-			return;
-		}
-	}
-	elsif ($state eq "Dep-Wait") {
-		if ($opt_override) {
-			print "$name: Forcing source dependency list to be cleared\n";
-		}
-		else {
-			print "$name: waiting for source dependencies. Skipping\n",
-				  "  (use --override to clear dependency list and ",
-				  "give back anyway)\n";
-			return;
-		}
-	}
-	elsif (!isin( $state, qw(Building Built Build-Attempted))) {
-		print "$name: not taken for building (state is $state).";
-		if ($opt_override) {
-			print "\n$name: Forcing give-back\n";
-		}
-		else {
-			print " Skipping.\n";
-			return;
-		}
-	}
-	if (defined ($pkg->{'builder'}) && $user ne $pkg->{'builder'} &&
-		!($pkg->{'builder'} =~ /^(\w+)-\w+/ && $1 eq $user) &&
-		!$opt_override) {
-		print "$name: not taken by you, but by ".
-			  "$pkg->{'builder'}. Skipping.\n";
-		return;
-	}
-	change_state( \$pkg, 'BD-Uninstallable' );
-	$pkg->{'builder'} = undef;
-	$pkg->{'depends'} = undef;
-	log_ta( $pkg, "--give-back" );
-	update_source_info($pkg);
-	print "$name: given back\n" if $verbose;
 }
 
 sub set_one_binnmu {
