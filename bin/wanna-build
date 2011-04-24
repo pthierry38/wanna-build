@@ -605,17 +605,14 @@ sub add_one_building {
 	$ok = 1;
 	my $pkg = shift;
 	if (defined($pkg)) {
-		if ($pkg->{'state'} eq "Not-For-Us") {
+            my $pkgnack = {
+                'Not-For-Us' => 'not suitable for this architecture',
+                'Dep-Wait' => 'not all source dependencies available yet',
+                'BD-Uninstallable' => 'source dependencies are not installable',
+            };
+		if ($pkgnack->{$pkg->{'state'}}) {
 			$ok = 0;
-			$reason = "not suitable for this architecture";
-		}
-		elsif ($pkg->{'state'} =~ /^Dep-Wait/) {
-			$ok = 0;
-			$reason = "not all source dependencies available yet";
-		}
-		elsif ($pkg->{'state'} =~ /^BD-Uninstallable/) {
-			$ok = 0;
-			$reason = "source dependencies are not installable";
+			$reason = $pkgnack->{$pkg->{'state'}};
 		}
 		elsif ($pkg->{'state'} eq "Uploaded" &&
 			   (version_lesseq($version, $pkg->{'version'}))) {
