@@ -70,7 +70,8 @@ our ($verbose, $mail_logs, $list_order, $list_state,
     $short_date, $list_min_age, $list_max_age, $dbbase, @curr_time,
     $build_priority, %new_vers, $binNMUver, %merge_srcvers, %merge_binsrc,
     $printformat, $ownprintformat, $privmode, $extra_depends, $extra_conflicts,
-    %distributions, %distribution_aliases, $actions
+    %distributions, %distribution_aliases, $actions,
+    $sshwrapper,
     );
 our $Pas = '/org/buildd.debian.org/etc/packages-arch-specific/Packages-arch-specific';
 our $simulate = 0;
@@ -95,7 +96,7 @@ sub _set_mode { $op_mode = "$_[0]" }
 
 sub _option_deprecated { warn "Option $_[0] is deprecated" }
 
-GetOptions(
+my @wannabuildoptions = (
     # this is not supported by all operations (yet)!
     'simulate'      => \$simulate,
     'simulate-edos' => \$simulate_edos,
@@ -160,6 +161,15 @@ GetOptions(
             when ('s') { $distribution = 'stable'; }
             when ('t') { $distribution = 'testing'; }
             when ('u') { $distribution = 'unstable'; }
+
+            if ($distribution eq 'any-priv') {
+                $privmode = 1;
+                $distribution = 'any';
+            }
+            if ($distribution eq 'any-unpriv') {
+                $privmode = 0;
+                $distribution = 'any';
+            }
         }
     },
     'order|O=s' => sub {
@@ -169,13 +179,18 @@ GetOptions(
     },
     'message|m=s'  => \$fail_reason,
     'database|b=s' => sub {
+        # If they didn't specify an arch, try to get it from database name which
+        # is in the form of $arch/build-db
+        # This is for backwards compatibity with older versions that didn't
+        # specify the arch yet.
         warn "database is deprecated, please use 'arch' instead.\n";
-        $conf::dbbase = $_[1];
+        $_[1] =~ m#^([^/]+)#;
+        $arch ||= $1;
     },
     'arch|A=s'     => \$arch,
     'user|U=s'     => \$user,
     'min-age|a=i'       => \$list_min_age,
-    'max-age=i'         => \$list_max_age,
+    'max-age=i'         => sub { $list_min_age = -1 * ($_[1]); },
     'format=s'          => \$printformat,
     'own-format=s'      => \$ownprintformat,
     'Pas=s'             => \$Pas,
@@ -188,8 +203,12 @@ GetOptions(
     'manual-edit'                => \&_set_mode,
     'distribution-architectures' => \&_set_mode,
     'distribution-aliases'       => \&_set_mode,
-) or usage();
-$list_min_age = -1 * $list_max_age if $list_max_age;
+
+    'ssh-wrapper'       => \$sshwrapper,
+    'recorduser'        => \$recorduser,
+    );
+
+GetOptions(@wannabuildoptions) or usage();
 
 my $dbh;
 
@@ -201,14 +220,6 @@ END {
 }
 
 $distribution ||= "sid";
-if ($distribution eq 'any-priv') {
-    $privmode = 1;
-    $distribution = 'any';
-}
-if ($distribution eq 'any-unpriv') {
-    $privmode = 0;
-    $distribution = 'any';
-}
 
 my $schema_suffix = '';
 $recorduser //= (not -t and $user//"" =~ /^buildd_/);
@@ -258,13 +269,6 @@ if ($distribution) {
 if (!isin ( $op_mode, qw(list) ) && ( !$distribution || $distribution =~ /[ ,]/)) {
     die "multiple distributions are only allowed for list";
 }
-
-# If they didn't specify an arch, try to get it from database name which
-# is in the form of $arch/build-db
-# This is for backwards compatibity with older versions that didn't
-# specify the arch yet.
-$conf::dbbase =~ m#^([^/]+)#;
-$arch ||= $1;
 
 # TODO: Check that it's an known arch (for that dist), and give
 # a proper error.
