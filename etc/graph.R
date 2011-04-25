@@ -1,4 +1,4 @@
-arch <- c("amd64", "armel", "i386", "ia64", "kfreebsd-amd64",
+arch <- c("amd64", "armel", "hurd-i386", "i386", "ia64", "kfreebsd-amd64",
 	"kfreebsd-i386", "mips", "mipsel", "powerpc", "s390", "sparc")
 palette(c("black", "turquoise", "red", "OrangeRed", "green3", "cyan", 
 	"blue", "yellow", "magenta",
@@ -14,9 +14,10 @@ readdata <- function (file,start) {
 	ts(as.matrix(data.frame(
 	t[23]/t[24]*100, #amd64
 	t[27]/t[28]*100, #armel
+	t[7]/t[8]*100, #hurd-i386
 	t[9]/t[10]*100, #i386
 	t[11]/t[12]*100, #ia64
-	t[29]/t[30]*100, #fkfreebsd-amd64
+	t[29]/t[30]*100, #kfreebsd-amd64
 	t[31]/t[32]*100, #kfreebsd-i386
 	t[15]/t[16]*100, #mips
 	t[17]/t[18]*100, #mipsel
