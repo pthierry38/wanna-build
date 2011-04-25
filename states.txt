@@ -1,0 +1,100 @@
+====DRAFT====
+
+States a package could be in
+
+After a source package is uploaded (or, equivalently, a binNMU is
+scheduled), the corresponding package in the wanna-build database enters
+into the transient states (or Auto-Not-For-Us, or Installed if the binary
+package is uploaded together with the source package), till it reaches an
+final state.
+
+States are considered different whether they might be changed by software
+depending on other packages or because a buildd pickes it up ("transient
+states"), or whether they are only left by explicit human decision or
+upload of the same package (i.e. change of the source version or the binNMU
+version) ("final states").
+
+
+Transient states
+================
+
+If a package is said to enter the transient states, it is always put to
+needs-build or bd-uninstallable. Even if the package was previously in
+another transient state, it is considered "entering". Upload of a new
+version of a package makes it entering the transient state, as well as
+scheduling an binNMU.
+
+On entering the transient state all temporary build-priorities, extra
+conflicts and depends are removed.
+
+
+needs-build
+bd-uninstallable
+~~~~~~~~~~~~~~~~
+The initial state of any package. Which of the two states is choosen only
+depends on the buildability of the package, and may change often.
+
+building
+~~~~~~~~
+packages from needs-build are picked up from the buildd and move into the
+building state. Packages from building might be given back on problems on
+the buildd itself, and go back into needs-build/bd-uninstallable. Packages
+in building might also short-cut into uploaded, installed or failed (i.e.
+the states built, build-attempted and uploaded are technical spoken
+optional).
+
+built
+~~~~~
+packages are marked built automatically if the buildd is satisfied with the
+build of the package. Built is only reached from building, and exited
+usually to uploaded or installed.
+
+uploaded
+~~~~~~~~
+packages are marked uploaded by buildd-uploader once they are transfered to
+the relevant archive server or upload queue (e.g. ftp-master.d.o).
+
+build-attempted
+~~~~~~~~~~~~~~~
+packages are marked build-attempted automatically if the buildd is not
+satisfied with the build of the package. build-attempted is only reached
+from building, and exited usually to failed (or not at all, i.e. it's quite
+often an de-facto final state).
+
+dep-wait
+~~~~~~~~
+Packages from an transient state could be marked as "dep-wait" if they
+should only be built after an certain version of another package is
+available. This happens usually for binNMUs.
+
+
+
+Final states
+============
+
+Installed
+~~~~~~~~~
+After a package is the same in source and binary version, it is marked as
+Installed. This state is usually left as a new source package is uploaded,
+or a binNMU is scheduled, when the package enters the transient states.
+
+Not-For-Us
+~~~~~~~~~~
+Packages are marked by hand that they shouldn't be built. This state is
+only left by explicit marking a package as for-us, and not when a new
+version is uploaded.
+
+Auto-Not-For-Us
+~~~~~~~~~~~~~~~
+Packages are not to be considered for building due to being marked as such
+in the source package arch list, in the Packages-arch-specific file or if
+all potential binary packages are overwritten by newer arch-all-packages.
+This state is entered directly on upload of an source package, and only
+left with a new version which includes the architecture, or by removing the
+package from Packages-arch-specific.
+
+Failed
+~~~~~~
+packages are marked failed by buildd admins decision usually, if they
+haven't built sucessfully and need an bug fix or porting. This state is
+left with a new source version, and packages enter the transient state.
