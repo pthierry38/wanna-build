@@ -348,6 +348,10 @@ if (isin($op_mode, qw<forget-user merge-v3 import>) && defined @conf::admin_user
 }
 if (!isin($op_mode, qw<distribution-architectures distribution-aliases>)) {
     die "need an architecture" unless $arch;
+    my $rows = $dbh->selectall_hashref('SELECT distribution as d from distribution_architectures where architecture=? and distribution=?', [qw<d>], undef, ($arch, $distribution)) if $distribution;
+    $rows = $dbh->selectall_hashref('SELECT distribution as d from distribution_architectures where architecture=?', [qw<d>], undef, ($arch,)) unless $rows;
+    die "architecture ($arch) does not exist (at least not for $distribution)" if !keys %$rows and $distribution;
+    die "architecture ($arch) does not exist" if !keys %$rows;
 }
 
 	SWITCH: foreach ($op_mode) {
