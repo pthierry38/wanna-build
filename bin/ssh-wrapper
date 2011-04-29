@@ -18,5 +18,5 @@ shift
 
 [ -f "$bin" -a -x "$bin" ] || exit 1
 
-exec $bin $@
+exec $bin --recorduser $@
 
