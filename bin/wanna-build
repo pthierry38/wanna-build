@@ -1561,7 +1561,7 @@ sub build_deplist {
 
 sub filterarch {
     return "" unless $_[0];
-    return Dpkg::Deps::parse($_[0], ("reduce_arch" => 1, "host_arch" => $_[1]))->dump();
+    return Dpkg::Deps::deps_parse($_[0], ("reduce_arch" => 1, "host_arch" => $_[1]))->output();
 }
 
 sub wb_edos_builddebcheck {
@@ -1608,9 +1608,9 @@ sub wb_edos_builddebcheck {
         }   
     }
 
-    print "calling: edos-debcheck $edosoptions < $sourcesfile ".join('', map {" '-base FILE' ".$_ } @$packagefiles)."\n";
+    print "calling: edos-debcheck $edosoptions < $sourcesfile ".join('', map {" -I ".$_ } @$packagefiles)."\n";
     open(my $result_cmd, '-|',
-        "edos-debcheck $edosoptions < $sourcesfile ".join('', map {" '-base FILE' ".$_ } @$packagefiles));
+        "edos-debcheck $edosoptions < $sourcesfile ".join('', map {" -I ".$_ } @$packagefiles));
 
     my $explanation="";
     my $result={};
