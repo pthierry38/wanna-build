@@ -275,7 +275,7 @@ if (!isin ( $op_mode, qw(list) ) && ( ($distribution//"") =~ /[ ,]/)) {
 if ($verbose) {
 	my $version = '$Revision: db181a534e9d $ $Date: 2008/03/26 06:20:22 $ $Author: rmurray $';
 	$version =~ s/(^\$| \$ .*$)//g;
-	print "wanna-build $version for $distribution on $arch\n";
+	print "wanna-build $version for ".($distribution//"sid")." on $arch\n";
 }
 
 if (!@ARGV && !isin( $op_mode, qw(list merge-quinn merge-partial-quinn import export
