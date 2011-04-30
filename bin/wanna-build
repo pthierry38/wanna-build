@@ -170,6 +170,7 @@ my @wannabuildoptions = (
                 $privmode = 0;
                 $distribution = 'any';
             }
+            $privmode = 1 if $distribution =~ /security/;
         }
     },
     'order|O=s' => sub {
@@ -219,10 +220,8 @@ END {
 	}
 }
 
-$distribution ||= "sid";
-
 my $schema_suffix = '';
-if ((isin( $op_mode, qw(list info distribution-architectures distribution-aliases)) && $distribution !~ /security/ && !$recorduser && !($privmode)) || $simulate) {
+if ((isin( $op_mode, qw(list info distribution-architectures distribution-aliases)) && !$recorduser && !$privmode) || $simulate) {
 	$dbh = DBI->connect("DBI:Pg:service=wanna-build") || 
 		die "FATAL: Cannot open database: $DBI::errstr\n";
 	$schema_suffix = '_public';
@@ -257,15 +256,14 @@ foreach my $name (keys %$rows) {
 $distribution = $distribution_aliases{$distribution} if (isin($distribution, keys %distribution_aliases));
 
 $op_mode ||= "set-building";
-undef $distribution if $distribution eq 'any';
 if ($distribution) {
     my @dists = split(/[, ]+/, $distribution);
     foreach my $dist (@dists) {
         die "Bad distribution '$distribution'\n"
-	    if !isin($dist, keys %distributions);
+	    if !isin($dist, keys %distributions, "any");
     }
 }
-if (!isin ( $op_mode, qw(list) ) && ( !$distribution || $distribution =~ /[ ,]/)) {
+if (!isin ( $op_mode, qw(list) ) && ( ($distribution//"") =~ /[ ,]/)) {
     die "multiple distributions are only allowed for list";
 }
 
@@ -348,11 +346,15 @@ if (isin($op_mode, qw<forget-user merge-v3 import>) && defined @conf::admin_user
 }
 if (!isin($op_mode, qw<distribution-architectures distribution-aliases>)) {
     die "need an architecture" unless $arch;
-    my $rows = $dbh->selectall_hashref('SELECT distribution as d from distribution_architectures where architecture=? and distribution=?', [qw<d>], undef, ($arch, $distribution)) if $distribution;
+    my $rows = $dbh->selectall_hashref('SELECT distribution as d from distribution_architectures where architecture=? and distribution=?', [qw<d>], undef, ($arch, $distribution//"sid")) if ($distribution//"") ne 'any';
     $rows = $dbh->selectall_hashref('SELECT distribution as d from distribution_architectures where architecture=?', [qw<d>], undef, ($arch,)) unless $rows;
-    die "architecture ($arch) does not exist (at least not for $distribution)" if !keys %$rows and $distribution;
+    die "architecture ($arch) does not exist (at least not for ".($distribution//"sid").")" if !keys %$rows and $distribution//"sid" ne 'any';
     die "architecture ($arch) does not exist" if !keys %$rows;
 }
+
+my $suite = $distribution;
+$distribution ||='sid';
+undef $distribution if $distribution eq 'any';
 
 	SWITCH: foreach ($op_mode) {
 		/^set-(.+)/ && do {
@@ -413,7 +415,7 @@ if (!isin($op_mode, qw<distribution-architectures distribution-aliases>)) {
 			last SWITCH;
 		};
 		/^distribution-architectures/ && do {
-			show_distribution_architectures();
+			show_distribution_architectures({'suite' => $suite});
 			last SWITCH;
 		};
 		/^distribution-aliases/ && do {
@@ -1950,13 +1952,18 @@ sub get_all_source_info {
 }
 
 sub show_distribution_architectures {
+        my $args = shift;
 	my $q = 'SELECT distribution, spacecat_all(architecture) AS architectures '.
 		'FROM distribution_architectures '.
 		'GROUP BY distribution';
 	my $rows = $dbh->selectall_hashref($q, 'distribution');
-	foreach my $name (keys %$rows) {
+        if ($args->{suite}) {
+            print $rows->{$args->{'suite'}}->{'architectures'}."\n";
+        } else {
+	    foreach my $name (keys %$rows) {
 		print $name.': '.$rows->{$name}->{'architectures'}."\n";
-	}
+	    }
+        }
 }
 
 sub show_distribution_aliases {
