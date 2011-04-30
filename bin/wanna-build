@@ -23,6 +23,8 @@ use strict;
 use warnings;
 use 5.010;
 
+die "wanna-build disabled" if -f "/org/wanna-build/NO-WANNA-BUILD";
+
 package conf;
 
 use vars qw< $basedir $dbbase $transactlog $mailprog $buildd_domain >;
