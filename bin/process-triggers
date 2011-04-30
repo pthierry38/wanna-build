@@ -24,21 +24,13 @@ while [ $work -eq 1 ]
 do
     # No further runs unless at least one signal is found.
     work=0
-    find /org/wanna-build/signals -type f | while read signal
+    find /org/wanna-build/signals -type f | while read signal_file
     do
         # Process it.
         work=1
-        if [ "$(stat -c '%s' $signal)" -eq 0 ]
-        then
-            /org/wanna-build/triggers/trigger.$(basename $signal)
-        else
-            cat $signal | \
-                (while read args
-                 do
-                     /org/wanna-build/triggers/trigger.$(basename $signal) $args
-                 done)
-        fi
-        rm $signal
+        signal=$(basename $signal_file)
+        /org/wanna-build/triggers/trigger.${signal/.?*} ${signal/?*./}
+        rm $signal_file
     done
 done
 

@@ -8,16 +8,25 @@ set -- $SSH_ORIGINAL_COMMAND
 
 shift
 args="$*"
+args=${args//[^a-zA-Z-]/}
+args=${args,,}
+
+# Ignore ftpsync stuff.
+if [ "$args" = "syncall" -o "$args" = "sync:all" ]
+then
+    args=""
+fi
 
 echo "$(date): $trigger_name | $args" >> /org/wanna-build/db/signal.log
 
 if [ ! -z "$args" ]
 then
-    # Append because we might get triggered for multiple suites.
-    # (This is mainly for security currently.)
-    echo $args >> /org/wanna-build/signals/$trigger_name
+    # Pass arguments in the filename because we might get triggered for
+    # multiple suites.  A simple append wouldn't be race-free on the
+    # reader side.
+    touch "/org/wanna-build/signals/${trigger_name}.${args}"
 else
-    touch /org/wanna-build/signals/$trigger_name
+    touch "/org/wanna-build/signals/$trigger_name"
 fi
 
 exit 0
