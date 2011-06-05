@@ -226,6 +226,7 @@ GRANT wb_all TO jwilk GRANTED BY wbadm;
 GRANT wb_all TO kibi GRANTED BY wbadm;
 GRANT wb_all TO kitterman GRANTED BY wbadm;
 GRANT wb_all TO kroeckx GRANTED BY wbadm;
+GRANT wb_all TO luk GRANTED BY wbadm;
 GRANT wb_all TO mehdi GRANTED BY wbadm;
 GRANT wb_all TO nomeata GRANTED BY wbadm;
 GRANT wb_all TO vorlon GRANTED BY wbadm;
