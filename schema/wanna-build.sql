@@ -957,7 +957,8 @@ CREATE TABLE pkg_history (
     "timestamp" timestamp without time zone NOT NULL,
     result character varying NOT NULL,
     build_time integer,
-    disk_space bigint
+    disk_space bigint,
+    builder character varying
 );
 
 
@@ -1084,7 +1085,8 @@ CREATE TABLE pkg_history (
     "timestamp" timestamp without time zone NOT NULL,
     result character varying NOT NULL,
     build_time integer,
-    disk_space bigint
+    disk_space bigint,
+    builder character varying
 );
 
 
@@ -1211,7 +1213,8 @@ CREATE TABLE pkg_history (
     "timestamp" timestamp without time zone NOT NULL,
     result character varying NOT NULL,
     build_time integer,
-    disk_space bigint
+    disk_space bigint,
+    builder character varying
 );
 
 
@@ -1338,7 +1341,8 @@ CREATE TABLE pkg_history (
     "timestamp" timestamp without time zone NOT NULL,
     result character varying NOT NULL,
     build_time integer,
-    disk_space bigint
+    disk_space bigint,
+    builder character varying
 );
 
 
@@ -1465,7 +1469,8 @@ CREATE TABLE pkg_history (
     "timestamp" timestamp without time zone NOT NULL,
     result character varying NOT NULL,
     build_time integer,
-    disk_space bigint
+    disk_space bigint,
+    builder character varying
 );
 
 
@@ -1592,7 +1597,8 @@ CREATE TABLE pkg_history (
     "timestamp" timestamp without time zone NOT NULL,
     result character varying NOT NULL,
     build_time integer,
-    disk_space bigint
+    disk_space bigint,
+    builder character varying
 );
 
 
@@ -1719,7 +1725,8 @@ CREATE TABLE pkg_history (
     "timestamp" timestamp without time zone NOT NULL,
     result character varying NOT NULL,
     build_time integer,
-    disk_space bigint
+    disk_space bigint,
+    builder character varying
 );
 
 
@@ -1846,7 +1853,8 @@ CREATE TABLE pkg_history (
     "timestamp" timestamp without time zone NOT NULL,
     result character varying NOT NULL,
     build_time integer,
-    disk_space bigint
+    disk_space bigint,
+    builder character varying
 );
 
 
@@ -1973,7 +1981,8 @@ CREATE TABLE pkg_history (
     "timestamp" timestamp without time zone NOT NULL,
     result character varying NOT NULL,
     build_time integer,
-    disk_space bigint
+    disk_space bigint,
+    builder character varying
 );
 
 
@@ -2100,7 +2109,8 @@ CREATE TABLE pkg_history (
     "timestamp" timestamp without time zone NOT NULL,
     result character varying NOT NULL,
     build_time integer,
-    disk_space bigint
+    disk_space bigint,
+    builder character varying
 );
 
 
@@ -2227,7 +2237,8 @@ CREATE TABLE pkg_history (
     "timestamp" timestamp without time zone NOT NULL,
     result character varying NOT NULL,
     build_time integer,
-    disk_space bigint
+    disk_space bigint,
+    builder character varying
 );
 
 
@@ -2354,7 +2365,8 @@ CREATE TABLE pkg_history (
     "timestamp" timestamp without time zone NOT NULL,
     result character varying NOT NULL,
     build_time integer,
-    disk_space bigint
+    disk_space bigint,
+    builder character varying
 );
 
 
@@ -2481,7 +2493,8 @@ CREATE TABLE pkg_history (
     "timestamp" timestamp without time zone NOT NULL,
     result character varying NOT NULL,
     build_time integer,
-    disk_space bigint
+    disk_space bigint,
+    builder character varying
 );
 
 
@@ -2689,7 +2702,8 @@ CREATE TABLE pkg_history (
     "timestamp" timestamp without time zone NOT NULL,
     result character varying NOT NULL,
     build_time integer,
-    disk_space bigint
+    disk_space bigint,
+    builder character varying
 );
 
 
@@ -2720,7 +2734,8 @@ CREATE TABLE pkg_history (
     "timestamp" timestamp without time zone NOT NULL,
     result character varying NOT NULL,
     build_time integer,
-    disk_space bigint
+    disk_space bigint,
+    builder character varying
 );
 
 
