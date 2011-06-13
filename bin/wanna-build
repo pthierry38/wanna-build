@@ -2082,8 +2082,8 @@ sub add_user_info {
 
 sub lock_table {
         return if $simulate;
-	$dbh->do('LOCK TABLE ' . table_name() .
-		' IN EXCLUSIVE MODE', undef) or die $dbh->errstr;
+	$dbh->do('SELECT 1 FROM ' . table_name() .
+		' FOR UPDATE', undef) or die $dbh->errstr;
 }
 
 sub parse_argv {
