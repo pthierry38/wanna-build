@@ -2673,6 +2673,16 @@ CREATE VIEW distribution_architectures AS
 ALTER TABLE public.distribution_architectures OWNER TO wbadm;
 
 --
+-- Name: distribution_architectures_statistics; Type: VIEW; Schema: public; Owner: wbadm
+--
+
+CREATE VIEW distribution_architectures_statistics AS
+    SELECT distribution_architectures.distribution, distribution_architectures.architecture, distribution_architectures.needsbuild, distribution_architectures.notinstalled FROM distribution_architectures;
+
+
+ALTER TABLE public.distribution_architectures_statistics OWNER TO wbadm;
+
+--
 -- Name: distributions; Type: TABLE; Schema: public; Owner: wbadm; Tablespace: 
 --
 
@@ -2774,16 +2784,6 @@ CREATE VIEW log AS
 
 
 ALTER TABLE public.log OWNER TO wbadm;
-
---
--- Name: log_v2; Type: VIEW; Schema: public; Owner: pkern
---
-
-CREATE VIEW log_v2 AS
-    (((((((((((((SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, 'alpha'::character varying AS architecture FROM alpha_public.pkg_history UNION ALL SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, 'amd64'::character varying AS architecture FROM amd64_public.pkg_history) UNION ALL SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, 'arm'::character varying AS architecture FROM arm_public.pkg_history) UNION ALL SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, 'armel'::character varying AS architecture FROM armel_public.pkg_history) UNION ALL SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, 'hppa'::character varying AS architecture FROM hppa_public.pkg_history) UNION ALL SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, 'hurd-i386'::character varying AS architecture FROM "hurd-i386_public".pkg_history) UNION ALL SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, 'i386'::character varying AS architecture FROM i386_public.pkg_history) UNION ALL SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, 'ia64'::character varying AS architecture FROM ia64_public.pkg_history) UNION ALL SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, 'kfreebsd-amd64'::character varying AS architecture FROM "kfreebsd-amd64_public".pkg_history) UNION ALL SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, 'kfreebsd-i386'::character varying AS architecture FROM "kfreebsd-i386_public".pkg_history) UNION ALL SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, 'mips'::character varying AS architecture FROM mips_public.pkg_history) UNION ALL SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, 'mipsel'::character varying AS architecture FROM mipsel_public.pkg_history) UNION ALL SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, 'powerpc'::character varying AS architecture FROM powerpc_public.pkg_history) UNION ALL SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, 's390'::character varying AS architecture FROM s390_public.pkg_history) UNION ALL SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, 'sparc'::character varying AS architecture FROM sparc_public.pkg_history ORDER BY 4 DESC;
-
-
-ALTER TABLE public.log_v2 OWNER TO pkern;
 
 SET search_path = s390_public, pg_catalog;
 
@@ -4478,6 +4478,7 @@ REVOKE ALL ON TABLE pkg_history FROM wbadm;
 GRANT ALL ON TABLE pkg_history TO wbadm;
 GRANT ALL ON TABLE pkg_history TO alpha;
 GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
 
 
 --
@@ -5638,6 +5639,16 @@ GRANT SELECT ON TABLE distribution_architectures TO PUBLIC;
 
 
 --
+-- Name: distribution_architectures_statistics; Type: ACL; Schema: public; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE distribution_architectures_statistics FROM PUBLIC;
+REVOKE ALL ON TABLE distribution_architectures_statistics FROM wbadm;
+GRANT ALL ON TABLE distribution_architectures_statistics TO wbadm;
+GRANT SELECT ON TABLE distribution_architectures_statistics TO PUBLIC;
+
+
+--
 -- Name: distributions; Type: ACL; Schema: public; Owner: wbadm
 --
 
@@ -5717,16 +5728,6 @@ REVOKE ALL ON TABLE log FROM PUBLIC;
 REVOKE ALL ON TABLE log FROM wbadm;
 GRANT ALL ON TABLE log TO wbadm;
 GRANT SELECT ON TABLE log TO PUBLIC;
-
-
---
--- Name: log_v2; Type: ACL; Schema: public; Owner: pkern
---
-
-REVOKE ALL ON TABLE log_v2 FROM PUBLIC;
-REVOKE ALL ON TABLE log_v2 FROM pkern;
-GRANT ALL ON TABLE log_v2 TO pkern;
-GRANT SELECT ON TABLE log_v2 TO PUBLIC;
 
 
 SET search_path = s390_public, pg_catalog;
