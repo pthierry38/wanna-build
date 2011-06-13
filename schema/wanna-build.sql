@@ -562,69 +562,8 @@ ALTER FUNCTION public.debversion_smaller(version1 debversion, version2 debversio
 CREATE FUNCTION query_source_package(param_dist character varying, param_srcpkg character varying) RETURNS SETOF record
     LANGUAGE plpgsql
     AS $$
-DECLARE
-	temp_row RECORD;
 BEGIN
-        SELECT 'alpha'::character varying AS arch, * INTO temp_row FROM "alpha_public".packages WHERE distribution = param_dist AND package = param_srcpkg;
-	IF FOUND THEN
-	        RETURN NEXT temp_row;
-	END IF;
-        SELECT 'amd64'::character varying AS arch, * INTO temp_row FROM "amd64_public".packages WHERE distribution = param_dist AND package = param_srcpkg;
-	IF FOUND THEN
-	        RETURN NEXT temp_row;
-	END IF;
-        SELECT 'arm'::character varying AS arch, * INTO temp_row FROM "arm_public".packages WHERE distribution = param_dist AND package = param_srcpkg;
-	IF FOUND THEN
-	        RETURN NEXT temp_row;
-	END IF;
-        SELECT 'armel'::character varying AS arch, * INTO temp_row FROM "armel_public".packages WHERE distribution = param_dist AND package = param_srcpkg;
-	IF FOUND THEN
-	        RETURN NEXT temp_row;
-	END IF;
-        SELECT 'hppa'::character varying AS arch, * INTO temp_row FROM "hppa_public".packages WHERE distribution = param_dist AND package = param_srcpkg;
-	IF FOUND THEN
-	        RETURN NEXT temp_row;
-	END IF;
-        SELECT 'hurd-i386'::character varying AS arch, * INTO temp_row FROM "hurd-i386_public".packages WHERE distribution = param_dist AND package = param_srcpkg;
-	IF FOUND THEN
-	        RETURN NEXT temp_row;
-	END IF;
-        SELECT 'i386'::character varying AS arch, * INTO temp_row FROM "i386_public".packages WHERE distribution = param_dist AND package = param_srcpkg;
-	IF FOUND THEN
-	        RETURN NEXT temp_row;
-	END IF;
-        SELECT 'ia64'::character varying AS arch, * INTO temp_row FROM "ia64_public".packages WHERE distribution = param_dist AND package = param_srcpkg;
-	IF FOUND THEN
-	        RETURN NEXT temp_row;
-	END IF;
-        SELECT 'kfreebsd-amd64'::character varying AS arch, * INTO temp_row FROM "kfreebsd-amd64_public".packages WHERE distribution = param_dist AND package = param_srcpkg;
-	IF FOUND THEN
-	        RETURN NEXT temp_row;
-	END IF;
-        SELECT 'freebsd-i386'::character varying AS arch, * INTO temp_row FROM "kfreebsd-i386_public".packages WHERE distribution = param_dist AND package = param_srcpkg;
-	IF FOUND THEN
-	        RETURN NEXT temp_row;
-	END IF;
-        SELECT 'mips'::character varying AS arch, * INTO temp_row FROM "mips_public".packages WHERE distribution = param_dist AND package = param_srcpkg;
-	IF FOUND THEN
-	        RETURN NEXT temp_row;
-	END IF;
-        SELECT 'mipsel'::character varying AS arch, * INTO temp_row FROM "mipsel_public".packages WHERE distribution = param_dist AND package = param_srcpkg;
-	IF FOUND THEN
-	        RETURN NEXT temp_row;
-	END IF;
-        SELECT 'powerpc'::character varying AS arch, * INTO temp_row FROM "powerpc_public".packages WHERE distribution = param_dist AND package = param_srcpkg;
-	IF FOUND THEN
-	        RETURN NEXT temp_row;
-	END IF;
-        SELECT 's390'::character varying AS arch, * INTO temp_row FROM "s390_public".packages WHERE distribution = param_dist AND package = param_srcpkg;
-	IF FOUND THEN
-	        RETURN NEXT temp_row;
-	END IF;
-        SELECT 'sparc'::character varying AS arch, * INTO temp_row FROM "sparc_public".packages WHERE distribution = param_dist AND package = param_srcpkg;
-	IF FOUND THEN
-	        RETURN NEXT temp_row;
-	END IF;
+	RETURN QUERY SELECT packages.architecture, packages.package, packages.distribution, packages.version::character varying, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM packages_public packages WHERE distribution = param_dist AND package = param_srcpkg;
 END
 $$;
 
@@ -906,20 +845,21 @@ CREATE CAST (text AS public.debversion) WITHOUT FUNCTION AS ASSIGNMENT;
 CREATE CAST (character varying AS public.debversion) WITHOUT FUNCTION AS ASSIGNMENT;
 
 
-SET search_path = alpha, pg_catalog;
+SET search_path = public, pg_catalog;
 
 SET default_tablespace = '';
 
 SET default_with_oids = false;
 
 --
--- Name: packages; Type: TABLE; Schema: alpha; Owner: wbadm; Tablespace: 
+-- Name: packages; Type: TABLE; Schema: public; Owner: wbadm; Tablespace: 
 --
 
 CREATE TABLE packages (
+    architecture character varying NOT NULL,
     package character varying NOT NULL,
     distribution character varying NOT NULL,
-    version character varying,
+    version debversion,
     state character varying,
     section character varying,
     priority character varying,
@@ -940,38 +880,68 @@ CREATE TABLE packages (
     bd_problem text,
     extra_depends character varying,
     extra_conflicts character varying,
-    build_arch_all boolean DEFAULT false NOT NULL
+    build_arch_all boolean DEFAULT false
 );
+
+
+ALTER TABLE public.packages OWNER TO wbadm;
+
+SET search_path = alpha, pg_catalog;
+
+--
+-- Name: packages; Type: VIEW; Schema: alpha; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM public.packages packages WHERE ((packages.architecture)::text = 'alpha'::text);
 
 
 ALTER TABLE alpha.packages OWNER TO wbadm;
 
+SET search_path = public, pg_catalog;
+
 --
--- Name: pkg_history; Type: TABLE; Schema: alpha; Owner: wbadm; Tablespace: 
+-- Name: pkg_history; Type: TABLE; Schema: public; Owner: wbadm; Tablespace: 
 --
 
 CREATE TABLE pkg_history (
+    architecture character varying NOT NULL,
     package character varying NOT NULL,
     distribution character varying NOT NULL,
-    version character varying NOT NULL,
+    version debversion NOT NULL,
     "timestamp" timestamp without time zone NOT NULL,
     result character varying NOT NULL,
     build_time integer,
     disk_space bigint,
     builder character varying
 );
+
+
+ALTER TABLE public.pkg_history OWNER TO wbadm;
+
+SET search_path = alpha, pg_catalog;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: alpha; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'alpha'::text);
 
 
 ALTER TABLE alpha.pkg_history OWNER TO wbadm;
 
+SET search_path = public, pg_catalog;
+
 --
--- Name: transactions; Type: TABLE; Schema: alpha; Owner: wbadm; Tablespace: 
+-- Name: transactions; Type: TABLE; Schema: public; Owner: wbadm; Tablespace: 
 --
 
 CREATE TABLE transactions (
+    architecture character varying,
     package character varying,
     distribution character varying,
-    version character varying,
+    version debversion,
     action character varying,
     prevstate character varying,
     state character varying,
@@ -979,1708 +949,51 @@ CREATE TABLE transactions (
     set_user character varying,
     "time" timestamp without time zone
 );
+
+
+ALTER TABLE public.transactions OWNER TO wbadm;
+
+SET search_path = alpha, pg_catalog;
+
+--
+-- Name: transactions; Type: VIEW; Schema: alpha; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM public.transactions WHERE ((transactions.architecture)::text = 'alpha'::text);
 
 
 ALTER TABLE alpha.transactions OWNER TO wbadm;
 
+SET search_path = public, pg_catalog;
+
 --
--- Name: users; Type: TABLE; Schema: alpha; Owner: wbadm; Tablespace: 
+-- Name: users; Type: TABLE; Schema: public; Owner: wbadm; Tablespace: 
 --
 
 CREATE TABLE users (
+    architecture character varying NOT NULL,
     username character varying NOT NULL,
     distribution character varying NOT NULL,
     last_seen timestamp without time zone
 );
+
+
+ALTER TABLE public.users OWNER TO wbadm;
+
+SET search_path = alpha, pg_catalog;
+
+--
+-- Name: users; Type: VIEW; Schema: alpha; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM public.users WHERE ((users.architecture)::text = 'alpha'::text);
 
 
 ALTER TABLE alpha.users OWNER TO wbadm;
 
-SET search_path = alpha_public, pg_catalog;
-
---
--- Name: packages; Type: VIEW; Schema: alpha_public; Owner: wbadm
---
-
-CREATE VIEW packages AS
-    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM alpha.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE alpha_public.packages OWNER TO wbadm;
-
---
--- Name: pkg_history; Type: VIEW; Schema: alpha_public; Owner: wbadm
---
-
-CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM alpha.pkg_history WHERE ((pkg_history.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE alpha_public.pkg_history OWNER TO wbadm;
-
---
--- Name: transactions; Type: VIEW; Schema: alpha_public; Owner: wbadm
---
-
-CREATE VIEW transactions AS
-    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM alpha.transactions WHERE ((transactions.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE alpha_public.transactions OWNER TO wbadm;
-
---
--- Name: users; Type: VIEW; Schema: alpha_public; Owner: wbadm
---
-
-CREATE VIEW users AS
-    SELECT users.username, users.distribution, users.last_seen FROM alpha.users WHERE ((users.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE alpha_public.users OWNER TO wbadm;
-
-SET search_path = amd64, pg_catalog;
-
---
--- Name: packages; Type: TABLE; Schema: amd64; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE packages (
-    package character varying NOT NULL,
-    distribution character varying NOT NULL,
-    version character varying,
-    state character varying,
-    section character varying,
-    priority character varying,
-    installed_version character varying,
-    previous_state character varying,
-    state_change timestamp without time zone,
-    notes character varying,
-    builder character varying,
-    failed text,
-    old_failed text,
-    binary_nmu_version integer,
-    binary_nmu_changelog character varying,
-    failed_category character varying,
-    permbuildpri integer,
-    buildpri integer,
-    depends character varying,
-    rel character varying,
-    bd_problem text,
-    extra_depends character varying,
-    extra_conflicts character varying,
-    build_arch_all boolean DEFAULT false NOT NULL
-);
-
-
-ALTER TABLE amd64.packages OWNER TO wbadm;
-
---
--- Name: pkg_history; Type: TABLE; Schema: amd64; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE pkg_history (
-    package character varying NOT NULL,
-    distribution character varying NOT NULL,
-    version character varying NOT NULL,
-    "timestamp" timestamp without time zone NOT NULL,
-    result character varying NOT NULL,
-    build_time integer,
-    disk_space bigint,
-    builder character varying
-);
-
-
-ALTER TABLE amd64.pkg_history OWNER TO wbadm;
-
---
--- Name: transactions; Type: TABLE; Schema: amd64; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE transactions (
-    package character varying,
-    distribution character varying,
-    version character varying,
-    action character varying,
-    prevstate character varying,
-    state character varying,
-    real_user character varying,
-    set_user character varying,
-    "time" timestamp without time zone
-);
-
-
-ALTER TABLE amd64.transactions OWNER TO wbadm;
-
---
--- Name: users; Type: TABLE; Schema: amd64; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE users (
-    username character varying NOT NULL,
-    distribution character varying NOT NULL,
-    last_seen timestamp without time zone
-);
-
-
-ALTER TABLE amd64.users OWNER TO wbadm;
-
-SET search_path = amd64_public, pg_catalog;
-
---
--- Name: packages; Type: VIEW; Schema: amd64_public; Owner: wbadm
---
-
-CREATE VIEW packages AS
-    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM amd64.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE amd64_public.packages OWNER TO wbadm;
-
---
--- Name: pkg_history; Type: VIEW; Schema: amd64_public; Owner: wbadm
---
-
-CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM amd64.pkg_history WHERE ((pkg_history.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE amd64_public.pkg_history OWNER TO wbadm;
-
---
--- Name: transactions; Type: VIEW; Schema: amd64_public; Owner: wbadm
---
-
-CREATE VIEW transactions AS
-    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM amd64.transactions WHERE ((transactions.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE amd64_public.transactions OWNER TO wbadm;
-
---
--- Name: users; Type: VIEW; Schema: amd64_public; Owner: wbadm
---
-
-CREATE VIEW users AS
-    SELECT users.username, users.distribution, users.last_seen FROM amd64.users WHERE ((users.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE amd64_public.users OWNER TO wbadm;
-
-SET search_path = arm, pg_catalog;
-
---
--- Name: packages; Type: TABLE; Schema: arm; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE packages (
-    package character varying NOT NULL,
-    distribution character varying NOT NULL,
-    version character varying,
-    state character varying,
-    section character varying,
-    priority character varying,
-    installed_version character varying,
-    previous_state character varying,
-    state_change timestamp without time zone,
-    notes character varying,
-    builder character varying,
-    failed text,
-    old_failed text,
-    binary_nmu_version integer,
-    binary_nmu_changelog character varying,
-    failed_category character varying,
-    permbuildpri integer,
-    buildpri integer,
-    depends character varying,
-    rel character varying,
-    bd_problem text,
-    extra_depends character varying,
-    extra_conflicts character varying,
-    build_arch_all boolean DEFAULT false NOT NULL
-);
-
-
-ALTER TABLE arm.packages OWNER TO wbadm;
-
---
--- Name: pkg_history; Type: TABLE; Schema: arm; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE pkg_history (
-    package character varying NOT NULL,
-    distribution character varying NOT NULL,
-    version character varying NOT NULL,
-    "timestamp" timestamp without time zone NOT NULL,
-    result character varying NOT NULL,
-    build_time integer,
-    disk_space bigint,
-    builder character varying
-);
-
-
-ALTER TABLE arm.pkg_history OWNER TO wbadm;
-
---
--- Name: transactions; Type: TABLE; Schema: arm; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE transactions (
-    package character varying,
-    distribution character varying,
-    version character varying,
-    action character varying,
-    prevstate character varying,
-    state character varying,
-    real_user character varying,
-    set_user character varying,
-    "time" timestamp without time zone
-);
-
-
-ALTER TABLE arm.transactions OWNER TO wbadm;
-
---
--- Name: users; Type: TABLE; Schema: arm; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE users (
-    username character varying NOT NULL,
-    distribution character varying NOT NULL,
-    last_seen timestamp without time zone
-);
-
-
-ALTER TABLE arm.users OWNER TO wbadm;
-
-SET search_path = arm_public, pg_catalog;
-
---
--- Name: packages; Type: VIEW; Schema: arm_public; Owner: wbadm
---
-
-CREATE VIEW packages AS
-    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM arm.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE arm_public.packages OWNER TO wbadm;
-
---
--- Name: pkg_history; Type: VIEW; Schema: arm_public; Owner: wbadm
---
-
-CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM arm.pkg_history WHERE ((pkg_history.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE arm_public.pkg_history OWNER TO wbadm;
-
---
--- Name: transactions; Type: VIEW; Schema: arm_public; Owner: wbadm
---
-
-CREATE VIEW transactions AS
-    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM arm.transactions WHERE ((transactions.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE arm_public.transactions OWNER TO wbadm;
-
---
--- Name: users; Type: VIEW; Schema: arm_public; Owner: wbadm
---
-
-CREATE VIEW users AS
-    SELECT users.username, users.distribution, users.last_seen FROM arm.users WHERE ((users.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE arm_public.users OWNER TO wbadm;
-
-SET search_path = armel, pg_catalog;
-
---
--- Name: packages; Type: TABLE; Schema: armel; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE packages (
-    package character varying NOT NULL,
-    distribution character varying NOT NULL,
-    version character varying,
-    state character varying,
-    section character varying,
-    priority character varying,
-    installed_version character varying,
-    previous_state character varying,
-    state_change timestamp without time zone,
-    notes character varying,
-    builder character varying,
-    failed text,
-    old_failed text,
-    binary_nmu_version integer,
-    binary_nmu_changelog character varying,
-    failed_category character varying,
-    permbuildpri integer,
-    buildpri integer,
-    depends character varying,
-    rel character varying,
-    bd_problem text,
-    extra_depends character varying,
-    extra_conflicts character varying,
-    build_arch_all boolean DEFAULT false NOT NULL
-);
-
-
-ALTER TABLE armel.packages OWNER TO wbadm;
-
---
--- Name: pkg_history; Type: TABLE; Schema: armel; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE pkg_history (
-    package character varying NOT NULL,
-    distribution character varying NOT NULL,
-    version character varying NOT NULL,
-    "timestamp" timestamp without time zone NOT NULL,
-    result character varying NOT NULL,
-    build_time integer,
-    disk_space bigint,
-    builder character varying
-);
-
-
-ALTER TABLE armel.pkg_history OWNER TO wbadm;
-
---
--- Name: transactions; Type: TABLE; Schema: armel; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE transactions (
-    package character varying,
-    distribution character varying,
-    version character varying,
-    action character varying,
-    prevstate character varying,
-    state character varying,
-    real_user character varying,
-    set_user character varying,
-    "time" timestamp without time zone
-);
-
-
-ALTER TABLE armel.transactions OWNER TO wbadm;
-
---
--- Name: users; Type: TABLE; Schema: armel; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE users (
-    username character varying NOT NULL,
-    distribution character varying NOT NULL,
-    last_seen timestamp without time zone
-);
-
-
-ALTER TABLE armel.users OWNER TO wbadm;
-
-SET search_path = armel_public, pg_catalog;
-
---
--- Name: packages; Type: VIEW; Schema: armel_public; Owner: wbadm
---
-
-CREATE VIEW packages AS
-    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM armel.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE armel_public.packages OWNER TO wbadm;
-
---
--- Name: pkg_history; Type: VIEW; Schema: armel_public; Owner: wbadm
---
-
-CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM armel.pkg_history WHERE ((pkg_history.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE armel_public.pkg_history OWNER TO wbadm;
-
---
--- Name: transactions; Type: VIEW; Schema: armel_public; Owner: wbadm
---
-
-CREATE VIEW transactions AS
-    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM armel.transactions WHERE ((transactions.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE armel_public.transactions OWNER TO wbadm;
-
---
--- Name: users; Type: VIEW; Schema: armel_public; Owner: wbadm
---
-
-CREATE VIEW users AS
-    SELECT users.username, users.distribution, users.last_seen FROM armel.users WHERE ((users.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE armel_public.users OWNER TO wbadm;
-
-SET search_path = hppa, pg_catalog;
-
---
--- Name: packages; Type: TABLE; Schema: hppa; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE packages (
-    package character varying NOT NULL,
-    distribution character varying NOT NULL,
-    version character varying,
-    state character varying,
-    section character varying,
-    priority character varying,
-    installed_version character varying,
-    previous_state character varying,
-    state_change timestamp without time zone,
-    notes character varying,
-    builder character varying,
-    failed text,
-    old_failed text,
-    binary_nmu_version integer,
-    binary_nmu_changelog character varying,
-    failed_category character varying,
-    permbuildpri integer,
-    buildpri integer,
-    depends character varying,
-    rel character varying,
-    bd_problem text,
-    extra_depends character varying,
-    extra_conflicts character varying,
-    build_arch_all boolean DEFAULT false NOT NULL
-);
-
-
-ALTER TABLE hppa.packages OWNER TO wbadm;
-
---
--- Name: pkg_history; Type: TABLE; Schema: hppa; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE pkg_history (
-    package character varying NOT NULL,
-    distribution character varying NOT NULL,
-    version character varying NOT NULL,
-    "timestamp" timestamp without time zone NOT NULL,
-    result character varying NOT NULL,
-    build_time integer,
-    disk_space bigint,
-    builder character varying
-);
-
-
-ALTER TABLE hppa.pkg_history OWNER TO wbadm;
-
---
--- Name: transactions; Type: TABLE; Schema: hppa; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE transactions (
-    package character varying,
-    distribution character varying,
-    version character varying,
-    action character varying,
-    prevstate character varying,
-    state character varying,
-    real_user character varying,
-    set_user character varying,
-    "time" timestamp without time zone
-);
-
-
-ALTER TABLE hppa.transactions OWNER TO wbadm;
-
---
--- Name: users; Type: TABLE; Schema: hppa; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE users (
-    username character varying NOT NULL,
-    distribution character varying NOT NULL,
-    last_seen timestamp without time zone
-);
-
-
-ALTER TABLE hppa.users OWNER TO wbadm;
-
-SET search_path = hppa_public, pg_catalog;
-
---
--- Name: packages; Type: VIEW; Schema: hppa_public; Owner: wbadm
---
-
-CREATE VIEW packages AS
-    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM hppa.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE hppa_public.packages OWNER TO wbadm;
-
---
--- Name: pkg_history; Type: VIEW; Schema: hppa_public; Owner: wbadm
---
-
-CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM hppa.pkg_history WHERE ((pkg_history.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE hppa_public.pkg_history OWNER TO wbadm;
-
---
--- Name: transactions; Type: VIEW; Schema: hppa_public; Owner: wbadm
---
-
-CREATE VIEW transactions AS
-    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM hppa.transactions WHERE ((transactions.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE hppa_public.transactions OWNER TO wbadm;
-
---
--- Name: users; Type: VIEW; Schema: hppa_public; Owner: wbadm
---
-
-CREATE VIEW users AS
-    SELECT users.username, users.distribution, users.last_seen FROM hppa.users WHERE ((users.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE hppa_public.users OWNER TO wbadm;
-
-SET search_path = "hurd-i386", pg_catalog;
-
---
--- Name: packages; Type: TABLE; Schema: hurd-i386; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE packages (
-    package character varying NOT NULL,
-    distribution character varying NOT NULL,
-    version character varying,
-    state character varying,
-    section character varying,
-    priority character varying,
-    installed_version character varying,
-    previous_state character varying,
-    state_change timestamp without time zone,
-    notes character varying,
-    builder character varying,
-    failed text,
-    old_failed text,
-    binary_nmu_version integer,
-    binary_nmu_changelog character varying,
-    failed_category character varying,
-    permbuildpri integer,
-    buildpri integer,
-    depends character varying,
-    rel character varying,
-    bd_problem text,
-    extra_depends character varying,
-    extra_conflicts character varying,
-    build_arch_all boolean DEFAULT false NOT NULL
-);
-
-
-ALTER TABLE "hurd-i386".packages OWNER TO wbadm;
-
---
--- Name: pkg_history; Type: TABLE; Schema: hurd-i386; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE pkg_history (
-    package character varying NOT NULL,
-    distribution character varying NOT NULL,
-    version character varying NOT NULL,
-    "timestamp" timestamp without time zone NOT NULL,
-    result character varying NOT NULL,
-    build_time integer,
-    disk_space bigint,
-    builder character varying
-);
-
-
-ALTER TABLE "hurd-i386".pkg_history OWNER TO wbadm;
-
---
--- Name: transactions; Type: TABLE; Schema: hurd-i386; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE transactions (
-    package character varying,
-    distribution character varying,
-    version character varying,
-    action character varying,
-    prevstate character varying,
-    state character varying,
-    real_user character varying,
-    set_user character varying,
-    "time" timestamp without time zone
-);
-
-
-ALTER TABLE "hurd-i386".transactions OWNER TO wbadm;
-
---
--- Name: users; Type: TABLE; Schema: hurd-i386; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE users (
-    username character varying NOT NULL,
-    distribution character varying NOT NULL,
-    last_seen timestamp without time zone
-);
-
-
-ALTER TABLE "hurd-i386".users OWNER TO wbadm;
-
-SET search_path = "hurd-i386_public", pg_catalog;
-
---
--- Name: packages; Type: VIEW; Schema: hurd-i386_public; Owner: wbadm
---
-
-CREATE VIEW packages AS
-    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM "hurd-i386".packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE "hurd-i386_public".packages OWNER TO wbadm;
-
---
--- Name: pkg_history; Type: VIEW; Schema: hurd-i386_public; Owner: wbadm
---
-
-CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM "hurd-i386".pkg_history WHERE ((pkg_history.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE "hurd-i386_public".pkg_history OWNER TO wbadm;
-
---
--- Name: transactions; Type: VIEW; Schema: hurd-i386_public; Owner: wbadm
---
-
-CREATE VIEW transactions AS
-    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM "hurd-i386".transactions WHERE ((transactions.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE "hurd-i386_public".transactions OWNER TO wbadm;
-
---
--- Name: users; Type: VIEW; Schema: hurd-i386_public; Owner: wbadm
---
-
-CREATE VIEW users AS
-    SELECT users.username, users.distribution, users.last_seen FROM "hurd-i386".users WHERE ((users.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE "hurd-i386_public".users OWNER TO wbadm;
-
-SET search_path = i386, pg_catalog;
-
---
--- Name: packages; Type: TABLE; Schema: i386; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE packages (
-    package character varying NOT NULL,
-    distribution character varying NOT NULL,
-    version character varying,
-    state character varying,
-    section character varying,
-    priority character varying,
-    installed_version character varying,
-    previous_state character varying,
-    state_change timestamp without time zone,
-    notes character varying,
-    builder character varying,
-    failed text,
-    old_failed text,
-    binary_nmu_version integer,
-    binary_nmu_changelog character varying,
-    failed_category character varying,
-    permbuildpri integer,
-    buildpri integer,
-    depends character varying,
-    rel character varying,
-    bd_problem text,
-    extra_depends character varying,
-    extra_conflicts character varying,
-    build_arch_all boolean DEFAULT false NOT NULL
-);
-
-
-ALTER TABLE i386.packages OWNER TO wbadm;
-
---
--- Name: pkg_history; Type: TABLE; Schema: i386; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE pkg_history (
-    package character varying NOT NULL,
-    distribution character varying NOT NULL,
-    version character varying NOT NULL,
-    "timestamp" timestamp without time zone NOT NULL,
-    result character varying NOT NULL,
-    build_time integer,
-    disk_space bigint,
-    builder character varying
-);
-
-
-ALTER TABLE i386.pkg_history OWNER TO wbadm;
-
---
--- Name: transactions; Type: TABLE; Schema: i386; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE transactions (
-    package character varying,
-    distribution character varying,
-    version character varying,
-    action character varying,
-    prevstate character varying,
-    state character varying,
-    real_user character varying,
-    set_user character varying,
-    "time" timestamp without time zone
-);
-
-
-ALTER TABLE i386.transactions OWNER TO wbadm;
-
---
--- Name: users; Type: TABLE; Schema: i386; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE users (
-    username character varying NOT NULL,
-    distribution character varying NOT NULL,
-    last_seen timestamp without time zone
-);
-
-
-ALTER TABLE i386.users OWNER TO wbadm;
-
-SET search_path = i386_public, pg_catalog;
-
---
--- Name: packages; Type: VIEW; Schema: i386_public; Owner: wbadm
---
-
-CREATE VIEW packages AS
-    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM i386.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE i386_public.packages OWNER TO wbadm;
-
---
--- Name: pkg_history; Type: VIEW; Schema: i386_public; Owner: wbadm
---
-
-CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM i386.pkg_history WHERE ((pkg_history.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE i386_public.pkg_history OWNER TO wbadm;
-
---
--- Name: transactions; Type: VIEW; Schema: i386_public; Owner: wbadm
---
-
-CREATE VIEW transactions AS
-    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM i386.transactions WHERE ((transactions.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE i386_public.transactions OWNER TO wbadm;
-
---
--- Name: users; Type: VIEW; Schema: i386_public; Owner: wbadm
---
-
-CREATE VIEW users AS
-    SELECT users.username, users.distribution, users.last_seen FROM i386.users WHERE ((users.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE i386_public.users OWNER TO wbadm;
-
-SET search_path = ia64, pg_catalog;
-
---
--- Name: packages; Type: TABLE; Schema: ia64; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE packages (
-    package character varying NOT NULL,
-    distribution character varying NOT NULL,
-    version character varying,
-    state character varying,
-    section character varying,
-    priority character varying,
-    installed_version character varying,
-    previous_state character varying,
-    state_change timestamp without time zone,
-    notes character varying,
-    builder character varying,
-    failed text,
-    old_failed text,
-    binary_nmu_version integer,
-    binary_nmu_changelog character varying,
-    failed_category character varying,
-    permbuildpri integer,
-    buildpri integer,
-    depends character varying,
-    rel character varying,
-    bd_problem text,
-    extra_depends character varying,
-    extra_conflicts character varying,
-    build_arch_all boolean DEFAULT false NOT NULL
-);
-
-
-ALTER TABLE ia64.packages OWNER TO wbadm;
-
---
--- Name: pkg_history; Type: TABLE; Schema: ia64; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE pkg_history (
-    package character varying NOT NULL,
-    distribution character varying NOT NULL,
-    version character varying NOT NULL,
-    "timestamp" timestamp without time zone NOT NULL,
-    result character varying NOT NULL,
-    build_time integer,
-    disk_space bigint,
-    builder character varying
-);
-
-
-ALTER TABLE ia64.pkg_history OWNER TO wbadm;
-
---
--- Name: transactions; Type: TABLE; Schema: ia64; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE transactions (
-    package character varying,
-    distribution character varying,
-    version character varying,
-    action character varying,
-    prevstate character varying,
-    state character varying,
-    real_user character varying,
-    set_user character varying,
-    "time" timestamp without time zone
-);
-
-
-ALTER TABLE ia64.transactions OWNER TO wbadm;
-
---
--- Name: users; Type: TABLE; Schema: ia64; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE users (
-    username character varying NOT NULL,
-    distribution character varying NOT NULL,
-    last_seen timestamp without time zone
-);
-
-
-ALTER TABLE ia64.users OWNER TO wbadm;
-
-SET search_path = ia64_public, pg_catalog;
-
---
--- Name: packages; Type: VIEW; Schema: ia64_public; Owner: wbadm
---
-
-CREATE VIEW packages AS
-    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM ia64.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE ia64_public.packages OWNER TO wbadm;
-
---
--- Name: pkg_history; Type: VIEW; Schema: ia64_public; Owner: wbadm
---
-
-CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM ia64.pkg_history WHERE ((pkg_history.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE ia64_public.pkg_history OWNER TO wbadm;
-
---
--- Name: transactions; Type: VIEW; Schema: ia64_public; Owner: wbadm
---
-
-CREATE VIEW transactions AS
-    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM ia64.transactions WHERE ((transactions.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE ia64_public.transactions OWNER TO wbadm;
-
---
--- Name: users; Type: VIEW; Schema: ia64_public; Owner: wbadm
---
-
-CREATE VIEW users AS
-    SELECT users.username, users.distribution, users.last_seen FROM ia64.users WHERE ((users.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE ia64_public.users OWNER TO wbadm;
-
-SET search_path = "kfreebsd-amd64", pg_catalog;
-
---
--- Name: packages; Type: TABLE; Schema: kfreebsd-amd64; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE packages (
-    package character varying NOT NULL,
-    distribution character varying NOT NULL,
-    version character varying,
-    state character varying,
-    section character varying,
-    priority character varying,
-    installed_version character varying,
-    previous_state character varying,
-    state_change timestamp without time zone,
-    notes character varying,
-    builder character varying,
-    failed text,
-    old_failed text,
-    binary_nmu_version integer,
-    binary_nmu_changelog character varying,
-    failed_category character varying,
-    permbuildpri integer,
-    buildpri integer,
-    depends character varying,
-    rel character varying,
-    bd_problem text,
-    extra_depends character varying,
-    extra_conflicts character varying,
-    build_arch_all boolean DEFAULT false NOT NULL
-);
-
-
-ALTER TABLE "kfreebsd-amd64".packages OWNER TO wbadm;
-
---
--- Name: pkg_history; Type: TABLE; Schema: kfreebsd-amd64; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE pkg_history (
-    package character varying NOT NULL,
-    distribution character varying NOT NULL,
-    version character varying NOT NULL,
-    "timestamp" timestamp without time zone NOT NULL,
-    result character varying NOT NULL,
-    build_time integer,
-    disk_space bigint,
-    builder character varying
-);
-
-
-ALTER TABLE "kfreebsd-amd64".pkg_history OWNER TO wbadm;
-
---
--- Name: transactions; Type: TABLE; Schema: kfreebsd-amd64; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE transactions (
-    package character varying,
-    distribution character varying,
-    version character varying,
-    action character varying,
-    prevstate character varying,
-    state character varying,
-    real_user character varying,
-    set_user character varying,
-    "time" timestamp without time zone
-);
-
-
-ALTER TABLE "kfreebsd-amd64".transactions OWNER TO wbadm;
-
---
--- Name: users; Type: TABLE; Schema: kfreebsd-amd64; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE users (
-    username character varying NOT NULL,
-    distribution character varying NOT NULL,
-    last_seen timestamp without time zone
-);
-
-
-ALTER TABLE "kfreebsd-amd64".users OWNER TO wbadm;
-
-SET search_path = "kfreebsd-amd64_public", pg_catalog;
-
---
--- Name: packages; Type: VIEW; Schema: kfreebsd-amd64_public; Owner: wbadm
---
-
-CREATE VIEW packages AS
-    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM "kfreebsd-amd64".packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE "kfreebsd-amd64_public".packages OWNER TO wbadm;
-
---
--- Name: pkg_history; Type: VIEW; Schema: kfreebsd-amd64_public; Owner: wbadm
---
-
-CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM "kfreebsd-amd64".pkg_history WHERE ((pkg_history.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE "kfreebsd-amd64_public".pkg_history OWNER TO wbadm;
-
---
--- Name: transactions; Type: VIEW; Schema: kfreebsd-amd64_public; Owner: wbadm
---
-
-CREATE VIEW transactions AS
-    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM "kfreebsd-amd64".transactions WHERE ((transactions.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE "kfreebsd-amd64_public".transactions OWNER TO wbadm;
-
---
--- Name: users; Type: VIEW; Schema: kfreebsd-amd64_public; Owner: wbadm
---
-
-CREATE VIEW users AS
-    SELECT users.username, users.distribution, users.last_seen FROM "kfreebsd-amd64".users WHERE ((users.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE "kfreebsd-amd64_public".users OWNER TO wbadm;
-
-SET search_path = "kfreebsd-i386", pg_catalog;
-
---
--- Name: packages; Type: TABLE; Schema: kfreebsd-i386; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE packages (
-    package character varying NOT NULL,
-    distribution character varying NOT NULL,
-    version character varying,
-    state character varying,
-    section character varying,
-    priority character varying,
-    installed_version character varying,
-    previous_state character varying,
-    state_change timestamp without time zone,
-    notes character varying,
-    builder character varying,
-    failed text,
-    old_failed text,
-    binary_nmu_version integer,
-    binary_nmu_changelog character varying,
-    failed_category character varying,
-    permbuildpri integer,
-    buildpri integer,
-    depends character varying,
-    rel character varying,
-    bd_problem text,
-    extra_depends character varying,
-    extra_conflicts character varying,
-    build_arch_all boolean DEFAULT false NOT NULL
-);
-
-
-ALTER TABLE "kfreebsd-i386".packages OWNER TO wbadm;
-
---
--- Name: pkg_history; Type: TABLE; Schema: kfreebsd-i386; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE pkg_history (
-    package character varying NOT NULL,
-    distribution character varying NOT NULL,
-    version character varying NOT NULL,
-    "timestamp" timestamp without time zone NOT NULL,
-    result character varying NOT NULL,
-    build_time integer,
-    disk_space bigint,
-    builder character varying
-);
-
-
-ALTER TABLE "kfreebsd-i386".pkg_history OWNER TO wbadm;
-
---
--- Name: transactions; Type: TABLE; Schema: kfreebsd-i386; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE transactions (
-    package character varying,
-    distribution character varying,
-    version character varying,
-    action character varying,
-    prevstate character varying,
-    state character varying,
-    real_user character varying,
-    set_user character varying,
-    "time" timestamp without time zone
-);
-
-
-ALTER TABLE "kfreebsd-i386".transactions OWNER TO wbadm;
-
---
--- Name: users; Type: TABLE; Schema: kfreebsd-i386; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE users (
-    username character varying NOT NULL,
-    distribution character varying NOT NULL,
-    last_seen timestamp without time zone
-);
-
-
-ALTER TABLE "kfreebsd-i386".users OWNER TO wbadm;
-
-SET search_path = "kfreebsd-i386_public", pg_catalog;
-
---
--- Name: packages; Type: VIEW; Schema: kfreebsd-i386_public; Owner: wbadm
---
-
-CREATE VIEW packages AS
-    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM "kfreebsd-i386".packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE "kfreebsd-i386_public".packages OWNER TO wbadm;
-
---
--- Name: pkg_history; Type: VIEW; Schema: kfreebsd-i386_public; Owner: wbadm
---
-
-CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM "kfreebsd-i386".pkg_history WHERE ((pkg_history.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE "kfreebsd-i386_public".pkg_history OWNER TO wbadm;
-
---
--- Name: transactions; Type: VIEW; Schema: kfreebsd-i386_public; Owner: wbadm
---
-
-CREATE VIEW transactions AS
-    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM "kfreebsd-i386".transactions WHERE ((transactions.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE "kfreebsd-i386_public".transactions OWNER TO wbadm;
-
---
--- Name: users; Type: VIEW; Schema: kfreebsd-i386_public; Owner: wbadm
---
-
-CREATE VIEW users AS
-    SELECT users.username, users.distribution, users.last_seen FROM "kfreebsd-i386".users WHERE ((users.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE "kfreebsd-i386_public".users OWNER TO wbadm;
-
-SET search_path = mips, pg_catalog;
-
---
--- Name: packages; Type: TABLE; Schema: mips; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE packages (
-    package character varying NOT NULL,
-    distribution character varying NOT NULL,
-    version character varying,
-    state character varying,
-    section character varying,
-    priority character varying,
-    installed_version character varying,
-    previous_state character varying,
-    state_change timestamp without time zone,
-    notes character varying,
-    builder character varying,
-    failed text,
-    old_failed text,
-    binary_nmu_version integer,
-    binary_nmu_changelog character varying,
-    failed_category character varying,
-    permbuildpri integer,
-    buildpri integer,
-    depends character varying,
-    rel character varying,
-    bd_problem text,
-    extra_depends character varying,
-    extra_conflicts character varying,
-    build_arch_all boolean DEFAULT false NOT NULL
-);
-
-
-ALTER TABLE mips.packages OWNER TO wbadm;
-
---
--- Name: pkg_history; Type: TABLE; Schema: mips; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE pkg_history (
-    package character varying NOT NULL,
-    distribution character varying NOT NULL,
-    version character varying NOT NULL,
-    "timestamp" timestamp without time zone NOT NULL,
-    result character varying NOT NULL,
-    build_time integer,
-    disk_space bigint,
-    builder character varying
-);
-
-
-ALTER TABLE mips.pkg_history OWNER TO wbadm;
-
---
--- Name: transactions; Type: TABLE; Schema: mips; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE transactions (
-    package character varying,
-    distribution character varying,
-    version character varying,
-    action character varying,
-    prevstate character varying,
-    state character varying,
-    real_user character varying,
-    set_user character varying,
-    "time" timestamp without time zone
-);
-
-
-ALTER TABLE mips.transactions OWNER TO wbadm;
-
---
--- Name: users; Type: TABLE; Schema: mips; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE users (
-    username character varying NOT NULL,
-    distribution character varying NOT NULL,
-    last_seen timestamp without time zone
-);
-
-
-ALTER TABLE mips.users OWNER TO wbadm;
-
-SET search_path = mips_public, pg_catalog;
-
---
--- Name: packages; Type: VIEW; Schema: mips_public; Owner: wbadm
---
-
-CREATE VIEW packages AS
-    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM mips.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE mips_public.packages OWNER TO wbadm;
-
---
--- Name: pkg_history; Type: VIEW; Schema: mips_public; Owner: wbadm
---
-
-CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM mips.pkg_history WHERE ((pkg_history.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE mips_public.pkg_history OWNER TO wbadm;
-
---
--- Name: transactions; Type: VIEW; Schema: mips_public; Owner: wbadm
---
-
-CREATE VIEW transactions AS
-    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM mips.transactions WHERE ((transactions.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE mips_public.transactions OWNER TO wbadm;
-
---
--- Name: users; Type: VIEW; Schema: mips_public; Owner: wbadm
---
-
-CREATE VIEW users AS
-    SELECT users.username, users.distribution, users.last_seen FROM mips.users WHERE ((users.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE mips_public.users OWNER TO wbadm;
-
-SET search_path = mipsel, pg_catalog;
-
---
--- Name: packages; Type: TABLE; Schema: mipsel; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE packages (
-    package character varying NOT NULL,
-    distribution character varying NOT NULL,
-    version character varying,
-    state character varying,
-    section character varying,
-    priority character varying,
-    installed_version character varying,
-    previous_state character varying,
-    state_change timestamp without time zone,
-    notes character varying,
-    builder character varying,
-    failed text,
-    old_failed text,
-    binary_nmu_version integer,
-    binary_nmu_changelog character varying,
-    failed_category character varying,
-    permbuildpri integer,
-    buildpri integer,
-    depends character varying,
-    rel character varying,
-    bd_problem text,
-    extra_depends character varying,
-    extra_conflicts character varying,
-    build_arch_all boolean DEFAULT false NOT NULL
-);
-
-
-ALTER TABLE mipsel.packages OWNER TO wbadm;
-
---
--- Name: pkg_history; Type: TABLE; Schema: mipsel; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE pkg_history (
-    package character varying NOT NULL,
-    distribution character varying NOT NULL,
-    version character varying NOT NULL,
-    "timestamp" timestamp without time zone NOT NULL,
-    result character varying NOT NULL,
-    build_time integer,
-    disk_space bigint,
-    builder character varying
-);
-
-
-ALTER TABLE mipsel.pkg_history OWNER TO wbadm;
-
---
--- Name: transactions; Type: TABLE; Schema: mipsel; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE transactions (
-    package character varying,
-    distribution character varying,
-    version character varying,
-    action character varying,
-    prevstate character varying,
-    state character varying,
-    real_user character varying,
-    set_user character varying,
-    "time" timestamp without time zone
-);
-
-
-ALTER TABLE mipsel.transactions OWNER TO wbadm;
-
---
--- Name: users; Type: TABLE; Schema: mipsel; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE users (
-    username character varying NOT NULL,
-    distribution character varying NOT NULL,
-    last_seen timestamp without time zone
-);
-
-
-ALTER TABLE mipsel.users OWNER TO wbadm;
-
-SET search_path = mipsel_public, pg_catalog;
-
---
--- Name: packages; Type: VIEW; Schema: mipsel_public; Owner: wbadm
---
-
-CREATE VIEW packages AS
-    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM mipsel.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE mipsel_public.packages OWNER TO wbadm;
-
---
--- Name: pkg_history; Type: VIEW; Schema: mipsel_public; Owner: wbadm
---
-
-CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM mipsel.pkg_history WHERE ((pkg_history.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE mipsel_public.pkg_history OWNER TO wbadm;
-
---
--- Name: transactions; Type: VIEW; Schema: mipsel_public; Owner: wbadm
---
-
-CREATE VIEW transactions AS
-    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM mipsel.transactions WHERE ((transactions.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE mipsel_public.transactions OWNER TO wbadm;
-
---
--- Name: users; Type: VIEW; Schema: mipsel_public; Owner: wbadm
---
-
-CREATE VIEW users AS
-    SELECT users.username, users.distribution, users.last_seen FROM mipsel.users WHERE ((users.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE mipsel_public.users OWNER TO wbadm;
-
-SET search_path = powerpc, pg_catalog;
-
---
--- Name: packages; Type: TABLE; Schema: powerpc; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE packages (
-    package character varying NOT NULL,
-    distribution character varying NOT NULL,
-    version character varying,
-    state character varying,
-    section character varying,
-    priority character varying,
-    installed_version character varying,
-    previous_state character varying,
-    state_change timestamp without time zone,
-    notes character varying,
-    builder character varying,
-    failed text,
-    old_failed text,
-    binary_nmu_version integer,
-    binary_nmu_changelog character varying,
-    failed_category character varying,
-    permbuildpri integer,
-    buildpri integer,
-    depends character varying,
-    rel character varying,
-    bd_problem text,
-    extra_depends character varying,
-    extra_conflicts character varying,
-    build_arch_all boolean DEFAULT false NOT NULL
-);
-
-
-ALTER TABLE powerpc.packages OWNER TO wbadm;
-
---
--- Name: pkg_history; Type: TABLE; Schema: powerpc; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE pkg_history (
-    package character varying NOT NULL,
-    distribution character varying NOT NULL,
-    version character varying NOT NULL,
-    "timestamp" timestamp without time zone NOT NULL,
-    result character varying NOT NULL,
-    build_time integer,
-    disk_space bigint,
-    builder character varying
-);
-
-
-ALTER TABLE powerpc.pkg_history OWNER TO wbadm;
-
---
--- Name: transactions; Type: TABLE; Schema: powerpc; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE transactions (
-    package character varying,
-    distribution character varying,
-    version character varying,
-    action character varying,
-    prevstate character varying,
-    state character varying,
-    real_user character varying,
-    set_user character varying,
-    "time" timestamp without time zone
-);
-
-
-ALTER TABLE powerpc.transactions OWNER TO wbadm;
-
---
--- Name: users; Type: TABLE; Schema: powerpc; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE users (
-    username character varying NOT NULL,
-    distribution character varying NOT NULL,
-    last_seen timestamp without time zone
-);
-
-
-ALTER TABLE powerpc.users OWNER TO wbadm;
-
-SET search_path = powerpc_public, pg_catalog;
-
---
--- Name: packages; Type: VIEW; Schema: powerpc_public; Owner: wbadm
---
-
-CREATE VIEW packages AS
-    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM powerpc.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE powerpc_public.packages OWNER TO wbadm;
-
---
--- Name: pkg_history; Type: VIEW; Schema: powerpc_public; Owner: wbadm
---
-
-CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM powerpc.pkg_history WHERE ((pkg_history.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE powerpc_public.pkg_history OWNER TO wbadm;
-
---
--- Name: transactions; Type: VIEW; Schema: powerpc_public; Owner: wbadm
---
-
-CREATE VIEW transactions AS
-    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM powerpc.transactions WHERE ((transactions.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE powerpc_public.transactions OWNER TO wbadm;
-
---
--- Name: users; Type: VIEW; Schema: powerpc_public; Owner: wbadm
---
-
-CREATE VIEW users AS
-    SELECT users.username, users.distribution, users.last_seen FROM powerpc.users WHERE ((users.distribution)::text !~~ '%-security'::text);
-
-
-ALTER TABLE powerpc_public.users OWNER TO wbadm;
-
 SET search_path = public, pg_catalog;
-
---
--- Name: distribution_aliases; Type: TABLE; Schema: public; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE distribution_aliases (
-    alias character varying NOT NULL,
-    distribution character varying NOT NULL
-);
-
-
-ALTER TABLE public.distribution_aliases OWNER TO wbadm;
-
-SET search_path = s390, pg_catalog;
-
---
--- Name: packages; Type: TABLE; Schema: s390; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE packages (
-    package character varying NOT NULL,
-    distribution character varying NOT NULL,
-    version character varying,
-    state character varying,
-    section character varying,
-    priority character varying,
-    installed_version character varying,
-    previous_state character varying,
-    state_change timestamp without time zone,
-    notes character varying,
-    builder character varying,
-    failed text,
-    old_failed text,
-    binary_nmu_version integer,
-    binary_nmu_changelog character varying,
-    failed_category character varying,
-    permbuildpri integer,
-    buildpri integer,
-    depends character varying,
-    rel character varying,
-    bd_problem text,
-    extra_depends character varying,
-    extra_conflicts character varying,
-    build_arch_all boolean DEFAULT false NOT NULL
-);
-
-
-ALTER TABLE s390.packages OWNER TO wbadm;
-
-SET search_path = sparc, pg_catalog;
-
---
--- Name: packages; Type: TABLE; Schema: sparc; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE packages (
-    package character varying NOT NULL,
-    distribution character varying NOT NULL,
-    version character varying,
-    state character varying,
-    section character varying,
-    priority character varying,
-    installed_version character varying,
-    previous_state character varying,
-    state_change timestamp without time zone,
-    notes character varying,
-    builder character varying,
-    failed text,
-    old_failed text,
-    binary_nmu_version integer,
-    binary_nmu_changelog character varying,
-    failed_category character varying,
-    permbuildpri integer,
-    buildpri integer,
-    depends character varying,
-    rel character varying,
-    bd_problem text,
-    extra_depends character varying,
-    extra_conflicts character varying,
-    build_arch_all boolean DEFAULT false NOT NULL
-);
-
-
-ALTER TABLE sparc.packages OWNER TO wbadm;
-
-SET search_path = public, pg_catalog;
-
---
--- Name: distribution_architectures; Type: VIEW; Schema: public; Owner: wbadm
---
-
-CREATE VIEW distribution_architectures AS
-    (((((((((((((SELECT DISTINCT packages.distribution, 'alpha'::character varying AS architecture, count(CASE WHEN ((packages.state)::text = 'Needs-Build'::text) THEN 1 ELSE NULL::integer END) AS needsbuild, count(CASE WHEN ((packages.state_change < (now() - '1 day'::interval)) AND (((packages.state)::text = 'Built'::text) OR ((packages.state)::text = 'Uploaded'::text))) THEN 1 ELSE NULL::integer END) AS notinstalled FROM alpha.packages GROUP BY packages.distribution UNION SELECT DISTINCT packages.distribution, 'amd64'::character varying AS architecture, count(CASE WHEN ((packages.state)::text = 'Needs-Build'::text) THEN 1 ELSE NULL::integer END) AS needsbuild, count(CASE WHEN ((packages.state_change < (now() - '1 day'::interval)) AND (((packages.state)::text = 'Built'::text) OR ((packages.state)::text = 'Uploaded'::text))) THEN 1 ELSE NULL::integer END) AS notinstalled FROM amd64.packages GROUP BY packages.distribution) UNION SELECT DISTINCT packages.distribution, 'arm'::character varying AS architecture, count(CASE WHEN ((packages.state)::text = 'Needs-Build'::text) THEN 1 ELSE NULL::integer END) AS needsbuild, count(CASE WHEN ((packages.state_change < (now() - '1 day'::interval)) AND (((packages.state)::text = 'Built'::text) OR ((packages.state)::text = 'Uploaded'::text))) THEN 1 ELSE NULL::integer END) AS notinstalled FROM arm.packages GROUP BY packages.distribution) UNION SELECT DISTINCT packages.distribution, 'armel'::character varying AS architecture, count(CASE WHEN ((packages.state)::text = 'Needs-Build'::text) THEN 1 ELSE NULL::integer END) AS needsbuild, count(CASE WHEN ((packages.state_change < (now() - '1 day'::interval)) AND (((packages.state)::text = 'Built'::text) OR ((packages.state)::text = 'Uploaded'::text))) THEN 1 ELSE NULL::integer END) AS notinstalled FROM armel.packages GROUP BY packages.distribution) UNION SELECT DISTINCT packages.distribution, 'hppa'::character varying AS architecture, count(CASE WHEN ((packages.state)::text = 'Needs-Build'::text) THEN 1 ELSE NULL::integer END) AS needsbuild, count(CASE WHEN ((packages.state_change < (now() - '1 day'::interval)) AND (((packages.state)::text = 'Built'::text) OR ((packages.state)::text = 'Uploaded'::text))) THEN 1 ELSE NULL::integer END) AS notinstalled FROM hppa.packages GROUP BY packages.distribution) UNION SELECT DISTINCT packages.distribution, 'hurd-i386'::character varying AS architecture, count(CASE WHEN ((packages.state)::text = 'Needs-Build'::text) THEN 1 ELSE NULL::integer END) AS needsbuild, count(CASE WHEN ((packages.state_change < (now() - '1 day'::interval)) AND (((packages.state)::text = 'Built'::text) OR ((packages.state)::text = 'Uploaded'::text))) THEN 1 ELSE NULL::integer END) AS notinstalled FROM "hurd-i386".packages GROUP BY packages.distribution) UNION SELECT DISTINCT packages.distribution, 'i386'::character varying AS architecture, count(CASE WHEN ((packages.state)::text = 'Needs-Build'::text) THEN 1 ELSE NULL::integer END) AS needsbuild, count(CASE WHEN ((packages.state_change < (now() - '1 day'::interval)) AND (((packages.state)::text = 'Built'::text) OR ((packages.state)::text = 'Uploaded'::text))) THEN 1 ELSE NULL::integer END) AS notinstalled FROM i386.packages GROUP BY packages.distribution) UNION SELECT DISTINCT packages.distribution, 'ia64'::character varying AS architecture, count(CASE WHEN ((packages.state)::text = 'Needs-Build'::text) THEN 1 ELSE NULL::integer END) AS needsbuild, count(CASE WHEN ((packages.state_change < (now() - '1 day'::interval)) AND (((packages.state)::text = 'Built'::text) OR ((packages.state)::text = 'Uploaded'::text))) THEN 1 ELSE NULL::integer END) AS notinstalled FROM ia64.packages GROUP BY packages.distribution) UNION SELECT DISTINCT packages.distribution, 'kfreebsd-amd64'::character varying AS architecture, count(CASE WHEN ((packages.state)::text = 'Needs-Build'::text) THEN 1 ELSE NULL::integer END) AS needsbuild, count(CASE WHEN ((packages.state_change < (now() - '1 day'::interval)) AND (((packages.state)::text = 'Built'::text) OR ((packages.state)::text = 'Uploaded'::text))) THEN 1 ELSE NULL::integer END) AS notinstalled FROM "kfreebsd-amd64".packages GROUP BY packages.distribution) UNION SELECT DISTINCT packages.distribution, 'kfreebsd-i386'::character varying AS architecture, count(CASE WHEN ((packages.state)::text = 'Needs-Build'::text) THEN 1 ELSE NULL::integer END) AS needsbuild, count(CASE WHEN ((packages.state_change < (now() - '1 day'::interval)) AND (((packages.state)::text = 'Built'::text) OR ((packages.state)::text = 'Uploaded'::text))) THEN 1 ELSE NULL::integer END) AS notinstalled FROM "kfreebsd-i386".packages GROUP BY packages.distribution) UNION SELECT DISTINCT packages.distribution, 'mips'::character varying AS architecture, count(CASE WHEN ((packages.state)::text = 'Needs-Build'::text) THEN 1 ELSE NULL::integer END) AS needsbuild, count(CASE WHEN ((packages.state_change < (now() - '1 day'::interval)) AND (((packages.state)::text = 'Built'::text) OR ((packages.state)::text = 'Uploaded'::text))) THEN 1 ELSE NULL::integer END) AS notinstalled FROM mips.packages GROUP BY packages.distribution) UNION SELECT DISTINCT packages.distribution, 'mipsel'::character varying AS architecture, count(CASE WHEN ((packages.state)::text = 'Needs-Build'::text) THEN 1 ELSE NULL::integer END) AS needsbuild, count(CASE WHEN ((packages.state_change < (now() - '1 day'::interval)) AND (((packages.state)::text = 'Built'::text) OR ((packages.state)::text = 'Uploaded'::text))) THEN 1 ELSE NULL::integer END) AS notinstalled FROM mipsel.packages GROUP BY packages.distribution) UNION SELECT DISTINCT packages.distribution, 'powerpc'::character varying AS architecture, count(CASE WHEN ((packages.state)::text = 'Needs-Build'::text) THEN 1 ELSE NULL::integer END) AS needsbuild, count(CASE WHEN ((packages.state_change < (now() - '1 day'::interval)) AND (((packages.state)::text = 'Built'::text) OR ((packages.state)::text = 'Uploaded'::text))) THEN 1 ELSE NULL::integer END) AS notinstalled FROM powerpc.packages GROUP BY packages.distribution) UNION SELECT DISTINCT packages.distribution, 's390'::character varying AS architecture, count(CASE WHEN ((packages.state)::text = 'Needs-Build'::text) THEN 1 ELSE NULL::integer END) AS needsbuild, count(CASE WHEN ((packages.state_change < (now() - '1 day'::interval)) AND (((packages.state)::text = 'Built'::text) OR ((packages.state)::text = 'Uploaded'::text))) THEN 1 ELSE NULL::integer END) AS notinstalled FROM s390.packages GROUP BY packages.distribution) UNION SELECT DISTINCT packages.distribution, 'sparc'::character varying AS architecture, count(CASE WHEN ((packages.state)::text = 'Needs-Build'::text) THEN 1 ELSE NULL::integer END) AS needsbuild, count(CASE WHEN ((packages.state_change < (now() - '1 day'::interval)) AND (((packages.state)::text = 'Built'::text) OR ((packages.state)::text = 'Uploaded'::text))) THEN 1 ELSE NULL::integer END) AS notinstalled FROM sparc.packages GROUP BY packages.distribution;
-
-
-ALTER TABLE public.distribution_architectures OWNER TO wbadm;
-
---
--- Name: distribution_architectures_statistics; Type: VIEW; Schema: public; Owner: wbadm
---
-
-CREATE VIEW distribution_architectures_statistics AS
-    SELECT distribution_architectures.distribution, distribution_architectures.architecture, distribution_architectures.needsbuild, distribution_architectures.notinstalled FROM distribution_architectures;
-
-
-ALTER TABLE public.distribution_architectures_statistics OWNER TO wbadm;
 
 --
 -- Name: distributions; Type: TABLE; Schema: public; Owner: wbadm; Tablespace: 
@@ -2699,78 +1012,1098 @@ CREATE TABLE distributions (
 
 ALTER TABLE public.distributions OWNER TO wbadm;
 
-SET search_path = s390, pg_catalog;
+SET search_path = alpha_public, pg_catalog;
 
 --
--- Name: pkg_history; Type: TABLE; Schema: s390; Owner: wbadm; Tablespace: 
+-- Name: packages; Type: VIEW; Schema: alpha_public; Owner: wbadm
 --
 
-CREATE TABLE pkg_history (
-    package character varying NOT NULL,
-    distribution character varying NOT NULL,
-    version character varying NOT NULL,
-    "timestamp" timestamp without time zone NOT NULL,
-    result character varying NOT NULL,
-    build_time integer,
-    disk_space bigint,
-    builder character varying
-);
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM (public.packages NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((packages.architecture)::text = 'alpha'::text));
 
 
-ALTER TABLE s390.pkg_history OWNER TO wbadm;
-
-SET search_path = s390_public, pg_catalog;
+ALTER TABLE alpha_public.packages OWNER TO wbadm;
 
 --
--- Name: pkg_history; Type: VIEW; Schema: s390_public; Owner: wbadm
+-- Name: pkg_history; Type: VIEW; Schema: alpha_public; Owner: wbadm
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM s390.pkg_history WHERE ((pkg_history.distribution)::text !~~ '%-security'::text);
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'alpha'::text));
 
 
-ALTER TABLE s390_public.pkg_history OWNER TO wbadm;
-
-SET search_path = sparc, pg_catalog;
+ALTER TABLE alpha_public.pkg_history OWNER TO wbadm;
 
 --
--- Name: pkg_history; Type: TABLE; Schema: sparc; Owner: wbadm; Tablespace: 
+-- Name: transactions; Type: VIEW; Schema: alpha_public; Owner: wbadm
 --
 
-CREATE TABLE pkg_history (
-    package character varying NOT NULL,
-    distribution character varying NOT NULL,
-    version character varying NOT NULL,
-    "timestamp" timestamp without time zone NOT NULL,
-    result character varying NOT NULL,
-    build_time integer,
-    disk_space bigint,
-    builder character varying
-);
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM (public.transactions NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((transactions.architecture)::text = 'alpha'::text));
 
 
-ALTER TABLE sparc.pkg_history OWNER TO wbadm;
-
-SET search_path = sparc_public, pg_catalog;
+ALTER TABLE alpha_public.transactions OWNER TO wbadm;
 
 --
--- Name: pkg_history; Type: VIEW; Schema: sparc_public; Owner: wbadm
+-- Name: users; Type: VIEW; Schema: alpha_public; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM (public.users NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((users.architecture)::text = 'alpha'::text));
+
+
+ALTER TABLE alpha_public.users OWNER TO wbadm;
+
+SET search_path = amd64, pg_catalog;
+
+--
+-- Name: packages; Type: VIEW; Schema: amd64; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM public.packages packages WHERE ((packages.architecture)::text = 'amd64'::text);
+
+
+ALTER TABLE amd64.packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: amd64; Owner: wbadm
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM sparc.pkg_history WHERE ((pkg_history.distribution)::text !~~ '%-security'::text);
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'amd64'::text);
 
 
-ALTER TABLE sparc_public.pkg_history OWNER TO wbadm;
+ALTER TABLE amd64.pkg_history OWNER TO wbadm;
+
+--
+-- Name: transactions; Type: VIEW; Schema: amd64; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM public.transactions WHERE ((transactions.architecture)::text = 'amd64'::text);
+
+
+ALTER TABLE amd64.transactions OWNER TO wbadm;
+
+--
+-- Name: users; Type: VIEW; Schema: amd64; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM public.users WHERE ((users.architecture)::text = 'amd64'::text);
+
+
+ALTER TABLE amd64.users OWNER TO wbadm;
+
+SET search_path = amd64_public, pg_catalog;
+
+--
+-- Name: packages; Type: VIEW; Schema: amd64_public; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM (public.packages NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((packages.architecture)::text = 'amd64'::text));
+
+
+ALTER TABLE amd64_public.packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: amd64_public; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'amd64'::text));
+
+
+ALTER TABLE amd64_public.pkg_history OWNER TO wbadm;
+
+--
+-- Name: transactions; Type: VIEW; Schema: amd64_public; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM (public.transactions NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((transactions.architecture)::text = 'amd64'::text));
+
+
+ALTER TABLE amd64_public.transactions OWNER TO wbadm;
+
+--
+-- Name: users; Type: VIEW; Schema: amd64_public; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM (public.users NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((users.architecture)::text = 'amd64'::text));
+
+
+ALTER TABLE amd64_public.users OWNER TO wbadm;
+
+SET search_path = arm, pg_catalog;
+
+--
+-- Name: packages; Type: VIEW; Schema: arm; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM public.packages packages WHERE ((packages.architecture)::text = 'arm'::text);
+
+
+ALTER TABLE arm.packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: arm; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'arm'::text);
+
+
+ALTER TABLE arm.pkg_history OWNER TO wbadm;
+
+--
+-- Name: transactions; Type: VIEW; Schema: arm; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM public.transactions WHERE ((transactions.architecture)::text = 'arm'::text);
+
+
+ALTER TABLE arm.transactions OWNER TO wbadm;
+
+--
+-- Name: users; Type: VIEW; Schema: arm; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM public.users WHERE ((users.architecture)::text = 'arm'::text);
+
+
+ALTER TABLE arm.users OWNER TO wbadm;
+
+SET search_path = arm_public, pg_catalog;
+
+--
+-- Name: packages; Type: VIEW; Schema: arm_public; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM (public.packages NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((packages.architecture)::text = 'arm'::text));
+
+
+ALTER TABLE arm_public.packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: arm_public; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'arm'::text));
+
+
+ALTER TABLE arm_public.pkg_history OWNER TO wbadm;
+
+--
+-- Name: transactions; Type: VIEW; Schema: arm_public; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM (public.transactions NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((transactions.architecture)::text = 'arm'::text));
+
+
+ALTER TABLE arm_public.transactions OWNER TO wbadm;
+
+--
+-- Name: users; Type: VIEW; Schema: arm_public; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM (public.users NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((users.architecture)::text = 'arm'::text));
+
+
+ALTER TABLE arm_public.users OWNER TO wbadm;
+
+SET search_path = armel, pg_catalog;
+
+--
+-- Name: packages; Type: VIEW; Schema: armel; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM public.packages packages WHERE ((packages.architecture)::text = 'armel'::text);
+
+
+ALTER TABLE armel.packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: armel; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'armel'::text);
+
+
+ALTER TABLE armel.pkg_history OWNER TO wbadm;
+
+--
+-- Name: transactions; Type: VIEW; Schema: armel; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM public.transactions WHERE ((transactions.architecture)::text = 'armel'::text);
+
+
+ALTER TABLE armel.transactions OWNER TO wbadm;
+
+--
+-- Name: users; Type: VIEW; Schema: armel; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM public.users WHERE ((users.architecture)::text = 'armel'::text);
+
+
+ALTER TABLE armel.users OWNER TO wbadm;
+
+SET search_path = armel_public, pg_catalog;
+
+--
+-- Name: packages; Type: VIEW; Schema: armel_public; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM (public.packages NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((packages.architecture)::text = 'armel'::text));
+
+
+ALTER TABLE armel_public.packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: armel_public; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'armel'::text));
+
+
+ALTER TABLE armel_public.pkg_history OWNER TO wbadm;
+
+--
+-- Name: transactions; Type: VIEW; Schema: armel_public; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM (public.transactions NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((transactions.architecture)::text = 'armel'::text));
+
+
+ALTER TABLE armel_public.transactions OWNER TO wbadm;
+
+--
+-- Name: users; Type: VIEW; Schema: armel_public; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM (public.users NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((users.architecture)::text = 'armel'::text));
+
+
+ALTER TABLE armel_public.users OWNER TO wbadm;
+
+SET search_path = hppa, pg_catalog;
+
+--
+-- Name: packages; Type: VIEW; Schema: hppa; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM public.packages packages WHERE ((packages.architecture)::text = 'hppa'::text);
+
+
+ALTER TABLE hppa.packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: hppa; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'hppa'::text);
+
+
+ALTER TABLE hppa.pkg_history OWNER TO wbadm;
+
+--
+-- Name: transactions; Type: VIEW; Schema: hppa; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM public.transactions WHERE ((transactions.architecture)::text = 'hppa'::text);
+
+
+ALTER TABLE hppa.transactions OWNER TO wbadm;
+
+--
+-- Name: users; Type: VIEW; Schema: hppa; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM public.users WHERE ((users.architecture)::text = 'hppa'::text);
+
+
+ALTER TABLE hppa.users OWNER TO wbadm;
+
+SET search_path = hppa_public, pg_catalog;
+
+--
+-- Name: packages; Type: VIEW; Schema: hppa_public; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM (public.packages NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((packages.architecture)::text = 'hppa'::text));
+
+
+ALTER TABLE hppa_public.packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: hppa_public; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'hppa'::text));
+
+
+ALTER TABLE hppa_public.pkg_history OWNER TO wbadm;
+
+--
+-- Name: transactions; Type: VIEW; Schema: hppa_public; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM (public.transactions NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((transactions.architecture)::text = 'hppa'::text));
+
+
+ALTER TABLE hppa_public.transactions OWNER TO wbadm;
+
+--
+-- Name: users; Type: VIEW; Schema: hppa_public; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM (public.users NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((users.architecture)::text = 'hppa'::text));
+
+
+ALTER TABLE hppa_public.users OWNER TO wbadm;
+
+SET search_path = "hurd-i386", pg_catalog;
+
+--
+-- Name: packages; Type: VIEW; Schema: hurd-i386; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM public.packages packages WHERE ((packages.architecture)::text = 'hurd-i386'::text);
+
+
+ALTER TABLE "hurd-i386".packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: hurd-i386; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'hurd-i386'::text);
+
+
+ALTER TABLE "hurd-i386".pkg_history OWNER TO wbadm;
+
+--
+-- Name: transactions; Type: VIEW; Schema: hurd-i386; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM public.transactions WHERE ((transactions.architecture)::text = 'hurd-i386'::text);
+
+
+ALTER TABLE "hurd-i386".transactions OWNER TO wbadm;
+
+--
+-- Name: users; Type: VIEW; Schema: hurd-i386; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM public.users WHERE ((users.architecture)::text = 'hurd-i386'::text);
+
+
+ALTER TABLE "hurd-i386".users OWNER TO wbadm;
+
+SET search_path = "hurd-i386_public", pg_catalog;
+
+--
+-- Name: packages; Type: VIEW; Schema: hurd-i386_public; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM (public.packages NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((packages.architecture)::text = 'hurd-i386'::text));
+
+
+ALTER TABLE "hurd-i386_public".packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: hurd-i386_public; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'hurd-i386'::text));
+
+
+ALTER TABLE "hurd-i386_public".pkg_history OWNER TO wbadm;
+
+--
+-- Name: transactions; Type: VIEW; Schema: hurd-i386_public; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM (public.transactions NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((transactions.architecture)::text = 'hurd-i386'::text));
+
+
+ALTER TABLE "hurd-i386_public".transactions OWNER TO wbadm;
+
+--
+-- Name: users; Type: VIEW; Schema: hurd-i386_public; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM (public.users NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((users.architecture)::text = 'hurd-i386'::text));
+
+
+ALTER TABLE "hurd-i386_public".users OWNER TO wbadm;
+
+SET search_path = i386, pg_catalog;
+
+--
+-- Name: packages; Type: VIEW; Schema: i386; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM public.packages packages WHERE ((packages.architecture)::text = 'i386'::text);
+
+
+ALTER TABLE i386.packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: i386; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'i386'::text);
+
+
+ALTER TABLE i386.pkg_history OWNER TO wbadm;
+
+--
+-- Name: transactions; Type: VIEW; Schema: i386; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM public.transactions WHERE ((transactions.architecture)::text = 'i386'::text);
+
+
+ALTER TABLE i386.transactions OWNER TO wbadm;
+
+--
+-- Name: users; Type: VIEW; Schema: i386; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM public.users WHERE ((users.architecture)::text = 'i386'::text);
+
+
+ALTER TABLE i386.users OWNER TO wbadm;
+
+SET search_path = i386_public, pg_catalog;
+
+--
+-- Name: packages; Type: VIEW; Schema: i386_public; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM (public.packages NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((packages.architecture)::text = 'i386'::text));
+
+
+ALTER TABLE i386_public.packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: i386_public; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'i386'::text));
+
+
+ALTER TABLE i386_public.pkg_history OWNER TO wbadm;
+
+--
+-- Name: transactions; Type: VIEW; Schema: i386_public; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM (public.transactions NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((transactions.architecture)::text = 'i386'::text));
+
+
+ALTER TABLE i386_public.transactions OWNER TO wbadm;
+
+--
+-- Name: users; Type: VIEW; Schema: i386_public; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM (public.users NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((users.architecture)::text = 'i386'::text));
+
+
+ALTER TABLE i386_public.users OWNER TO wbadm;
+
+SET search_path = ia64, pg_catalog;
+
+--
+-- Name: packages; Type: VIEW; Schema: ia64; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM public.packages packages WHERE ((packages.architecture)::text = 'ia64'::text);
+
+
+ALTER TABLE ia64.packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: ia64; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'ia64'::text);
+
+
+ALTER TABLE ia64.pkg_history OWNER TO wbadm;
+
+--
+-- Name: transactions; Type: VIEW; Schema: ia64; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM public.transactions WHERE ((transactions.architecture)::text = 'ia64'::text);
+
+
+ALTER TABLE ia64.transactions OWNER TO wbadm;
+
+--
+-- Name: users; Type: VIEW; Schema: ia64; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM public.users WHERE ((users.architecture)::text = 'ia64'::text);
+
+
+ALTER TABLE ia64.users OWNER TO wbadm;
+
+SET search_path = ia64_public, pg_catalog;
+
+--
+-- Name: packages; Type: VIEW; Schema: ia64_public; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM (public.packages NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((packages.architecture)::text = 'ia64'::text));
+
+
+ALTER TABLE ia64_public.packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: ia64_public; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'ia64'::text));
+
+
+ALTER TABLE ia64_public.pkg_history OWNER TO wbadm;
+
+--
+-- Name: transactions; Type: VIEW; Schema: ia64_public; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM (public.transactions NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((transactions.architecture)::text = 'ia64'::text));
+
+
+ALTER TABLE ia64_public.transactions OWNER TO wbadm;
+
+--
+-- Name: users; Type: VIEW; Schema: ia64_public; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM (public.users NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((users.architecture)::text = 'ia64'::text));
+
+
+ALTER TABLE ia64_public.users OWNER TO wbadm;
+
+SET search_path = "kfreebsd-amd64", pg_catalog;
+
+--
+-- Name: packages; Type: VIEW; Schema: kfreebsd-amd64; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM public.packages packages WHERE ((packages.architecture)::text = 'kfreebsd-amd64'::text);
+
+
+ALTER TABLE "kfreebsd-amd64".packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: kfreebsd-amd64; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'kfreebsd-amd64'::text);
+
+
+ALTER TABLE "kfreebsd-amd64".pkg_history OWNER TO wbadm;
+
+--
+-- Name: transactions; Type: VIEW; Schema: kfreebsd-amd64; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM public.transactions WHERE ((transactions.architecture)::text = 'kfreebsd-amd64'::text);
+
+
+ALTER TABLE "kfreebsd-amd64".transactions OWNER TO wbadm;
+
+--
+-- Name: users; Type: VIEW; Schema: kfreebsd-amd64; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM public.users WHERE ((users.architecture)::text = 'kfreebsd-amd64'::text);
+
+
+ALTER TABLE "kfreebsd-amd64".users OWNER TO wbadm;
+
+SET search_path = "kfreebsd-amd64_public", pg_catalog;
+
+--
+-- Name: packages; Type: VIEW; Schema: kfreebsd-amd64_public; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM (public.packages NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((packages.architecture)::text = 'kfreebsd-amd64'::text));
+
+
+ALTER TABLE "kfreebsd-amd64_public".packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: kfreebsd-amd64_public; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'kfreebsd-amd64'::text));
+
+
+ALTER TABLE "kfreebsd-amd64_public".pkg_history OWNER TO wbadm;
+
+--
+-- Name: transactions; Type: VIEW; Schema: kfreebsd-amd64_public; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM (public.transactions NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((transactions.architecture)::text = 'kfreebsd-amd64'::text));
+
+
+ALTER TABLE "kfreebsd-amd64_public".transactions OWNER TO wbadm;
+
+--
+-- Name: users; Type: VIEW; Schema: kfreebsd-amd64_public; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM (public.users NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((users.architecture)::text = 'kfreebsd-amd64'::text));
+
+
+ALTER TABLE "kfreebsd-amd64_public".users OWNER TO wbadm;
+
+SET search_path = "kfreebsd-i386", pg_catalog;
+
+--
+-- Name: packages; Type: VIEW; Schema: kfreebsd-i386; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM public.packages packages WHERE ((packages.architecture)::text = 'kfreebsd-i386'::text);
+
+
+ALTER TABLE "kfreebsd-i386".packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: kfreebsd-i386; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'kfreebsd-i386'::text);
+
+
+ALTER TABLE "kfreebsd-i386".pkg_history OWNER TO wbadm;
+
+--
+-- Name: transactions; Type: VIEW; Schema: kfreebsd-i386; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM public.transactions WHERE ((transactions.architecture)::text = 'kfreebsd-i386'::text);
+
+
+ALTER TABLE "kfreebsd-i386".transactions OWNER TO wbadm;
+
+--
+-- Name: users; Type: VIEW; Schema: kfreebsd-i386; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM public.users WHERE ((users.architecture)::text = 'kfreebsd-i386'::text);
+
+
+ALTER TABLE "kfreebsd-i386".users OWNER TO wbadm;
+
+SET search_path = "kfreebsd-i386_public", pg_catalog;
+
+--
+-- Name: packages; Type: VIEW; Schema: kfreebsd-i386_public; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM (public.packages NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((packages.architecture)::text = 'kfreebsd-i386'::text));
+
+
+ALTER TABLE "kfreebsd-i386_public".packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: kfreebsd-i386_public; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'kfreebsd-i386'::text));
+
+
+ALTER TABLE "kfreebsd-i386_public".pkg_history OWNER TO wbadm;
+
+--
+-- Name: transactions; Type: VIEW; Schema: kfreebsd-i386_public; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM (public.transactions NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((transactions.architecture)::text = 'kfreebsd-i386'::text));
+
+
+ALTER TABLE "kfreebsd-i386_public".transactions OWNER TO wbadm;
+
+--
+-- Name: users; Type: VIEW; Schema: kfreebsd-i386_public; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM (public.users NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((users.architecture)::text = 'kfreebsd-i386'::text));
+
+
+ALTER TABLE "kfreebsd-i386_public".users OWNER TO wbadm;
+
+SET search_path = mips, pg_catalog;
+
+--
+-- Name: packages; Type: VIEW; Schema: mips; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM public.packages packages WHERE ((packages.architecture)::text = 'mips'::text);
+
+
+ALTER TABLE mips.packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: mips; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'mips'::text);
+
+
+ALTER TABLE mips.pkg_history OWNER TO wbadm;
+
+--
+-- Name: transactions; Type: VIEW; Schema: mips; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM public.transactions WHERE ((transactions.architecture)::text = 'mips'::text);
+
+
+ALTER TABLE mips.transactions OWNER TO wbadm;
+
+--
+-- Name: users; Type: VIEW; Schema: mips; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM public.users WHERE ((users.architecture)::text = 'mips'::text);
+
+
+ALTER TABLE mips.users OWNER TO wbadm;
+
+SET search_path = mips_public, pg_catalog;
+
+--
+-- Name: packages; Type: VIEW; Schema: mips_public; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM (public.packages NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((packages.architecture)::text = 'mips'::text));
+
+
+ALTER TABLE mips_public.packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: mips_public; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'mips'::text));
+
+
+ALTER TABLE mips_public.pkg_history OWNER TO wbadm;
+
+--
+-- Name: transactions; Type: VIEW; Schema: mips_public; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM (public.transactions NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((transactions.architecture)::text = 'mips'::text));
+
+
+ALTER TABLE mips_public.transactions OWNER TO wbadm;
+
+--
+-- Name: users; Type: VIEW; Schema: mips_public; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM (public.users NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((users.architecture)::text = 'mips'::text));
+
+
+ALTER TABLE mips_public.users OWNER TO wbadm;
+
+SET search_path = mipsel, pg_catalog;
+
+--
+-- Name: packages; Type: VIEW; Schema: mipsel; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM public.packages packages WHERE ((packages.architecture)::text = 'mipsel'::text);
+
+
+ALTER TABLE mipsel.packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: mipsel; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'mipsel'::text);
+
+
+ALTER TABLE mipsel.pkg_history OWNER TO wbadm;
+
+--
+-- Name: transactions; Type: VIEW; Schema: mipsel; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM public.transactions WHERE ((transactions.architecture)::text = 'mipsel'::text);
+
+
+ALTER TABLE mipsel.transactions OWNER TO wbadm;
+
+--
+-- Name: users; Type: VIEW; Schema: mipsel; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM public.users WHERE ((users.architecture)::text = 'mipsel'::text);
+
+
+ALTER TABLE mipsel.users OWNER TO wbadm;
+
+SET search_path = mipsel_public, pg_catalog;
+
+--
+-- Name: packages; Type: VIEW; Schema: mipsel_public; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM (public.packages NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((packages.architecture)::text = 'mipsel'::text));
+
+
+ALTER TABLE mipsel_public.packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: mipsel_public; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'mipsel'::text));
+
+
+ALTER TABLE mipsel_public.pkg_history OWNER TO wbadm;
+
+--
+-- Name: transactions; Type: VIEW; Schema: mipsel_public; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM (public.transactions NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((transactions.architecture)::text = 'mipsel'::text));
+
+
+ALTER TABLE mipsel_public.transactions OWNER TO wbadm;
+
+--
+-- Name: users; Type: VIEW; Schema: mipsel_public; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM (public.users NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((users.architecture)::text = 'mipsel'::text));
+
+
+ALTER TABLE mipsel_public.users OWNER TO wbadm;
+
+SET search_path = powerpc, pg_catalog;
+
+--
+-- Name: packages; Type: VIEW; Schema: powerpc; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM public.packages packages WHERE ((packages.architecture)::text = 'powerpc'::text);
+
+
+ALTER TABLE powerpc.packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: powerpc; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'powerpc'::text);
+
+
+ALTER TABLE powerpc.pkg_history OWNER TO wbadm;
+
+--
+-- Name: transactions; Type: VIEW; Schema: powerpc; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM public.transactions WHERE ((transactions.architecture)::text = 'powerpc'::text);
+
+
+ALTER TABLE powerpc.transactions OWNER TO wbadm;
+
+--
+-- Name: users; Type: VIEW; Schema: powerpc; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM public.users WHERE ((users.architecture)::text = 'powerpc'::text);
+
+
+ALTER TABLE powerpc.users OWNER TO wbadm;
+
+SET search_path = powerpc_public, pg_catalog;
+
+--
+-- Name: packages; Type: VIEW; Schema: powerpc_public; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM (public.packages NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((packages.architecture)::text = 'powerpc'::text));
+
+
+ALTER TABLE powerpc_public.packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: powerpc_public; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'powerpc'::text));
+
+
+ALTER TABLE powerpc_public.pkg_history OWNER TO wbadm;
+
+--
+-- Name: transactions; Type: VIEW; Schema: powerpc_public; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM (public.transactions NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((transactions.architecture)::text = 'powerpc'::text));
+
+
+ALTER TABLE powerpc_public.transactions OWNER TO wbadm;
+
+--
+-- Name: users; Type: VIEW; Schema: powerpc_public; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM (public.users NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((users.architecture)::text = 'powerpc'::text));
+
+
+ALTER TABLE powerpc_public.users OWNER TO wbadm;
 
 SET search_path = public, pg_catalog;
+
+--
+-- Name: distribution_aliases; Type: TABLE; Schema: public; Owner: wbadm; Tablespace: 
+--
+
+CREATE TABLE distribution_aliases (
+    alias character varying NOT NULL,
+    distribution character varying NOT NULL
+);
+
+
+ALTER TABLE public.distribution_aliases OWNER TO wbadm;
+
+--
+-- Name: distribution_architectures; Type: TABLE; Schema: public; Owner: wbadm; Tablespace: 
+--
+
+CREATE TABLE distribution_architectures (
+    distribution character varying NOT NULL,
+    architecture character varying NOT NULL
+);
+
+
+ALTER TABLE public.distribution_architectures OWNER TO wbadm;
+
+--
+-- Name: distribution_architectures_statistics; Type: VIEW; Schema: public; Owner: wbadm
+--
+
+CREATE VIEW distribution_architectures_statistics AS
+    SELECT DISTINCT packages.distribution, packages.architecture, sum(CASE WHEN ((packages.state)::text = 'Needs-Build'::text) THEN 1 ELSE 0 END) AS needsbuild, sum(CASE WHEN ((packages.state_change < (now() - '1 day'::interval)) AND (((packages.state)::text = 'Built'::text) OR ((packages.state)::text = 'Uploaded'::text))) THEN 1 ELSE 0 END) AS notinstalled FROM packages GROUP BY packages.distribution, packages.architecture;
+
+
+ALTER TABLE public.distribution_architectures_statistics OWNER TO wbadm;
 
 --
 -- Name: lastlog; Type: VIEW; Schema: public; Owner: wbadm
 --
 
 CREATE VIEW lastlog AS
-    ((((((((((((((SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, 'alpha'::character varying AS architecture FROM alpha_public.pkg_history ORDER BY pkg_history."timestamp" DESC LIMIT 25) UNION (SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, 'amd64'::character varying AS architecture FROM amd64_public.pkg_history ORDER BY pkg_history."timestamp" DESC LIMIT 25)) UNION (SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, 'arm'::character varying AS architecture FROM arm_public.pkg_history ORDER BY pkg_history."timestamp" DESC LIMIT 25)) UNION (SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, 'armel'::character varying AS architecture FROM armel_public.pkg_history ORDER BY pkg_history."timestamp" DESC LIMIT 25)) UNION (SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, 'hppa'::character varying AS architecture FROM hppa_public.pkg_history ORDER BY pkg_history."timestamp" DESC LIMIT 25)) UNION (SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, 'hurd-i386'::character varying AS architecture FROM "hurd-i386_public".pkg_history ORDER BY pkg_history."timestamp" DESC LIMIT 25)) UNION (SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, 'i386'::character varying AS architecture FROM i386_public.pkg_history ORDER BY pkg_history."timestamp" DESC LIMIT 25)) UNION (SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, 'ia64'::character varying AS architecture FROM ia64_public.pkg_history ORDER BY pkg_history."timestamp" DESC LIMIT 25)) UNION (SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, 'kfreebsd-amd64'::character varying AS architecture FROM "kfreebsd-amd64_public".pkg_history ORDER BY pkg_history."timestamp" DESC LIMIT 25)) UNION (SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, 'kfreebsd-i386'::character varying AS architecture FROM "kfreebsd-i386_public".pkg_history ORDER BY pkg_history."timestamp" DESC LIMIT 25)) UNION (SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, 'mips'::character varying AS architecture FROM mips_public.pkg_history ORDER BY pkg_history."timestamp" DESC LIMIT 25)) UNION (SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, 'mipsel'::character varying AS architecture FROM mipsel_public.pkg_history ORDER BY pkg_history."timestamp" DESC LIMIT 25)) UNION (SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, 'powerpc'::character varying AS architecture FROM powerpc_public.pkg_history ORDER BY pkg_history."timestamp" DESC LIMIT 25)) UNION (SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, 's390'::character varying AS architecture FROM s390_public.pkg_history ORDER BY pkg_history."timestamp" DESC LIMIT 25)) UNION (SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, 'sparc'::character varying AS architecture FROM sparc_public.pkg_history ORDER BY pkg_history."timestamp" DESC LIMIT 25) ORDER BY 4 DESC LIMIT 25;
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.architecture FROM (pkg_history NATURAL JOIN distributions) WHERE (distributions.public = true) ORDER BY pkg_history."timestamp" DESC LIMIT 25;
 
 
 ALTER TABLE public.lastlog OWNER TO wbadm;
@@ -2780,10 +2113,72 @@ ALTER TABLE public.lastlog OWNER TO wbadm;
 --
 
 CREATE VIEW log AS
-    (((((((((((((SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", 'alpha'::character varying AS architecture FROM alpha_public.pkg_history UNION ALL SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", 'amd64'::character varying AS architecture FROM amd64_public.pkg_history) UNION ALL SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", 'arm'::character varying AS architecture FROM arm_public.pkg_history) UNION ALL SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", 'armel'::character varying AS architecture FROM armel_public.pkg_history) UNION ALL SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", 'hppa'::character varying AS architecture FROM hppa_public.pkg_history) UNION ALL SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", 'hurd-i386'::character varying AS architecture FROM "hurd-i386_public".pkg_history) UNION ALL SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", 'i386'::character varying AS architecture FROM i386_public.pkg_history) UNION ALL SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", 'ia64'::character varying AS architecture FROM ia64_public.pkg_history) UNION ALL SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", 'kfreebsd-amd64'::character varying AS architecture FROM "kfreebsd-amd64_public".pkg_history) UNION ALL SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", 'kfreebsd-i386'::character varying AS architecture FROM "kfreebsd-i386_public".pkg_history) UNION ALL SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", 'mips'::character varying AS architecture FROM mips_public.pkg_history) UNION ALL SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", 'mipsel'::character varying AS architecture FROM mipsel_public.pkg_history) UNION ALL SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", 'powerpc'::character varying AS architecture FROM powerpc_public.pkg_history) UNION ALL SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", 's390'::character varying AS architecture FROM s390_public.pkg_history) UNION ALL SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", 'sparc'::character varying AS architecture FROM sparc_public.pkg_history ORDER BY 4 DESC;
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.architecture FROM (pkg_history NATURAL JOIN distributions) WHERE (distributions.public = true) ORDER BY pkg_history."timestamp" DESC;
 
 
 ALTER TABLE public.log OWNER TO wbadm;
+
+--
+-- Name: packages_all; Type: VIEW; Schema: public; Owner: wbadm
+--
+
+CREATE VIEW packages_all AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.architecture FROM (packages NATURAL JOIN distributions) WHERE (distributions.public = true);
+
+
+ALTER TABLE public.packages_all OWNER TO wbadm;
+
+--
+-- Name: packages_public; Type: VIEW; Schema: public; Owner: wbadm
+--
+
+CREATE VIEW packages_public AS
+    SELECT packages.distribution, packages.architecture, packages.package, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all, distributions.public, distributions.sort_order, distributions.auto_dep_wait, distributions.build_dep_resolver, distributions.archive, distributions.suppress_successful_logs FROM (packages NATURAL JOIN distributions) WHERE (distributions.public = true);
+
+
+ALTER TABLE public.packages_public OWNER TO wbadm;
+
+SET search_path = s390, pg_catalog;
+
+--
+-- Name: packages; Type: VIEW; Schema: s390; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM public.packages packages WHERE ((packages.architecture)::text = 's390'::text);
+
+
+ALTER TABLE s390.packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: s390; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 's390'::text);
+
+
+ALTER TABLE s390.pkg_history OWNER TO wbadm;
+
+--
+-- Name: transactions; Type: VIEW; Schema: s390; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM public.transactions WHERE ((transactions.architecture)::text = 's390'::text);
+
+
+ALTER TABLE s390.transactions OWNER TO wbadm;
+
+--
+-- Name: users; Type: VIEW; Schema: s390; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM public.users WHERE ((users.architecture)::text = 's390'::text);
+
+
+ALTER TABLE s390.users OWNER TO wbadm;
 
 SET search_path = s390_public, pg_catalog;
 
@@ -2792,77 +2187,27 @@ SET search_path = s390_public, pg_catalog;
 --
 
 CREATE VIEW packages AS
-    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM s390.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM (public.packages NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((packages.architecture)::text = 's390'::text));
 
 
 ALTER TABLE s390_public.packages OWNER TO wbadm;
 
-SET search_path = sparc_public, pg_catalog;
-
 --
--- Name: packages; Type: VIEW; Schema: sparc_public; Owner: wbadm
+-- Name: pkg_history; Type: VIEW; Schema: s390_public; Owner: wbadm
 --
 
-CREATE VIEW packages AS
-    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM sparc.packages WHERE ((packages.distribution)::text !~~ '%-security'::text);
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 's390'::text));
 
 
-ALTER TABLE sparc_public.packages OWNER TO wbadm;
-
-SET search_path = public, pg_catalog;
-
---
--- Name: packages_all; Type: VIEW; Schema: public; Owner: wbadm
---
-
-CREATE VIEW packages_all AS
-    (((((((((((((SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, 'alpha'::character varying AS architecture FROM alpha_public.packages UNION ALL SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, 'amd64'::character varying AS architecture FROM amd64_public.packages) UNION ALL SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, 'arm'::character varying AS architecture FROM arm_public.packages) UNION ALL SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, 'armel'::character varying AS architecture FROM armel_public.packages) UNION ALL SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, 'hppa'::character varying AS architecture FROM hppa_public.packages) UNION ALL SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, 'hurd-i386'::character varying AS architecture FROM "hurd-i386_public".packages) UNION ALL SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, 'i386'::character varying AS architecture FROM i386_public.packages) UNION ALL SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, 'ia64'::character varying AS architecture FROM ia64_public.packages) UNION ALL SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, 'kfreebsd-amd64'::character varying AS architecture FROM "kfreebsd-amd64_public".packages) UNION ALL SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, 'kfreebsd-i386'::character varying AS architecture FROM "kfreebsd-i386_public".packages) UNION ALL SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, 'mips'::character varying AS architecture FROM mips_public.packages) UNION ALL SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, 'mipsel'::character varying AS architecture FROM mipsel_public.packages) UNION ALL SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, 'powerpc'::character varying AS architecture FROM powerpc_public.packages) UNION ALL SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, 's390'::character varying AS architecture FROM s390_public.packages) UNION ALL SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, 'sparc'::character varying AS architecture FROM sparc_public.packages;
-
-
-ALTER TABLE public.packages_all OWNER TO wbadm;
-
-SET search_path = s390, pg_catalog;
-
---
--- Name: transactions; Type: TABLE; Schema: s390; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE transactions (
-    package character varying,
-    distribution character varying,
-    version character varying,
-    action character varying,
-    prevstate character varying,
-    state character varying,
-    real_user character varying,
-    set_user character varying,
-    "time" timestamp without time zone
-);
-
-
-ALTER TABLE s390.transactions OWNER TO wbadm;
-
---
--- Name: users; Type: TABLE; Schema: s390; Owner: wbadm; Tablespace: 
---
-
-CREATE TABLE users (
-    username character varying NOT NULL,
-    distribution character varying NOT NULL,
-    last_seen timestamp without time zone
-);
-
-
-ALTER TABLE s390.users OWNER TO wbadm;
-
-SET search_path = s390_public, pg_catalog;
+ALTER TABLE s390_public.pkg_history OWNER TO wbadm;
 
 --
 -- Name: transactions; Type: VIEW; Schema: s390_public; Owner: wbadm
 --
 
 CREATE VIEW transactions AS
-    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM s390.transactions WHERE ((transactions.distribution)::text !~~ '%-security'::text);
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM (public.transactions NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((transactions.architecture)::text = 's390'::text));
 
 
 ALTER TABLE s390_public.transactions OWNER TO wbadm;
@@ -2872,7 +2217,7 @@ ALTER TABLE s390_public.transactions OWNER TO wbadm;
 --
 
 CREATE VIEW users AS
-    SELECT users.username, users.distribution, users.last_seen FROM s390.users WHERE ((users.distribution)::text !~~ '%-security'::text);
+    SELECT users.username, users.distribution, users.last_seen FROM (public.users NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((users.architecture)::text = 's390'::text));
 
 
 ALTER TABLE s390_public.users OWNER TO wbadm;
@@ -2880,33 +2225,41 @@ ALTER TABLE s390_public.users OWNER TO wbadm;
 SET search_path = sparc, pg_catalog;
 
 --
--- Name: transactions; Type: TABLE; Schema: sparc; Owner: wbadm; Tablespace: 
+-- Name: packages; Type: VIEW; Schema: sparc; Owner: wbadm
 --
 
-CREATE TABLE transactions (
-    package character varying,
-    distribution character varying,
-    version character varying,
-    action character varying,
-    prevstate character varying,
-    state character varying,
-    real_user character varying,
-    set_user character varying,
-    "time" timestamp without time zone
-);
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM public.packages packages WHERE ((packages.architecture)::text = 'sparc'::text);
+
+
+ALTER TABLE sparc.packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: sparc; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'sparc'::text);
+
+
+ALTER TABLE sparc.pkg_history OWNER TO wbadm;
+
+--
+-- Name: transactions; Type: VIEW; Schema: sparc; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM public.transactions WHERE ((transactions.architecture)::text = 'sparc'::text);
 
 
 ALTER TABLE sparc.transactions OWNER TO wbadm;
 
 --
--- Name: users; Type: TABLE; Schema: sparc; Owner: wbadm; Tablespace: 
+-- Name: users; Type: VIEW; Schema: sparc; Owner: wbadm
 --
 
-CREATE TABLE users (
-    username character varying NOT NULL,
-    distribution character varying NOT NULL,
-    last_seen timestamp without time zone
-);
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM public.users WHERE ((users.architecture)::text = 'sparc'::text);
 
 
 ALTER TABLE sparc.users OWNER TO wbadm;
@@ -2914,11 +2267,31 @@ ALTER TABLE sparc.users OWNER TO wbadm;
 SET search_path = sparc_public, pg_catalog;
 
 --
+-- Name: packages; Type: VIEW; Schema: sparc_public; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM (public.packages NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((packages.architecture)::text = 'sparc'::text));
+
+
+ALTER TABLE sparc_public.packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: sparc_public; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'sparc'::text));
+
+
+ALTER TABLE sparc_public.pkg_history OWNER TO wbadm;
+
+--
 -- Name: transactions; Type: VIEW; Schema: sparc_public; Owner: wbadm
 --
 
 CREATE VIEW transactions AS
-    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM sparc.transactions WHERE ((transactions.distribution)::text !~~ '%-security'::text);
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM (public.transactions NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((transactions.architecture)::text = 'sparc'::text));
 
 
 ALTER TABLE sparc_public.transactions OWNER TO wbadm;
@@ -2928,348 +2301,10 @@ ALTER TABLE sparc_public.transactions OWNER TO wbadm;
 --
 
 CREATE VIEW users AS
-    SELECT users.username, users.distribution, users.last_seen FROM sparc.users WHERE ((users.distribution)::text !~~ '%-security'::text);
+    SELECT users.username, users.distribution, users.last_seen FROM (public.users NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((users.architecture)::text = 'sparc'::text));
 
 
 ALTER TABLE sparc_public.users OWNER TO wbadm;
-
-SET search_path = alpha, pg_catalog;
-
---
--- Name: packages_pkey; Type: CONSTRAINT; Schema: alpha; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY packages
-    ADD CONSTRAINT packages_pkey PRIMARY KEY (package, distribution);
-
-
---
--- Name: pkg_history_pkey; Type: CONSTRAINT; Schema: alpha; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY pkg_history
-    ADD CONSTRAINT pkg_history_pkey PRIMARY KEY (package, distribution, version, "timestamp");
-
-
---
--- Name: users_pkey; Type: CONSTRAINT; Schema: alpha; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (username, distribution);
-
-
-SET search_path = amd64, pg_catalog;
-
---
--- Name: packages_pkey; Type: CONSTRAINT; Schema: amd64; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY packages
-    ADD CONSTRAINT packages_pkey PRIMARY KEY (package, distribution);
-
-
---
--- Name: pkg_history_pkey; Type: CONSTRAINT; Schema: amd64; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY pkg_history
-    ADD CONSTRAINT pkg_history_pkey PRIMARY KEY (package, distribution, version, "timestamp");
-
-
---
--- Name: users_pkey; Type: CONSTRAINT; Schema: amd64; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (username, distribution);
-
-
-SET search_path = arm, pg_catalog;
-
---
--- Name: packages_pkey; Type: CONSTRAINT; Schema: arm; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY packages
-    ADD CONSTRAINT packages_pkey PRIMARY KEY (package, distribution);
-
-
---
--- Name: pkg_history_pkey; Type: CONSTRAINT; Schema: arm; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY pkg_history
-    ADD CONSTRAINT pkg_history_pkey PRIMARY KEY (package, distribution, version, "timestamp");
-
-
---
--- Name: users_pkey; Type: CONSTRAINT; Schema: arm; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (username, distribution);
-
-
-SET search_path = armel, pg_catalog;
-
---
--- Name: packages_pkey; Type: CONSTRAINT; Schema: armel; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY packages
-    ADD CONSTRAINT packages_pkey PRIMARY KEY (package, distribution);
-
-
---
--- Name: pkg_history_pkey; Type: CONSTRAINT; Schema: armel; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY pkg_history
-    ADD CONSTRAINT pkg_history_pkey PRIMARY KEY (package, distribution, version, "timestamp");
-
-
---
--- Name: users_pkey; Type: CONSTRAINT; Schema: armel; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (username, distribution);
-
-
-SET search_path = hppa, pg_catalog;
-
---
--- Name: packages_pkey; Type: CONSTRAINT; Schema: hppa; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY packages
-    ADD CONSTRAINT packages_pkey PRIMARY KEY (package, distribution);
-
-
---
--- Name: pkg_history_pkey; Type: CONSTRAINT; Schema: hppa; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY pkg_history
-    ADD CONSTRAINT pkg_history_pkey PRIMARY KEY (package, distribution, version, "timestamp");
-
-
---
--- Name: users_pkey; Type: CONSTRAINT; Schema: hppa; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (username, distribution);
-
-
-SET search_path = "hurd-i386", pg_catalog;
-
---
--- Name: packages_pkey; Type: CONSTRAINT; Schema: hurd-i386; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY packages
-    ADD CONSTRAINT packages_pkey PRIMARY KEY (package, distribution);
-
-
---
--- Name: pkg_history_pkey; Type: CONSTRAINT; Schema: hurd-i386; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY pkg_history
-    ADD CONSTRAINT pkg_history_pkey PRIMARY KEY (package, distribution, version, "timestamp");
-
-
---
--- Name: users_pkey; Type: CONSTRAINT; Schema: hurd-i386; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (username, distribution);
-
-
-SET search_path = i386, pg_catalog;
-
---
--- Name: packages_pkey; Type: CONSTRAINT; Schema: i386; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY packages
-    ADD CONSTRAINT packages_pkey PRIMARY KEY (package, distribution);
-
-
---
--- Name: pkg_history_pkey; Type: CONSTRAINT; Schema: i386; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY pkg_history
-    ADD CONSTRAINT pkg_history_pkey PRIMARY KEY (package, distribution, version, "timestamp");
-
-
---
--- Name: users_pkey; Type: CONSTRAINT; Schema: i386; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (username, distribution);
-
-
-SET search_path = ia64, pg_catalog;
-
---
--- Name: packages_pkey; Type: CONSTRAINT; Schema: ia64; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY packages
-    ADD CONSTRAINT packages_pkey PRIMARY KEY (package, distribution);
-
-
---
--- Name: pkg_history_pkey; Type: CONSTRAINT; Schema: ia64; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY pkg_history
-    ADD CONSTRAINT pkg_history_pkey PRIMARY KEY (package, distribution, version, "timestamp");
-
-
---
--- Name: users_pkey; Type: CONSTRAINT; Schema: ia64; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (username, distribution);
-
-
-SET search_path = "kfreebsd-amd64", pg_catalog;
-
---
--- Name: packages_pkey; Type: CONSTRAINT; Schema: kfreebsd-amd64; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY packages
-    ADD CONSTRAINT packages_pkey PRIMARY KEY (package, distribution);
-
-
---
--- Name: pkg_history_pkey; Type: CONSTRAINT; Schema: kfreebsd-amd64; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY pkg_history
-    ADD CONSTRAINT pkg_history_pkey PRIMARY KEY (package, distribution, version, "timestamp");
-
-
---
--- Name: users_pkey; Type: CONSTRAINT; Schema: kfreebsd-amd64; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (username, distribution);
-
-
-SET search_path = "kfreebsd-i386", pg_catalog;
-
---
--- Name: packages_pkey; Type: CONSTRAINT; Schema: kfreebsd-i386; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY packages
-    ADD CONSTRAINT packages_pkey PRIMARY KEY (package, distribution);
-
-
---
--- Name: pkg_history_pkey; Type: CONSTRAINT; Schema: kfreebsd-i386; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY pkg_history
-    ADD CONSTRAINT pkg_history_pkey PRIMARY KEY (package, distribution, version, "timestamp");
-
-
---
--- Name: users_pkey; Type: CONSTRAINT; Schema: kfreebsd-i386; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (username, distribution);
-
-
-SET search_path = mips, pg_catalog;
-
---
--- Name: packages_pkey; Type: CONSTRAINT; Schema: mips; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY packages
-    ADD CONSTRAINT packages_pkey PRIMARY KEY (package, distribution);
-
-
---
--- Name: pkg_history_pkey; Type: CONSTRAINT; Schema: mips; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY pkg_history
-    ADD CONSTRAINT pkg_history_pkey PRIMARY KEY (package, distribution, version, "timestamp");
-
-
---
--- Name: users_pkey; Type: CONSTRAINT; Schema: mips; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (username, distribution);
-
-
-SET search_path = mipsel, pg_catalog;
-
---
--- Name: packages_pkey; Type: CONSTRAINT; Schema: mipsel; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY packages
-    ADD CONSTRAINT packages_pkey PRIMARY KEY (package, distribution);
-
-
---
--- Name: pkg_history_pkey; Type: CONSTRAINT; Schema: mipsel; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY pkg_history
-    ADD CONSTRAINT pkg_history_pkey PRIMARY KEY (package, distribution, version, "timestamp");
-
-
---
--- Name: users_pkey; Type: CONSTRAINT; Schema: mipsel; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (username, distribution);
-
-
-SET search_path = powerpc, pg_catalog;
-
---
--- Name: packages_pkey; Type: CONSTRAINT; Schema: powerpc; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY packages
-    ADD CONSTRAINT packages_pkey PRIMARY KEY (package, distribution);
-
-
---
--- Name: pkg_history_pkey; Type: CONSTRAINT; Schema: powerpc; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY pkg_history
-    ADD CONSTRAINT pkg_history_pkey PRIMARY KEY (package, distribution, version, "timestamp");
-
-
---
--- Name: users_pkey; Type: CONSTRAINT; Schema: powerpc; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (username, distribution);
-
 
 SET search_path = public, pg_catalog;
 
@@ -3281,365 +2316,37 @@ ALTER TABLE ONLY distribution_aliases
     ADD CONSTRAINT distribution_aliases_pkey PRIMARY KEY (alias);
 
 
-SET search_path = s390, pg_catalog;
-
 --
--- Name: packages_pkey; Type: CONSTRAINT; Schema: s390; Owner: wbadm; Tablespace: 
+-- Name: distribution_architectures_pkey; Type: CONSTRAINT; Schema: public; Owner: wbadm; Tablespace: 
 --
 
-ALTER TABLE ONLY packages
-    ADD CONSTRAINT packages_pkey PRIMARY KEY (package, distribution);
+ALTER TABLE ONLY distribution_architectures
+    ADD CONSTRAINT distribution_architectures_pkey PRIMARY KEY (distribution, architecture);
 
 
 --
--- Name: pkg_history_pkey; Type: CONSTRAINT; Schema: s390; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY pkg_history
-    ADD CONSTRAINT pkg_history_pkey PRIMARY KEY (package, distribution, version, "timestamp");
-
-
---
--- Name: users_pkey; Type: CONSTRAINT; Schema: s390; Owner: wbadm; Tablespace: 
---
-
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (username, distribution);
-
-
-SET search_path = sparc, pg_catalog;
-
---
--- Name: packages_pkey; Type: CONSTRAINT; Schema: sparc; Owner: wbadm; Tablespace: 
+-- Name: packages_pkey; Type: CONSTRAINT; Schema: public; Owner: wbadm; Tablespace: 
 --
 
 ALTER TABLE ONLY packages
-    ADD CONSTRAINT packages_pkey PRIMARY KEY (package, distribution);
+    ADD CONSTRAINT packages_pkey PRIMARY KEY (architecture, package, distribution);
 
 
 --
--- Name: pkg_history_pkey; Type: CONSTRAINT; Schema: sparc; Owner: wbadm; Tablespace: 
+-- Name: pkg_history_pkey; Type: CONSTRAINT; Schema: public; Owner: wbadm; Tablespace: 
 --
 
 ALTER TABLE ONLY pkg_history
-    ADD CONSTRAINT pkg_history_pkey PRIMARY KEY (package, distribution, version, "timestamp");
+    ADD CONSTRAINT pkg_history_pkey PRIMARY KEY (architecture, package, distribution, version, "timestamp");
 
 
 --
--- Name: users_pkey; Type: CONSTRAINT; Schema: sparc; Owner: wbadm; Tablespace: 
+-- Name: users_pkey; Type: CONSTRAINT; Schema: public; Owner: wbadm; Tablespace: 
 --
 
 ALTER TABLE ONLY users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (username, distribution);
+    ADD CONSTRAINT users_pkey PRIMARY KEY (architecture, username, distribution);
 
-
-SET search_path = alpha, pg_catalog;
-
---
--- Name: idx_alpha_state; Type: INDEX; Schema: alpha; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX idx_alpha_state ON packages USING btree (state);
-
-
---
--- Name: pkg_history_distribution; Type: INDEX; Schema: alpha; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX pkg_history_distribution ON pkg_history USING hash (distribution);
-
-
---
--- Name: pkg_history_index; Type: INDEX; Schema: alpha; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX pkg_history_index ON pkg_history USING btree (package, distribution, "timestamp" DESC, result);
-
-
---
--- Name: pkg_history_timestamp; Type: INDEX; Schema: alpha; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX pkg_history_timestamp ON pkg_history USING btree ("timestamp");
-
-
-SET search_path = amd64, pg_catalog;
-
---
--- Name: idx_amd64_state; Type: INDEX; Schema: amd64; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX idx_amd64_state ON packages USING btree (state);
-
-
---
--- Name: pkg_history_index; Type: INDEX; Schema: amd64; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX pkg_history_index ON pkg_history USING btree (package, distribution, "timestamp" DESC, result);
-
-
---
--- Name: pkg_history_timestamp; Type: INDEX; Schema: amd64; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX pkg_history_timestamp ON pkg_history USING btree ("timestamp");
-
-
-SET search_path = arm, pg_catalog;
-
---
--- Name: idx_arm_state; Type: INDEX; Schema: arm; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX idx_arm_state ON packages USING btree (state);
-
-
---
--- Name: pkg_history_index; Type: INDEX; Schema: arm; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX pkg_history_index ON pkg_history USING btree (package, distribution, "timestamp" DESC, result);
-
-
---
--- Name: pkg_history_timestamp; Type: INDEX; Schema: arm; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX pkg_history_timestamp ON pkg_history USING btree ("timestamp");
-
-
-SET search_path = armel, pg_catalog;
-
---
--- Name: idx_armel_state; Type: INDEX; Schema: armel; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX idx_armel_state ON packages USING btree (state);
-
-
---
--- Name: pkg_history_index; Type: INDEX; Schema: armel; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX pkg_history_index ON pkg_history USING btree (package, distribution, "timestamp" DESC, result);
-
-
---
--- Name: pkg_history_timestamp; Type: INDEX; Schema: armel; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX pkg_history_timestamp ON pkg_history USING btree ("timestamp");
-
-
-SET search_path = hppa, pg_catalog;
-
---
--- Name: idx_hppa_state; Type: INDEX; Schema: hppa; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX idx_hppa_state ON packages USING btree (state);
-
-
---
--- Name: pkg_history_index; Type: INDEX; Schema: hppa; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX pkg_history_index ON pkg_history USING btree (package, distribution, "timestamp" DESC, result);
-
-
---
--- Name: pkg_history_timestamp; Type: INDEX; Schema: hppa; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX pkg_history_timestamp ON pkg_history USING btree ("timestamp");
-
-
-SET search_path = "hurd-i386", pg_catalog;
-
---
--- Name: idx_hurd-i386_state; Type: INDEX; Schema: hurd-i386; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX "idx_hurd-i386_state" ON packages USING btree (state);
-
-
---
--- Name: pkg_history_index; Type: INDEX; Schema: hurd-i386; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX pkg_history_index ON pkg_history USING btree (package, distribution, "timestamp" DESC, result);
-
-
---
--- Name: pkg_history_timestamp; Type: INDEX; Schema: hurd-i386; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX pkg_history_timestamp ON pkg_history USING btree ("timestamp");
-
-
-SET search_path = i386, pg_catalog;
-
---
--- Name: idx_i386_state; Type: INDEX; Schema: i386; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX idx_i386_state ON packages USING btree (state);
-
-
---
--- Name: pkg_history_index; Type: INDEX; Schema: i386; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX pkg_history_index ON pkg_history USING btree (package, distribution, "timestamp" DESC, result);
-
-
---
--- Name: pkg_history_timestamp; Type: INDEX; Schema: i386; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX pkg_history_timestamp ON pkg_history USING btree ("timestamp");
-
-
-SET search_path = ia64, pg_catalog;
-
---
--- Name: idx_ia64_state; Type: INDEX; Schema: ia64; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX idx_ia64_state ON packages USING btree (state);
-
-
---
--- Name: pkg_history_index; Type: INDEX; Schema: ia64; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX pkg_history_index ON pkg_history USING btree (package, distribution, "timestamp" DESC, result);
-
-
---
--- Name: pkg_history_timestamp; Type: INDEX; Schema: ia64; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX pkg_history_timestamp ON pkg_history USING btree ("timestamp");
-
-
-SET search_path = "kfreebsd-amd64", pg_catalog;
-
---
--- Name: idx_kfreebsd-amd64_state; Type: INDEX; Schema: kfreebsd-amd64; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX "idx_kfreebsd-amd64_state" ON packages USING btree (state);
-
-
---
--- Name: pkg_history_index; Type: INDEX; Schema: kfreebsd-amd64; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX pkg_history_index ON pkg_history USING btree (package, distribution, "timestamp" DESC, result);
-
-
---
--- Name: pkg_history_timestamp; Type: INDEX; Schema: kfreebsd-amd64; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX pkg_history_timestamp ON pkg_history USING btree ("timestamp");
-
-
-SET search_path = "kfreebsd-i386", pg_catalog;
-
---
--- Name: idx_kfreebsd-i386_state; Type: INDEX; Schema: kfreebsd-i386; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX "idx_kfreebsd-i386_state" ON packages USING btree (state);
-
-
---
--- Name: pkg_history_index; Type: INDEX; Schema: kfreebsd-i386; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX pkg_history_index ON pkg_history USING btree (package, distribution, "timestamp" DESC, result);
-
-
---
--- Name: pkg_history_timestamp; Type: INDEX; Schema: kfreebsd-i386; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX pkg_history_timestamp ON pkg_history USING btree ("timestamp");
-
-
-SET search_path = mips, pg_catalog;
-
---
--- Name: idx_mips_state; Type: INDEX; Schema: mips; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX idx_mips_state ON packages USING btree (state);
-
-
---
--- Name: pkg_history_index; Type: INDEX; Schema: mips; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX pkg_history_index ON pkg_history USING btree (package, distribution, "timestamp" DESC, result);
-
-
---
--- Name: pkg_history_timestamp; Type: INDEX; Schema: mips; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX pkg_history_timestamp ON pkg_history USING btree ("timestamp");
-
-
-SET search_path = mipsel, pg_catalog;
-
---
--- Name: idx_mipsel_state; Type: INDEX; Schema: mipsel; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX idx_mipsel_state ON packages USING btree (state);
-
-
---
--- Name: pkg_history_index; Type: INDEX; Schema: mipsel; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX pkg_history_index ON pkg_history USING btree (package, distribution, "timestamp" DESC, result);
-
-
---
--- Name: pkg_history_timestamp; Type: INDEX; Schema: mipsel; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX pkg_history_timestamp ON pkg_history USING btree ("timestamp");
-
-
-SET search_path = powerpc, pg_catalog;
-
---
--- Name: idx_powerpc_state; Type: INDEX; Schema: powerpc; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX idx_powerpc_state ON packages USING btree (state);
-
-
---
--- Name: pkg_history_index; Type: INDEX; Schema: powerpc; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX pkg_history_index ON pkg_history USING btree (package, distribution, "timestamp" DESC, result);
-
-
---
--- Name: pkg_history_timestamp; Type: INDEX; Schema: powerpc; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX pkg_history_timestamp ON pkg_history USING btree ("timestamp");
-
-
-SET search_path = public, pg_catalog;
 
 --
 -- Name: distribution_unique; Type: INDEX; Schema: public; Owner: wbadm; Tablespace: 
@@ -3655,47 +2362,22 @@ CREATE UNIQUE INDEX distribution_unique ON distributions USING btree (distributi
 CREATE INDEX distributions_distribution ON distributions USING hash (distribution);
 
 
-SET search_path = s390, pg_catalog;
-
 --
--- Name: idx_s390_state; Type: INDEX; Schema: s390; Owner: wbadm; Tablespace: 
+-- Name: packages_arch_dist_state; Type: INDEX; Schema: public; Owner: wbadm; Tablespace: 
 --
 
-CREATE INDEX idx_s390_state ON packages USING btree (state);
+CREATE INDEX packages_arch_dist_state ON packages USING btree (architecture, distribution, upper((state)::text));
 
 
 --
--- Name: pkg_history_index; Type: INDEX; Schema: s390; Owner: wbadm; Tablespace: 
+-- Name: packages_distribution_package; Type: INDEX; Schema: public; Owner: wbadm; Tablespace: 
 --
 
-CREATE INDEX pkg_history_index ON pkg_history USING btree (package, distribution, "timestamp" DESC, result);
-
-
---
--- Name: pkg_history_timestamp; Type: INDEX; Schema: s390; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX pkg_history_timestamp ON pkg_history USING btree ("timestamp");
-
-
-SET search_path = sparc, pg_catalog;
-
---
--- Name: idx_sparc_state; Type: INDEX; Schema: sparc; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX idx_sparc_state ON packages USING btree (state);
+CREATE INDEX packages_distribution_package ON packages USING btree (distribution, package);
 
 
 --
--- Name: pkg_history_index; Type: INDEX; Schema: sparc; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX pkg_history_index ON pkg_history USING btree (package, distribution, "timestamp" DESC, result);
-
-
---
--- Name: pkg_history_timestamp; Type: INDEX; Schema: sparc; Owner: wbadm; Tablespace: 
+-- Name: pkg_history_timestamp; Type: INDEX; Schema: public; Owner: wbadm; Tablespace: 
 --
 
 CREATE INDEX pkg_history_timestamp ON pkg_history USING btree ("timestamp");
@@ -3704,339 +2386,1081 @@ CREATE INDEX pkg_history_timestamp ON pkg_history USING btree ("timestamp");
 SET search_path = alpha, pg_catalog;
 
 --
--- Name: packages_distribution_fkey; Type: FK CONSTRAINT; Schema: alpha; Owner: wbadm
+-- Name: packages_delete; Type: RULE; Schema: alpha; Owner: wbadm
 --
 
-ALTER TABLE ONLY packages
-    ADD CONSTRAINT packages_distribution_fkey FOREIGN KEY (distribution) REFERENCES public.distributions(distribution);
-
-
---
--- Name: pkg_history_distribution_fk; Type: FK CONSTRAINT; Schema: alpha; Owner: wbadm
---
-
-ALTER TABLE ONLY pkg_history
-    ADD CONSTRAINT pkg_history_distribution_fk FOREIGN KEY (distribution) REFERENCES public.distributions(distribution) MATCH FULL;
+CREATE RULE packages_delete AS ON DELETE TO packages DO INSTEAD DELETE FROM public.packages p WHERE ((((p.architecture)::text = 'alpha'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
 
 
 --
--- Name: users_distribution_fkey; Type: FK CONSTRAINT; Schema: alpha; Owner: wbadm
+-- Name: packages_insert; Type: RULE; Schema: alpha; Owner: wbadm
 --
 
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_distribution_fkey FOREIGN KEY (distribution) REFERENCES public.distributions(distribution);
+CREATE RULE packages_insert AS ON INSERT TO packages DO INSTEAD INSERT INTO public.packages (architecture, package, distribution, version, state, section, priority, installed_version, previous_state, state_change, notes, builder, failed, old_failed, binary_nmu_version, binary_nmu_changelog, failed_category, permbuildpri, buildpri, depends, rel, bd_problem, extra_depends, extra_conflicts, build_arch_all) VALUES ('alpha'::character varying, new.package, new.distribution, new.version, new.state, new.section, new.priority, new.installed_version, new.previous_state, new.state_change, new.notes, new.builder, new.failed, new.old_failed, new.binary_nmu_version, new.binary_nmu_changelog, new.failed_category, new.permbuildpri, new.buildpri, new.depends, new.rel, new.bd_problem, new.extra_depends, new.extra_conflicts, new.build_arch_all);
+
+
+--
+-- Name: packages_update; Type: RULE; Schema: alpha; Owner: wbadm
+--
+
+CREATE RULE packages_update AS ON UPDATE TO packages DO INSTEAD UPDATE public.packages p SET version = new.version, state = new.state, section = new.section, priority = new.priority, installed_version = new.installed_version, previous_state = new.previous_state, state_change = new.state_change, notes = new.notes, builder = new.builder, failed = new.failed, old_failed = new.old_failed, binary_nmu_version = new.binary_nmu_version, binary_nmu_changelog = new.binary_nmu_changelog, failed_category = new.failed_category, permbuildpri = new.permbuildpri, buildpri = new.buildpri, depends = new.depends, rel = new.rel, bd_problem = new.bd_problem, extra_depends = new.extra_depends, extra_conflicts = new.extra_conflicts, build_arch_all = new.build_arch_all WHERE ((((p.architecture)::text = 'alpha'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
+
+
+--
+-- Name: pkg_history_delete; Type: RULE; Schema: alpha; Owner: wbadm
+--
+
+CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FROM public.pkg_history p WHERE ((((((p.architecture)::text = 'alpha'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: pkg_history_insert; Type: RULE; Schema: alpha; Owner: wbadm
+--
+
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('alpha'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+
+
+--
+-- Name: pkg_history_update; Type: RULE; Schema: alpha; Owner: wbadm
+--
+
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 'alpha'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: transactions_insert; Type: RULE; Schema: alpha; Owner: wbadm
+--
+
+CREATE RULE transactions_insert AS ON INSERT TO transactions DO INSTEAD INSERT INTO public.transactions (architecture, package, distribution, version, action, prevstate, state, real_user, set_user, "time") VALUES ('alpha'::character varying, new.package, new.distribution, new.version, new.action, new.prevstate, new.state, new.real_user, new.set_user, new."time");
+
+
+--
+-- Name: users_delete; Type: RULE; Schema: alpha; Owner: wbadm
+--
+
+CREATE RULE users_delete AS ON DELETE TO users DO INSTEAD DELETE FROM public.users u WHERE ((((u.architecture)::text = 'alpha'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
+
+
+--
+-- Name: users_insert; Type: RULE; Schema: alpha; Owner: wbadm
+--
+
+CREATE RULE users_insert AS ON INSERT TO users DO INSTEAD INSERT INTO public.users (architecture, username, distribution, last_seen) VALUES ('alpha'::character varying, new.username, new.distribution, new.last_seen);
+
+
+--
+-- Name: users_update; Type: RULE; Schema: alpha; Owner: wbadm
+--
+
+CREATE RULE users_update AS ON UPDATE TO users DO INSTEAD UPDATE public.users u SET last_seen = new.last_seen WHERE ((((u.architecture)::text = 'alpha'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
 
 
 SET search_path = amd64, pg_catalog;
 
 --
--- Name: packages_distribution_fkey; Type: FK CONSTRAINT; Schema: amd64; Owner: wbadm
+-- Name: packages_delete; Type: RULE; Schema: amd64; Owner: wbadm
 --
 
-ALTER TABLE ONLY packages
-    ADD CONSTRAINT packages_distribution_fkey FOREIGN KEY (distribution) REFERENCES public.distributions(distribution);
-
-
---
--- Name: pkg_history_distribution_fk; Type: FK CONSTRAINT; Schema: amd64; Owner: wbadm
---
-
-ALTER TABLE ONLY pkg_history
-    ADD CONSTRAINT pkg_history_distribution_fk FOREIGN KEY (distribution) REFERENCES public.distributions(distribution) MATCH FULL;
+CREATE RULE packages_delete AS ON DELETE TO packages DO INSTEAD DELETE FROM public.packages p WHERE ((((p.architecture)::text = 'amd64'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
 
 
 --
--- Name: users_distribution_fkey; Type: FK CONSTRAINT; Schema: amd64; Owner: wbadm
+-- Name: packages_insert; Type: RULE; Schema: amd64; Owner: wbadm
 --
 
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_distribution_fkey FOREIGN KEY (distribution) REFERENCES public.distributions(distribution);
+CREATE RULE packages_insert AS ON INSERT TO packages DO INSTEAD INSERT INTO public.packages (architecture, package, distribution, version, state, section, priority, installed_version, previous_state, state_change, notes, builder, failed, old_failed, binary_nmu_version, binary_nmu_changelog, failed_category, permbuildpri, buildpri, depends, rel, bd_problem, extra_depends, extra_conflicts, build_arch_all) VALUES ('amd64'::character varying, new.package, new.distribution, new.version, new.state, new.section, new.priority, new.installed_version, new.previous_state, new.state_change, new.notes, new.builder, new.failed, new.old_failed, new.binary_nmu_version, new.binary_nmu_changelog, new.failed_category, new.permbuildpri, new.buildpri, new.depends, new.rel, new.bd_problem, new.extra_depends, new.extra_conflicts, new.build_arch_all);
+
+
+--
+-- Name: packages_update; Type: RULE; Schema: amd64; Owner: wbadm
+--
+
+CREATE RULE packages_update AS ON UPDATE TO packages DO INSTEAD UPDATE public.packages p SET version = new.version, state = new.state, section = new.section, priority = new.priority, installed_version = new.installed_version, previous_state = new.previous_state, state_change = new.state_change, notes = new.notes, builder = new.builder, failed = new.failed, old_failed = new.old_failed, binary_nmu_version = new.binary_nmu_version, binary_nmu_changelog = new.binary_nmu_changelog, failed_category = new.failed_category, permbuildpri = new.permbuildpri, buildpri = new.buildpri, depends = new.depends, rel = new.rel, bd_problem = new.bd_problem, extra_depends = new.extra_depends, extra_conflicts = new.extra_conflicts, build_arch_all = new.build_arch_all WHERE ((((p.architecture)::text = 'amd64'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
+
+
+--
+-- Name: pkg_history_delete; Type: RULE; Schema: amd64; Owner: wbadm
+--
+
+CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FROM public.pkg_history p WHERE ((((((p.architecture)::text = 'amd64'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: pkg_history_insert; Type: RULE; Schema: amd64; Owner: wbadm
+--
+
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('amd64'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+
+
+--
+-- Name: pkg_history_update; Type: RULE; Schema: amd64; Owner: wbadm
+--
+
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 'amd64'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: transactions_insert; Type: RULE; Schema: amd64; Owner: wbadm
+--
+
+CREATE RULE transactions_insert AS ON INSERT TO transactions DO INSTEAD INSERT INTO public.transactions (architecture, package, distribution, version, action, prevstate, state, real_user, set_user, "time") VALUES ('amd64'::character varying, new.package, new.distribution, new.version, new.action, new.prevstate, new.state, new.real_user, new.set_user, new."time");
+
+
+--
+-- Name: users_delete; Type: RULE; Schema: amd64; Owner: wbadm
+--
+
+CREATE RULE users_delete AS ON DELETE TO users DO INSTEAD DELETE FROM public.users u WHERE ((((u.architecture)::text = 'amd64'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
+
+
+--
+-- Name: users_insert; Type: RULE; Schema: amd64; Owner: wbadm
+--
+
+CREATE RULE users_insert AS ON INSERT TO users DO INSTEAD INSERT INTO public.users (architecture, username, distribution, last_seen) VALUES ('amd64'::character varying, new.username, new.distribution, new.last_seen);
+
+
+--
+-- Name: users_update; Type: RULE; Schema: amd64; Owner: wbadm
+--
+
+CREATE RULE users_update AS ON UPDATE TO users DO INSTEAD UPDATE public.users u SET last_seen = new.last_seen WHERE ((((u.architecture)::text = 'amd64'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
 
 
 SET search_path = arm, pg_catalog;
 
 --
--- Name: packages_distribution_fkey; Type: FK CONSTRAINT; Schema: arm; Owner: wbadm
+-- Name: packages_delete; Type: RULE; Schema: arm; Owner: wbadm
 --
 
-ALTER TABLE ONLY packages
-    ADD CONSTRAINT packages_distribution_fkey FOREIGN KEY (distribution) REFERENCES public.distributions(distribution);
-
-
---
--- Name: pkg_history_distribution_fk; Type: FK CONSTRAINT; Schema: arm; Owner: wbadm
---
-
-ALTER TABLE ONLY pkg_history
-    ADD CONSTRAINT pkg_history_distribution_fk FOREIGN KEY (distribution) REFERENCES public.distributions(distribution) MATCH FULL;
+CREATE RULE packages_delete AS ON DELETE TO packages DO INSTEAD DELETE FROM public.packages p WHERE ((((p.architecture)::text = 'arm'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
 
 
 --
--- Name: users_distribution_fkey; Type: FK CONSTRAINT; Schema: arm; Owner: wbadm
+-- Name: packages_insert; Type: RULE; Schema: arm; Owner: wbadm
 --
 
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_distribution_fkey FOREIGN KEY (distribution) REFERENCES public.distributions(distribution);
+CREATE RULE packages_insert AS ON INSERT TO packages DO INSTEAD INSERT INTO public.packages (architecture, package, distribution, version, state, section, priority, installed_version, previous_state, state_change, notes, builder, failed, old_failed, binary_nmu_version, binary_nmu_changelog, failed_category, permbuildpri, buildpri, depends, rel, bd_problem, extra_depends, extra_conflicts, build_arch_all) VALUES ('arm'::character varying, new.package, new.distribution, new.version, new.state, new.section, new.priority, new.installed_version, new.previous_state, new.state_change, new.notes, new.builder, new.failed, new.old_failed, new.binary_nmu_version, new.binary_nmu_changelog, new.failed_category, new.permbuildpri, new.buildpri, new.depends, new.rel, new.bd_problem, new.extra_depends, new.extra_conflicts, new.build_arch_all);
+
+
+--
+-- Name: packages_update; Type: RULE; Schema: arm; Owner: wbadm
+--
+
+CREATE RULE packages_update AS ON UPDATE TO packages DO INSTEAD UPDATE public.packages p SET version = new.version, state = new.state, section = new.section, priority = new.priority, installed_version = new.installed_version, previous_state = new.previous_state, state_change = new.state_change, notes = new.notes, builder = new.builder, failed = new.failed, old_failed = new.old_failed, binary_nmu_version = new.binary_nmu_version, binary_nmu_changelog = new.binary_nmu_changelog, failed_category = new.failed_category, permbuildpri = new.permbuildpri, buildpri = new.buildpri, depends = new.depends, rel = new.rel, bd_problem = new.bd_problem, extra_depends = new.extra_depends, extra_conflicts = new.extra_conflicts, build_arch_all = new.build_arch_all WHERE ((((p.architecture)::text = 'arm'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
+
+
+--
+-- Name: pkg_history_delete; Type: RULE; Schema: arm; Owner: wbadm
+--
+
+CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FROM public.pkg_history p WHERE ((((((p.architecture)::text = 'arm'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: pkg_history_insert; Type: RULE; Schema: arm; Owner: wbadm
+--
+
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('arm'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+
+
+--
+-- Name: pkg_history_update; Type: RULE; Schema: arm; Owner: wbadm
+--
+
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 'arm'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: transactions_insert; Type: RULE; Schema: arm; Owner: wbadm
+--
+
+CREATE RULE transactions_insert AS ON INSERT TO transactions DO INSTEAD INSERT INTO public.transactions (architecture, package, distribution, version, action, prevstate, state, real_user, set_user, "time") VALUES ('arm'::character varying, new.package, new.distribution, new.version, new.action, new.prevstate, new.state, new.real_user, new.set_user, new."time");
+
+
+--
+-- Name: users_delete; Type: RULE; Schema: arm; Owner: wbadm
+--
+
+CREATE RULE users_delete AS ON DELETE TO users DO INSTEAD DELETE FROM public.users u WHERE ((((u.architecture)::text = 'arm'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
+
+
+--
+-- Name: users_insert; Type: RULE; Schema: arm; Owner: wbadm
+--
+
+CREATE RULE users_insert AS ON INSERT TO users DO INSTEAD INSERT INTO public.users (architecture, username, distribution, last_seen) VALUES ('arm'::character varying, new.username, new.distribution, new.last_seen);
+
+
+--
+-- Name: users_update; Type: RULE; Schema: arm; Owner: wbadm
+--
+
+CREATE RULE users_update AS ON UPDATE TO users DO INSTEAD UPDATE public.users u SET last_seen = new.last_seen WHERE ((((u.architecture)::text = 'arm'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
 
 
 SET search_path = armel, pg_catalog;
 
 --
--- Name: packages_distribution_fkey; Type: FK CONSTRAINT; Schema: armel; Owner: wbadm
+-- Name: packages_delete; Type: RULE; Schema: armel; Owner: wbadm
 --
 
-ALTER TABLE ONLY packages
-    ADD CONSTRAINT packages_distribution_fkey FOREIGN KEY (distribution) REFERENCES public.distributions(distribution);
-
-
---
--- Name: pkg_history_distribution_fk; Type: FK CONSTRAINT; Schema: armel; Owner: wbadm
---
-
-ALTER TABLE ONLY pkg_history
-    ADD CONSTRAINT pkg_history_distribution_fk FOREIGN KEY (distribution) REFERENCES public.distributions(distribution) MATCH FULL;
+CREATE RULE packages_delete AS ON DELETE TO packages DO INSTEAD DELETE FROM public.packages p WHERE ((((p.architecture)::text = 'armel'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
 
 
 --
--- Name: users_distribution_fkey; Type: FK CONSTRAINT; Schema: armel; Owner: wbadm
+-- Name: packages_insert; Type: RULE; Schema: armel; Owner: wbadm
 --
 
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_distribution_fkey FOREIGN KEY (distribution) REFERENCES public.distributions(distribution);
+CREATE RULE packages_insert AS ON INSERT TO packages DO INSTEAD INSERT INTO public.packages (architecture, package, distribution, version, state, section, priority, installed_version, previous_state, state_change, notes, builder, failed, old_failed, binary_nmu_version, binary_nmu_changelog, failed_category, permbuildpri, buildpri, depends, rel, bd_problem, extra_depends, extra_conflicts, build_arch_all) VALUES ('armel'::character varying, new.package, new.distribution, new.version, new.state, new.section, new.priority, new.installed_version, new.previous_state, new.state_change, new.notes, new.builder, new.failed, new.old_failed, new.binary_nmu_version, new.binary_nmu_changelog, new.failed_category, new.permbuildpri, new.buildpri, new.depends, new.rel, new.bd_problem, new.extra_depends, new.extra_conflicts, new.build_arch_all);
+
+
+--
+-- Name: packages_update; Type: RULE; Schema: armel; Owner: wbadm
+--
+
+CREATE RULE packages_update AS ON UPDATE TO packages DO INSTEAD UPDATE public.packages p SET version = new.version, state = new.state, section = new.section, priority = new.priority, installed_version = new.installed_version, previous_state = new.previous_state, state_change = new.state_change, notes = new.notes, builder = new.builder, failed = new.failed, old_failed = new.old_failed, binary_nmu_version = new.binary_nmu_version, binary_nmu_changelog = new.binary_nmu_changelog, failed_category = new.failed_category, permbuildpri = new.permbuildpri, buildpri = new.buildpri, depends = new.depends, rel = new.rel, bd_problem = new.bd_problem, extra_depends = new.extra_depends, extra_conflicts = new.extra_conflicts, build_arch_all = new.build_arch_all WHERE ((((p.architecture)::text = 'armel'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
+
+
+--
+-- Name: pkg_history_delete; Type: RULE; Schema: armel; Owner: wbadm
+--
+
+CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FROM public.pkg_history p WHERE ((((((p.architecture)::text = 'armel'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: pkg_history_insert; Type: RULE; Schema: armel; Owner: wbadm
+--
+
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('armel'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+
+
+--
+-- Name: pkg_history_update; Type: RULE; Schema: armel; Owner: wbadm
+--
+
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 'armel'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: transactions_insert; Type: RULE; Schema: armel; Owner: wbadm
+--
+
+CREATE RULE transactions_insert AS ON INSERT TO transactions DO INSTEAD INSERT INTO public.transactions (architecture, package, distribution, version, action, prevstate, state, real_user, set_user, "time") VALUES ('armel'::character varying, new.package, new.distribution, new.version, new.action, new.prevstate, new.state, new.real_user, new.set_user, new."time");
+
+
+--
+-- Name: users_delete; Type: RULE; Schema: armel; Owner: wbadm
+--
+
+CREATE RULE users_delete AS ON DELETE TO users DO INSTEAD DELETE FROM public.users u WHERE ((((u.architecture)::text = 'armel'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
+
+
+--
+-- Name: users_insert; Type: RULE; Schema: armel; Owner: wbadm
+--
+
+CREATE RULE users_insert AS ON INSERT TO users DO INSTEAD INSERT INTO public.users (architecture, username, distribution, last_seen) VALUES ('armel'::character varying, new.username, new.distribution, new.last_seen);
+
+
+--
+-- Name: users_update; Type: RULE; Schema: armel; Owner: wbadm
+--
+
+CREATE RULE users_update AS ON UPDATE TO users DO INSTEAD UPDATE public.users u SET last_seen = new.last_seen WHERE ((((u.architecture)::text = 'armel'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
 
 
 SET search_path = hppa, pg_catalog;
 
 --
--- Name: packages_distribution_fkey; Type: FK CONSTRAINT; Schema: hppa; Owner: wbadm
+-- Name: packages_delete; Type: RULE; Schema: hppa; Owner: wbadm
 --
 
-ALTER TABLE ONLY packages
-    ADD CONSTRAINT packages_distribution_fkey FOREIGN KEY (distribution) REFERENCES public.distributions(distribution);
-
-
---
--- Name: pkg_history_distribution_fk; Type: FK CONSTRAINT; Schema: hppa; Owner: wbadm
---
-
-ALTER TABLE ONLY pkg_history
-    ADD CONSTRAINT pkg_history_distribution_fk FOREIGN KEY (distribution) REFERENCES public.distributions(distribution) MATCH FULL;
+CREATE RULE packages_delete AS ON DELETE TO packages DO INSTEAD DELETE FROM public.packages p WHERE ((((p.architecture)::text = 'hppa'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
 
 
 --
--- Name: users_distribution_fkey; Type: FK CONSTRAINT; Schema: hppa; Owner: wbadm
+-- Name: packages_insert; Type: RULE; Schema: hppa; Owner: wbadm
 --
 
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_distribution_fkey FOREIGN KEY (distribution) REFERENCES public.distributions(distribution);
+CREATE RULE packages_insert AS ON INSERT TO packages DO INSTEAD INSERT INTO public.packages (architecture, package, distribution, version, state, section, priority, installed_version, previous_state, state_change, notes, builder, failed, old_failed, binary_nmu_version, binary_nmu_changelog, failed_category, permbuildpri, buildpri, depends, rel, bd_problem, extra_depends, extra_conflicts, build_arch_all) VALUES ('hppa'::character varying, new.package, new.distribution, new.version, new.state, new.section, new.priority, new.installed_version, new.previous_state, new.state_change, new.notes, new.builder, new.failed, new.old_failed, new.binary_nmu_version, new.binary_nmu_changelog, new.failed_category, new.permbuildpri, new.buildpri, new.depends, new.rel, new.bd_problem, new.extra_depends, new.extra_conflicts, new.build_arch_all);
+
+
+--
+-- Name: packages_update; Type: RULE; Schema: hppa; Owner: wbadm
+--
+
+CREATE RULE packages_update AS ON UPDATE TO packages DO INSTEAD UPDATE public.packages p SET version = new.version, state = new.state, section = new.section, priority = new.priority, installed_version = new.installed_version, previous_state = new.previous_state, state_change = new.state_change, notes = new.notes, builder = new.builder, failed = new.failed, old_failed = new.old_failed, binary_nmu_version = new.binary_nmu_version, binary_nmu_changelog = new.binary_nmu_changelog, failed_category = new.failed_category, permbuildpri = new.permbuildpri, buildpri = new.buildpri, depends = new.depends, rel = new.rel, bd_problem = new.bd_problem, extra_depends = new.extra_depends, extra_conflicts = new.extra_conflicts, build_arch_all = new.build_arch_all WHERE ((((p.architecture)::text = 'hppa'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
+
+
+--
+-- Name: pkg_history_delete; Type: RULE; Schema: hppa; Owner: wbadm
+--
+
+CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FROM public.pkg_history p WHERE ((((((p.architecture)::text = 'hppa'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: pkg_history_insert; Type: RULE; Schema: hppa; Owner: wbadm
+--
+
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('hppa'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+
+
+--
+-- Name: pkg_history_update; Type: RULE; Schema: hppa; Owner: wbadm
+--
+
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 'hppa'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: transactions_insert; Type: RULE; Schema: hppa; Owner: wbadm
+--
+
+CREATE RULE transactions_insert AS ON INSERT TO transactions DO INSTEAD INSERT INTO public.transactions (architecture, package, distribution, version, action, prevstate, state, real_user, set_user, "time") VALUES ('hppa'::character varying, new.package, new.distribution, new.version, new.action, new.prevstate, new.state, new.real_user, new.set_user, new."time");
+
+
+--
+-- Name: users_delete; Type: RULE; Schema: hppa; Owner: wbadm
+--
+
+CREATE RULE users_delete AS ON DELETE TO users DO INSTEAD DELETE FROM public.users u WHERE ((((u.architecture)::text = 'hppa'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
+
+
+--
+-- Name: users_insert; Type: RULE; Schema: hppa; Owner: wbadm
+--
+
+CREATE RULE users_insert AS ON INSERT TO users DO INSTEAD INSERT INTO public.users (architecture, username, distribution, last_seen) VALUES ('hppa'::character varying, new.username, new.distribution, new.last_seen);
+
+
+--
+-- Name: users_update; Type: RULE; Schema: hppa; Owner: wbadm
+--
+
+CREATE RULE users_update AS ON UPDATE TO users DO INSTEAD UPDATE public.users u SET last_seen = new.last_seen WHERE ((((u.architecture)::text = 'hppa'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
 
 
 SET search_path = "hurd-i386", pg_catalog;
 
 --
--- Name: packages_distribution_fkey; Type: FK CONSTRAINT; Schema: hurd-i386; Owner: wbadm
+-- Name: packages_delete; Type: RULE; Schema: hurd-i386; Owner: wbadm
 --
 
-ALTER TABLE ONLY packages
-    ADD CONSTRAINT packages_distribution_fkey FOREIGN KEY (distribution) REFERENCES public.distributions(distribution);
-
-
---
--- Name: pkg_history_distribution_fk; Type: FK CONSTRAINT; Schema: hurd-i386; Owner: wbadm
---
-
-ALTER TABLE ONLY pkg_history
-    ADD CONSTRAINT pkg_history_distribution_fk FOREIGN KEY (distribution) REFERENCES public.distributions(distribution) MATCH FULL;
+CREATE RULE packages_delete AS ON DELETE TO packages DO INSTEAD DELETE FROM public.packages p WHERE ((((p.architecture)::text = 'hurd-i386'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
 
 
 --
--- Name: users_distribution_fkey; Type: FK CONSTRAINT; Schema: hurd-i386; Owner: wbadm
+-- Name: packages_insert; Type: RULE; Schema: hurd-i386; Owner: wbadm
 --
 
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_distribution_fkey FOREIGN KEY (distribution) REFERENCES public.distributions(distribution);
+CREATE RULE packages_insert AS ON INSERT TO packages DO INSTEAD INSERT INTO public.packages (architecture, package, distribution, version, state, section, priority, installed_version, previous_state, state_change, notes, builder, failed, old_failed, binary_nmu_version, binary_nmu_changelog, failed_category, permbuildpri, buildpri, depends, rel, bd_problem, extra_depends, extra_conflicts, build_arch_all) VALUES ('hurd-i386'::character varying, new.package, new.distribution, new.version, new.state, new.section, new.priority, new.installed_version, new.previous_state, new.state_change, new.notes, new.builder, new.failed, new.old_failed, new.binary_nmu_version, new.binary_nmu_changelog, new.failed_category, new.permbuildpri, new.buildpri, new.depends, new.rel, new.bd_problem, new.extra_depends, new.extra_conflicts, new.build_arch_all);
+
+
+--
+-- Name: packages_update; Type: RULE; Schema: hurd-i386; Owner: wbadm
+--
+
+CREATE RULE packages_update AS ON UPDATE TO packages DO INSTEAD UPDATE public.packages p SET version = new.version, state = new.state, section = new.section, priority = new.priority, installed_version = new.installed_version, previous_state = new.previous_state, state_change = new.state_change, notes = new.notes, builder = new.builder, failed = new.failed, old_failed = new.old_failed, binary_nmu_version = new.binary_nmu_version, binary_nmu_changelog = new.binary_nmu_changelog, failed_category = new.failed_category, permbuildpri = new.permbuildpri, buildpri = new.buildpri, depends = new.depends, rel = new.rel, bd_problem = new.bd_problem, extra_depends = new.extra_depends, extra_conflicts = new.extra_conflicts, build_arch_all = new.build_arch_all WHERE ((((p.architecture)::text = 'hurd-i386'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
+
+
+--
+-- Name: pkg_history_delete; Type: RULE; Schema: hurd-i386; Owner: wbadm
+--
+
+CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FROM public.pkg_history p WHERE ((((((p.architecture)::text = 'hurd-i386'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: pkg_history_insert; Type: RULE; Schema: hurd-i386; Owner: wbadm
+--
+
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('hurd-i386'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+
+
+--
+-- Name: pkg_history_update; Type: RULE; Schema: hurd-i386; Owner: wbadm
+--
+
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 'hurd-i386'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: transactions_insert; Type: RULE; Schema: hurd-i386; Owner: wbadm
+--
+
+CREATE RULE transactions_insert AS ON INSERT TO transactions DO INSTEAD INSERT INTO public.transactions (architecture, package, distribution, version, action, prevstate, state, real_user, set_user, "time") VALUES ('hurd-i386'::character varying, new.package, new.distribution, new.version, new.action, new.prevstate, new.state, new.real_user, new.set_user, new."time");
+
+
+--
+-- Name: users_delete; Type: RULE; Schema: hurd-i386; Owner: wbadm
+--
+
+CREATE RULE users_delete AS ON DELETE TO users DO INSTEAD DELETE FROM public.users u WHERE ((((u.architecture)::text = 'hurd-i386'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
+
+
+--
+-- Name: users_insert; Type: RULE; Schema: hurd-i386; Owner: wbadm
+--
+
+CREATE RULE users_insert AS ON INSERT TO users DO INSTEAD INSERT INTO public.users (architecture, username, distribution, last_seen) VALUES ('hurd-i386'::character varying, new.username, new.distribution, new.last_seen);
+
+
+--
+-- Name: users_update; Type: RULE; Schema: hurd-i386; Owner: wbadm
+--
+
+CREATE RULE users_update AS ON UPDATE TO users DO INSTEAD UPDATE public.users u SET last_seen = new.last_seen WHERE ((((u.architecture)::text = 'hurd-i386'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
 
 
 SET search_path = i386, pg_catalog;
 
 --
--- Name: packages_distribution_fkey; Type: FK CONSTRAINT; Schema: i386; Owner: wbadm
+-- Name: packages_delete; Type: RULE; Schema: i386; Owner: wbadm
 --
 
-ALTER TABLE ONLY packages
-    ADD CONSTRAINT packages_distribution_fkey FOREIGN KEY (distribution) REFERENCES public.distributions(distribution);
-
-
---
--- Name: pkg_history_distribution_fk; Type: FK CONSTRAINT; Schema: i386; Owner: wbadm
---
-
-ALTER TABLE ONLY pkg_history
-    ADD CONSTRAINT pkg_history_distribution_fk FOREIGN KEY (distribution) REFERENCES public.distributions(distribution) MATCH FULL;
+CREATE RULE packages_delete AS ON DELETE TO packages DO INSTEAD DELETE FROM public.packages p WHERE ((((p.architecture)::text = 'i386'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
 
 
 --
--- Name: users_distribution_fkey; Type: FK CONSTRAINT; Schema: i386; Owner: wbadm
+-- Name: packages_insert; Type: RULE; Schema: i386; Owner: wbadm
 --
 
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_distribution_fkey FOREIGN KEY (distribution) REFERENCES public.distributions(distribution);
+CREATE RULE packages_insert AS ON INSERT TO packages DO INSTEAD INSERT INTO public.packages (architecture, package, distribution, version, state, section, priority, installed_version, previous_state, state_change, notes, builder, failed, old_failed, binary_nmu_version, binary_nmu_changelog, failed_category, permbuildpri, buildpri, depends, rel, bd_problem, extra_depends, extra_conflicts, build_arch_all) VALUES ('i386'::character varying, new.package, new.distribution, new.version, new.state, new.section, new.priority, new.installed_version, new.previous_state, new.state_change, new.notes, new.builder, new.failed, new.old_failed, new.binary_nmu_version, new.binary_nmu_changelog, new.failed_category, new.permbuildpri, new.buildpri, new.depends, new.rel, new.bd_problem, new.extra_depends, new.extra_conflicts, new.build_arch_all);
+
+
+--
+-- Name: packages_update; Type: RULE; Schema: i386; Owner: wbadm
+--
+
+CREATE RULE packages_update AS ON UPDATE TO packages DO INSTEAD UPDATE public.packages p SET version = new.version, state = new.state, section = new.section, priority = new.priority, installed_version = new.installed_version, previous_state = new.previous_state, state_change = new.state_change, notes = new.notes, builder = new.builder, failed = new.failed, old_failed = new.old_failed, binary_nmu_version = new.binary_nmu_version, binary_nmu_changelog = new.binary_nmu_changelog, failed_category = new.failed_category, permbuildpri = new.permbuildpri, buildpri = new.buildpri, depends = new.depends, rel = new.rel, bd_problem = new.bd_problem, extra_depends = new.extra_depends, extra_conflicts = new.extra_conflicts, build_arch_all = new.build_arch_all WHERE ((((p.architecture)::text = 'i386'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
+
+
+--
+-- Name: pkg_history_delete; Type: RULE; Schema: i386; Owner: wbadm
+--
+
+CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FROM public.pkg_history p WHERE ((((((p.architecture)::text = 'i386'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: pkg_history_insert; Type: RULE; Schema: i386; Owner: wbadm
+--
+
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('i386'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+
+
+--
+-- Name: pkg_history_update; Type: RULE; Schema: i386; Owner: wbadm
+--
+
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 'i386'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: transactions_insert; Type: RULE; Schema: i386; Owner: wbadm
+--
+
+CREATE RULE transactions_insert AS ON INSERT TO transactions DO INSTEAD INSERT INTO public.transactions (architecture, package, distribution, version, action, prevstate, state, real_user, set_user, "time") VALUES ('i386'::character varying, new.package, new.distribution, new.version, new.action, new.prevstate, new.state, new.real_user, new.set_user, new."time");
+
+
+--
+-- Name: users_delete; Type: RULE; Schema: i386; Owner: wbadm
+--
+
+CREATE RULE users_delete AS ON DELETE TO users DO INSTEAD DELETE FROM public.users u WHERE ((((u.architecture)::text = 'i386'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
+
+
+--
+-- Name: users_insert; Type: RULE; Schema: i386; Owner: wbadm
+--
+
+CREATE RULE users_insert AS ON INSERT TO users DO INSTEAD INSERT INTO public.users (architecture, username, distribution, last_seen) VALUES ('i386'::character varying, new.username, new.distribution, new.last_seen);
+
+
+--
+-- Name: users_update; Type: RULE; Schema: i386; Owner: wbadm
+--
+
+CREATE RULE users_update AS ON UPDATE TO users DO INSTEAD UPDATE public.users u SET last_seen = new.last_seen WHERE ((((u.architecture)::text = 'i386'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
 
 
 SET search_path = ia64, pg_catalog;
 
 --
--- Name: packages_distribution_fkey; Type: FK CONSTRAINT; Schema: ia64; Owner: wbadm
+-- Name: packages_delete; Type: RULE; Schema: ia64; Owner: wbadm
 --
 
-ALTER TABLE ONLY packages
-    ADD CONSTRAINT packages_distribution_fkey FOREIGN KEY (distribution) REFERENCES public.distributions(distribution);
-
-
---
--- Name: pkg_history_distribution_fk; Type: FK CONSTRAINT; Schema: ia64; Owner: wbadm
---
-
-ALTER TABLE ONLY pkg_history
-    ADD CONSTRAINT pkg_history_distribution_fk FOREIGN KEY (distribution) REFERENCES public.distributions(distribution) MATCH FULL;
+CREATE RULE packages_delete AS ON DELETE TO packages DO INSTEAD DELETE FROM public.packages p WHERE ((((p.architecture)::text = 'ia64'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
 
 
 --
--- Name: users_distribution_fkey; Type: FK CONSTRAINT; Schema: ia64; Owner: wbadm
+-- Name: packages_insert; Type: RULE; Schema: ia64; Owner: wbadm
 --
 
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_distribution_fkey FOREIGN KEY (distribution) REFERENCES public.distributions(distribution);
+CREATE RULE packages_insert AS ON INSERT TO packages DO INSTEAD INSERT INTO public.packages (architecture, package, distribution, version, state, section, priority, installed_version, previous_state, state_change, notes, builder, failed, old_failed, binary_nmu_version, binary_nmu_changelog, failed_category, permbuildpri, buildpri, depends, rel, bd_problem, extra_depends, extra_conflicts, build_arch_all) VALUES ('ia64'::character varying, new.package, new.distribution, new.version, new.state, new.section, new.priority, new.installed_version, new.previous_state, new.state_change, new.notes, new.builder, new.failed, new.old_failed, new.binary_nmu_version, new.binary_nmu_changelog, new.failed_category, new.permbuildpri, new.buildpri, new.depends, new.rel, new.bd_problem, new.extra_depends, new.extra_conflicts, new.build_arch_all);
+
+
+--
+-- Name: packages_update; Type: RULE; Schema: ia64; Owner: wbadm
+--
+
+CREATE RULE packages_update AS ON UPDATE TO packages DO INSTEAD UPDATE public.packages p SET version = new.version, state = new.state, section = new.section, priority = new.priority, installed_version = new.installed_version, previous_state = new.previous_state, state_change = new.state_change, notes = new.notes, builder = new.builder, failed = new.failed, old_failed = new.old_failed, binary_nmu_version = new.binary_nmu_version, binary_nmu_changelog = new.binary_nmu_changelog, failed_category = new.failed_category, permbuildpri = new.permbuildpri, buildpri = new.buildpri, depends = new.depends, rel = new.rel, bd_problem = new.bd_problem, extra_depends = new.extra_depends, extra_conflicts = new.extra_conflicts, build_arch_all = new.build_arch_all WHERE ((((p.architecture)::text = 'ia64'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
+
+
+--
+-- Name: pkg_history_delete; Type: RULE; Schema: ia64; Owner: wbadm
+--
+
+CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FROM public.pkg_history p WHERE ((((((p.architecture)::text = 'ia64'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: pkg_history_insert; Type: RULE; Schema: ia64; Owner: wbadm
+--
+
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('ia64'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+
+
+--
+-- Name: pkg_history_update; Type: RULE; Schema: ia64; Owner: wbadm
+--
+
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 'ia64'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: transactions_insert; Type: RULE; Schema: ia64; Owner: wbadm
+--
+
+CREATE RULE transactions_insert AS ON INSERT TO transactions DO INSTEAD INSERT INTO public.transactions (architecture, package, distribution, version, action, prevstate, state, real_user, set_user, "time") VALUES ('ia64'::character varying, new.package, new.distribution, new.version, new.action, new.prevstate, new.state, new.real_user, new.set_user, new."time");
+
+
+--
+-- Name: users_delete; Type: RULE; Schema: ia64; Owner: wbadm
+--
+
+CREATE RULE users_delete AS ON DELETE TO users DO INSTEAD DELETE FROM public.users u WHERE ((((u.architecture)::text = 'ia64'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
+
+
+--
+-- Name: users_insert; Type: RULE; Schema: ia64; Owner: wbadm
+--
+
+CREATE RULE users_insert AS ON INSERT TO users DO INSTEAD INSERT INTO public.users (architecture, username, distribution, last_seen) VALUES ('ia64'::character varying, new.username, new.distribution, new.last_seen);
+
+
+--
+-- Name: users_update; Type: RULE; Schema: ia64; Owner: wbadm
+--
+
+CREATE RULE users_update AS ON UPDATE TO users DO INSTEAD UPDATE public.users u SET last_seen = new.last_seen WHERE ((((u.architecture)::text = 'ia64'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
 
 
 SET search_path = "kfreebsd-amd64", pg_catalog;
 
 --
--- Name: packages_distribution_fkey; Type: FK CONSTRAINT; Schema: kfreebsd-amd64; Owner: wbadm
+-- Name: packages_delete; Type: RULE; Schema: kfreebsd-amd64; Owner: wbadm
 --
 
-ALTER TABLE ONLY packages
-    ADD CONSTRAINT packages_distribution_fkey FOREIGN KEY (distribution) REFERENCES public.distributions(distribution);
-
-
---
--- Name: pkg_history_distribution_fk; Type: FK CONSTRAINT; Schema: kfreebsd-amd64; Owner: wbadm
---
-
-ALTER TABLE ONLY pkg_history
-    ADD CONSTRAINT pkg_history_distribution_fk FOREIGN KEY (distribution) REFERENCES public.distributions(distribution) MATCH FULL;
+CREATE RULE packages_delete AS ON DELETE TO packages DO INSTEAD DELETE FROM public.packages p WHERE ((((p.architecture)::text = 'kfreebsd-amd64'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
 
 
 --
--- Name: users_distribution_fkey; Type: FK CONSTRAINT; Schema: kfreebsd-amd64; Owner: wbadm
+-- Name: packages_insert; Type: RULE; Schema: kfreebsd-amd64; Owner: wbadm
 --
 
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_distribution_fkey FOREIGN KEY (distribution) REFERENCES public.distributions(distribution);
+CREATE RULE packages_insert AS ON INSERT TO packages DO INSTEAD INSERT INTO public.packages (architecture, package, distribution, version, state, section, priority, installed_version, previous_state, state_change, notes, builder, failed, old_failed, binary_nmu_version, binary_nmu_changelog, failed_category, permbuildpri, buildpri, depends, rel, bd_problem, extra_depends, extra_conflicts, build_arch_all) VALUES ('kfreebsd-amd64'::character varying, new.package, new.distribution, new.version, new.state, new.section, new.priority, new.installed_version, new.previous_state, new.state_change, new.notes, new.builder, new.failed, new.old_failed, new.binary_nmu_version, new.binary_nmu_changelog, new.failed_category, new.permbuildpri, new.buildpri, new.depends, new.rel, new.bd_problem, new.extra_depends, new.extra_conflicts, new.build_arch_all);
+
+
+--
+-- Name: packages_update; Type: RULE; Schema: kfreebsd-amd64; Owner: wbadm
+--
+
+CREATE RULE packages_update AS ON UPDATE TO packages DO INSTEAD UPDATE public.packages p SET version = new.version, state = new.state, section = new.section, priority = new.priority, installed_version = new.installed_version, previous_state = new.previous_state, state_change = new.state_change, notes = new.notes, builder = new.builder, failed = new.failed, old_failed = new.old_failed, binary_nmu_version = new.binary_nmu_version, binary_nmu_changelog = new.binary_nmu_changelog, failed_category = new.failed_category, permbuildpri = new.permbuildpri, buildpri = new.buildpri, depends = new.depends, rel = new.rel, bd_problem = new.bd_problem, extra_depends = new.extra_depends, extra_conflicts = new.extra_conflicts, build_arch_all = new.build_arch_all WHERE ((((p.architecture)::text = 'kfreebsd-amd64'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
+
+
+--
+-- Name: pkg_history_delete; Type: RULE; Schema: kfreebsd-amd64; Owner: wbadm
+--
+
+CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FROM public.pkg_history p WHERE ((((((p.architecture)::text = 'kfreebsd-amd64'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: pkg_history_insert; Type: RULE; Schema: kfreebsd-amd64; Owner: wbadm
+--
+
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('kfreebsd-amd64'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+
+
+--
+-- Name: pkg_history_update; Type: RULE; Schema: kfreebsd-amd64; Owner: wbadm
+--
+
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 'kfreebsd-amd64'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: transactions_insert; Type: RULE; Schema: kfreebsd-amd64; Owner: wbadm
+--
+
+CREATE RULE transactions_insert AS ON INSERT TO transactions DO INSTEAD INSERT INTO public.transactions (architecture, package, distribution, version, action, prevstate, state, real_user, set_user, "time") VALUES ('kfreebsd-amd64'::character varying, new.package, new.distribution, new.version, new.action, new.prevstate, new.state, new.real_user, new.set_user, new."time");
+
+
+--
+-- Name: users_delete; Type: RULE; Schema: kfreebsd-amd64; Owner: wbadm
+--
+
+CREATE RULE users_delete AS ON DELETE TO users DO INSTEAD DELETE FROM public.users u WHERE ((((u.architecture)::text = 'kfreebsd-amd64'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
+
+
+--
+-- Name: users_insert; Type: RULE; Schema: kfreebsd-amd64; Owner: wbadm
+--
+
+CREATE RULE users_insert AS ON INSERT TO users DO INSTEAD INSERT INTO public.users (architecture, username, distribution, last_seen) VALUES ('kfreebsd-amd64'::character varying, new.username, new.distribution, new.last_seen);
+
+
+--
+-- Name: users_update; Type: RULE; Schema: kfreebsd-amd64; Owner: wbadm
+--
+
+CREATE RULE users_update AS ON UPDATE TO users DO INSTEAD UPDATE public.users u SET last_seen = new.last_seen WHERE ((((u.architecture)::text = 'kfreebsd-amd64'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
 
 
 SET search_path = "kfreebsd-i386", pg_catalog;
 
 --
--- Name: packages_distribution_fkey; Type: FK CONSTRAINT; Schema: kfreebsd-i386; Owner: wbadm
+-- Name: packages_delete; Type: RULE; Schema: kfreebsd-i386; Owner: wbadm
 --
 
-ALTER TABLE ONLY packages
-    ADD CONSTRAINT packages_distribution_fkey FOREIGN KEY (distribution) REFERENCES public.distributions(distribution);
-
-
---
--- Name: pkg_history_distribution_fk; Type: FK CONSTRAINT; Schema: kfreebsd-i386; Owner: wbadm
---
-
-ALTER TABLE ONLY pkg_history
-    ADD CONSTRAINT pkg_history_distribution_fk FOREIGN KEY (distribution) REFERENCES public.distributions(distribution) MATCH FULL;
+CREATE RULE packages_delete AS ON DELETE TO packages DO INSTEAD DELETE FROM public.packages p WHERE ((((p.architecture)::text = 'kfreebsd-i386'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
 
 
 --
--- Name: users_distribution_fkey; Type: FK CONSTRAINT; Schema: kfreebsd-i386; Owner: wbadm
+-- Name: packages_insert; Type: RULE; Schema: kfreebsd-i386; Owner: wbadm
 --
 
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_distribution_fkey FOREIGN KEY (distribution) REFERENCES public.distributions(distribution);
+CREATE RULE packages_insert AS ON INSERT TO packages DO INSTEAD INSERT INTO public.packages (architecture, package, distribution, version, state, section, priority, installed_version, previous_state, state_change, notes, builder, failed, old_failed, binary_nmu_version, binary_nmu_changelog, failed_category, permbuildpri, buildpri, depends, rel, bd_problem, extra_depends, extra_conflicts, build_arch_all) VALUES ('kfreebsd-i386'::character varying, new.package, new.distribution, new.version, new.state, new.section, new.priority, new.installed_version, new.previous_state, new.state_change, new.notes, new.builder, new.failed, new.old_failed, new.binary_nmu_version, new.binary_nmu_changelog, new.failed_category, new.permbuildpri, new.buildpri, new.depends, new.rel, new.bd_problem, new.extra_depends, new.extra_conflicts, new.build_arch_all);
+
+
+--
+-- Name: packages_update; Type: RULE; Schema: kfreebsd-i386; Owner: wbadm
+--
+
+CREATE RULE packages_update AS ON UPDATE TO packages DO INSTEAD UPDATE public.packages p SET version = new.version, state = new.state, section = new.section, priority = new.priority, installed_version = new.installed_version, previous_state = new.previous_state, state_change = new.state_change, notes = new.notes, builder = new.builder, failed = new.failed, old_failed = new.old_failed, binary_nmu_version = new.binary_nmu_version, binary_nmu_changelog = new.binary_nmu_changelog, failed_category = new.failed_category, permbuildpri = new.permbuildpri, buildpri = new.buildpri, depends = new.depends, rel = new.rel, bd_problem = new.bd_problem, extra_depends = new.extra_depends, extra_conflicts = new.extra_conflicts, build_arch_all = new.build_arch_all WHERE ((((p.architecture)::text = 'kfreebsd-i386'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
+
+
+--
+-- Name: pkg_history_delete; Type: RULE; Schema: kfreebsd-i386; Owner: wbadm
+--
+
+CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FROM public.pkg_history p WHERE ((((((p.architecture)::text = 'kfreebsd-i386'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: pkg_history_insert; Type: RULE; Schema: kfreebsd-i386; Owner: wbadm
+--
+
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('kfreebsd-i386'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+
+
+--
+-- Name: pkg_history_update; Type: RULE; Schema: kfreebsd-i386; Owner: wbadm
+--
+
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 'kfreebsd-i386'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: transactions_insert; Type: RULE; Schema: kfreebsd-i386; Owner: wbadm
+--
+
+CREATE RULE transactions_insert AS ON INSERT TO transactions DO INSTEAD INSERT INTO public.transactions (architecture, package, distribution, version, action, prevstate, state, real_user, set_user, "time") VALUES ('kfreebsd-i386'::character varying, new.package, new.distribution, new.version, new.action, new.prevstate, new.state, new.real_user, new.set_user, new."time");
+
+
+--
+-- Name: users_delete; Type: RULE; Schema: kfreebsd-i386; Owner: wbadm
+--
+
+CREATE RULE users_delete AS ON DELETE TO users DO INSTEAD DELETE FROM public.users u WHERE ((((u.architecture)::text = 'kfreebsd-i386'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
+
+
+--
+-- Name: users_insert; Type: RULE; Schema: kfreebsd-i386; Owner: wbadm
+--
+
+CREATE RULE users_insert AS ON INSERT TO users DO INSTEAD INSERT INTO public.users (architecture, username, distribution, last_seen) VALUES ('kfreebsd-i386'::character varying, new.username, new.distribution, new.last_seen);
+
+
+--
+-- Name: users_update; Type: RULE; Schema: kfreebsd-i386; Owner: wbadm
+--
+
+CREATE RULE users_update AS ON UPDATE TO users DO INSTEAD UPDATE public.users u SET last_seen = new.last_seen WHERE ((((u.architecture)::text = 'kfreebsd-i386'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
 
 
 SET search_path = mips, pg_catalog;
 
 --
--- Name: packages_distribution_fkey; Type: FK CONSTRAINT; Schema: mips; Owner: wbadm
+-- Name: packages_delete; Type: RULE; Schema: mips; Owner: wbadm
 --
 
-ALTER TABLE ONLY packages
-    ADD CONSTRAINT packages_distribution_fkey FOREIGN KEY (distribution) REFERENCES public.distributions(distribution);
-
-
---
--- Name: pkg_history_distribution_fk; Type: FK CONSTRAINT; Schema: mips; Owner: wbadm
---
-
-ALTER TABLE ONLY pkg_history
-    ADD CONSTRAINT pkg_history_distribution_fk FOREIGN KEY (distribution) REFERENCES public.distributions(distribution) MATCH FULL;
+CREATE RULE packages_delete AS ON DELETE TO packages DO INSTEAD DELETE FROM public.packages p WHERE ((((p.architecture)::text = 'mips'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
 
 
 --
--- Name: users_distribution_fkey; Type: FK CONSTRAINT; Schema: mips; Owner: wbadm
+-- Name: packages_insert; Type: RULE; Schema: mips; Owner: wbadm
 --
 
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_distribution_fkey FOREIGN KEY (distribution) REFERENCES public.distributions(distribution);
+CREATE RULE packages_insert AS ON INSERT TO packages DO INSTEAD INSERT INTO public.packages (architecture, package, distribution, version, state, section, priority, installed_version, previous_state, state_change, notes, builder, failed, old_failed, binary_nmu_version, binary_nmu_changelog, failed_category, permbuildpri, buildpri, depends, rel, bd_problem, extra_depends, extra_conflicts, build_arch_all) VALUES ('mips'::character varying, new.package, new.distribution, new.version, new.state, new.section, new.priority, new.installed_version, new.previous_state, new.state_change, new.notes, new.builder, new.failed, new.old_failed, new.binary_nmu_version, new.binary_nmu_changelog, new.failed_category, new.permbuildpri, new.buildpri, new.depends, new.rel, new.bd_problem, new.extra_depends, new.extra_conflicts, new.build_arch_all);
+
+
+--
+-- Name: packages_update; Type: RULE; Schema: mips; Owner: wbadm
+--
+
+CREATE RULE packages_update AS ON UPDATE TO packages DO INSTEAD UPDATE public.packages p SET version = new.version, state = new.state, section = new.section, priority = new.priority, installed_version = new.installed_version, previous_state = new.previous_state, state_change = new.state_change, notes = new.notes, builder = new.builder, failed = new.failed, old_failed = new.old_failed, binary_nmu_version = new.binary_nmu_version, binary_nmu_changelog = new.binary_nmu_changelog, failed_category = new.failed_category, permbuildpri = new.permbuildpri, buildpri = new.buildpri, depends = new.depends, rel = new.rel, bd_problem = new.bd_problem, extra_depends = new.extra_depends, extra_conflicts = new.extra_conflicts, build_arch_all = new.build_arch_all WHERE ((((p.architecture)::text = 'mips'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
+
+
+--
+-- Name: pkg_history_delete; Type: RULE; Schema: mips; Owner: wbadm
+--
+
+CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FROM public.pkg_history p WHERE ((((((p.architecture)::text = 'mips'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: pkg_history_insert; Type: RULE; Schema: mips; Owner: wbadm
+--
+
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('mips'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+
+
+--
+-- Name: pkg_history_update; Type: RULE; Schema: mips; Owner: wbadm
+--
+
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 'mips'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: transactions_insert; Type: RULE; Schema: mips; Owner: wbadm
+--
+
+CREATE RULE transactions_insert AS ON INSERT TO transactions DO INSTEAD INSERT INTO public.transactions (architecture, package, distribution, version, action, prevstate, state, real_user, set_user, "time") VALUES ('mips'::character varying, new.package, new.distribution, new.version, new.action, new.prevstate, new.state, new.real_user, new.set_user, new."time");
+
+
+--
+-- Name: users_delete; Type: RULE; Schema: mips; Owner: wbadm
+--
+
+CREATE RULE users_delete AS ON DELETE TO users DO INSTEAD DELETE FROM public.users u WHERE ((((u.architecture)::text = 'mips'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
+
+
+--
+-- Name: users_insert; Type: RULE; Schema: mips; Owner: wbadm
+--
+
+CREATE RULE users_insert AS ON INSERT TO users DO INSTEAD INSERT INTO public.users (architecture, username, distribution, last_seen) VALUES ('mips'::character varying, new.username, new.distribution, new.last_seen);
+
+
+--
+-- Name: users_update; Type: RULE; Schema: mips; Owner: wbadm
+--
+
+CREATE RULE users_update AS ON UPDATE TO users DO INSTEAD UPDATE public.users u SET last_seen = new.last_seen WHERE ((((u.architecture)::text = 'mips'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
 
 
 SET search_path = mipsel, pg_catalog;
 
 --
--- Name: packages_distribution_fkey; Type: FK CONSTRAINT; Schema: mipsel; Owner: wbadm
+-- Name: packages_delete; Type: RULE; Schema: mipsel; Owner: wbadm
 --
 
-ALTER TABLE ONLY packages
-    ADD CONSTRAINT packages_distribution_fkey FOREIGN KEY (distribution) REFERENCES public.distributions(distribution);
-
-
---
--- Name: pkg_history_distribution_fk; Type: FK CONSTRAINT; Schema: mipsel; Owner: wbadm
---
-
-ALTER TABLE ONLY pkg_history
-    ADD CONSTRAINT pkg_history_distribution_fk FOREIGN KEY (distribution) REFERENCES public.distributions(distribution) MATCH FULL;
+CREATE RULE packages_delete AS ON DELETE TO packages DO INSTEAD DELETE FROM public.packages p WHERE ((((p.architecture)::text = 'mipsel'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
 
 
 --
--- Name: users_distribution_fkey; Type: FK CONSTRAINT; Schema: mipsel; Owner: wbadm
+-- Name: packages_insert; Type: RULE; Schema: mipsel; Owner: wbadm
 --
 
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_distribution_fkey FOREIGN KEY (distribution) REFERENCES public.distributions(distribution);
+CREATE RULE packages_insert AS ON INSERT TO packages DO INSTEAD INSERT INTO public.packages (architecture, package, distribution, version, state, section, priority, installed_version, previous_state, state_change, notes, builder, failed, old_failed, binary_nmu_version, binary_nmu_changelog, failed_category, permbuildpri, buildpri, depends, rel, bd_problem, extra_depends, extra_conflicts, build_arch_all) VALUES ('mipsel'::character varying, new.package, new.distribution, new.version, new.state, new.section, new.priority, new.installed_version, new.previous_state, new.state_change, new.notes, new.builder, new.failed, new.old_failed, new.binary_nmu_version, new.binary_nmu_changelog, new.failed_category, new.permbuildpri, new.buildpri, new.depends, new.rel, new.bd_problem, new.extra_depends, new.extra_conflicts, new.build_arch_all);
+
+
+--
+-- Name: packages_update; Type: RULE; Schema: mipsel; Owner: wbadm
+--
+
+CREATE RULE packages_update AS ON UPDATE TO packages DO INSTEAD UPDATE public.packages p SET version = new.version, state = new.state, section = new.section, priority = new.priority, installed_version = new.installed_version, previous_state = new.previous_state, state_change = new.state_change, notes = new.notes, builder = new.builder, failed = new.failed, old_failed = new.old_failed, binary_nmu_version = new.binary_nmu_version, binary_nmu_changelog = new.binary_nmu_changelog, failed_category = new.failed_category, permbuildpri = new.permbuildpri, buildpri = new.buildpri, depends = new.depends, rel = new.rel, bd_problem = new.bd_problem, extra_depends = new.extra_depends, extra_conflicts = new.extra_conflicts, build_arch_all = new.build_arch_all WHERE ((((p.architecture)::text = 'mipsel'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
+
+
+--
+-- Name: pkg_history_delete; Type: RULE; Schema: mipsel; Owner: wbadm
+--
+
+CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FROM public.pkg_history p WHERE ((((((p.architecture)::text = 'mipsel'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: pkg_history_insert; Type: RULE; Schema: mipsel; Owner: wbadm
+--
+
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('mipsel'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+
+
+--
+-- Name: pkg_history_update; Type: RULE; Schema: mipsel; Owner: wbadm
+--
+
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 'mipsel'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: transactions_insert; Type: RULE; Schema: mipsel; Owner: wbadm
+--
+
+CREATE RULE transactions_insert AS ON INSERT TO transactions DO INSTEAD INSERT INTO public.transactions (architecture, package, distribution, version, action, prevstate, state, real_user, set_user, "time") VALUES ('mipsel'::character varying, new.package, new.distribution, new.version, new.action, new.prevstate, new.state, new.real_user, new.set_user, new."time");
+
+
+--
+-- Name: users_delete; Type: RULE; Schema: mipsel; Owner: wbadm
+--
+
+CREATE RULE users_delete AS ON DELETE TO users DO INSTEAD DELETE FROM public.users u WHERE ((((u.architecture)::text = 'mipsel'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
+
+
+--
+-- Name: users_insert; Type: RULE; Schema: mipsel; Owner: wbadm
+--
+
+CREATE RULE users_insert AS ON INSERT TO users DO INSTEAD INSERT INTO public.users (architecture, username, distribution, last_seen) VALUES ('mipsel'::character varying, new.username, new.distribution, new.last_seen);
+
+
+--
+-- Name: users_update; Type: RULE; Schema: mipsel; Owner: wbadm
+--
+
+CREATE RULE users_update AS ON UPDATE TO users DO INSTEAD UPDATE public.users u SET last_seen = new.last_seen WHERE ((((u.architecture)::text = 'mipsel'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
 
 
 SET search_path = powerpc, pg_catalog;
 
 --
--- Name: packages_distribution_fkey; Type: FK CONSTRAINT; Schema: powerpc; Owner: wbadm
+-- Name: packages_delete; Type: RULE; Schema: powerpc; Owner: wbadm
 --
 
-ALTER TABLE ONLY packages
-    ADD CONSTRAINT packages_distribution_fkey FOREIGN KEY (distribution) REFERENCES public.distributions(distribution);
-
-
---
--- Name: pkg_history_distribution_fk; Type: FK CONSTRAINT; Schema: powerpc; Owner: wbadm
---
-
-ALTER TABLE ONLY pkg_history
-    ADD CONSTRAINT pkg_history_distribution_fk FOREIGN KEY (distribution) REFERENCES public.distributions(distribution) MATCH FULL;
+CREATE RULE packages_delete AS ON DELETE TO packages DO INSTEAD DELETE FROM public.packages p WHERE ((((p.architecture)::text = 'powerpc'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
 
 
 --
--- Name: users_distribution_fkey; Type: FK CONSTRAINT; Schema: powerpc; Owner: wbadm
+-- Name: packages_insert; Type: RULE; Schema: powerpc; Owner: wbadm
 --
 
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_distribution_fkey FOREIGN KEY (distribution) REFERENCES public.distributions(distribution);
+CREATE RULE packages_insert AS ON INSERT TO packages DO INSTEAD INSERT INTO public.packages (architecture, package, distribution, version, state, section, priority, installed_version, previous_state, state_change, notes, builder, failed, old_failed, binary_nmu_version, binary_nmu_changelog, failed_category, permbuildpri, buildpri, depends, rel, bd_problem, extra_depends, extra_conflicts, build_arch_all) VALUES ('powerpc'::character varying, new.package, new.distribution, new.version, new.state, new.section, new.priority, new.installed_version, new.previous_state, new.state_change, new.notes, new.builder, new.failed, new.old_failed, new.binary_nmu_version, new.binary_nmu_changelog, new.failed_category, new.permbuildpri, new.buildpri, new.depends, new.rel, new.bd_problem, new.extra_depends, new.extra_conflicts, new.build_arch_all);
+
+
+--
+-- Name: packages_update; Type: RULE; Schema: powerpc; Owner: wbadm
+--
+
+CREATE RULE packages_update AS ON UPDATE TO packages DO INSTEAD UPDATE public.packages p SET version = new.version, state = new.state, section = new.section, priority = new.priority, installed_version = new.installed_version, previous_state = new.previous_state, state_change = new.state_change, notes = new.notes, builder = new.builder, failed = new.failed, old_failed = new.old_failed, binary_nmu_version = new.binary_nmu_version, binary_nmu_changelog = new.binary_nmu_changelog, failed_category = new.failed_category, permbuildpri = new.permbuildpri, buildpri = new.buildpri, depends = new.depends, rel = new.rel, bd_problem = new.bd_problem, extra_depends = new.extra_depends, extra_conflicts = new.extra_conflicts, build_arch_all = new.build_arch_all WHERE ((((p.architecture)::text = 'powerpc'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
+
+
+--
+-- Name: pkg_history_delete; Type: RULE; Schema: powerpc; Owner: wbadm
+--
+
+CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FROM public.pkg_history p WHERE ((((((p.architecture)::text = 'powerpc'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: pkg_history_insert; Type: RULE; Schema: powerpc; Owner: wbadm
+--
+
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('powerpc'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+
+
+--
+-- Name: pkg_history_update; Type: RULE; Schema: powerpc; Owner: wbadm
+--
+
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 'powerpc'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: transactions_insert; Type: RULE; Schema: powerpc; Owner: wbadm
+--
+
+CREATE RULE transactions_insert AS ON INSERT TO transactions DO INSTEAD INSERT INTO public.transactions (architecture, package, distribution, version, action, prevstate, state, real_user, set_user, "time") VALUES ('powerpc'::character varying, new.package, new.distribution, new.version, new.action, new.prevstate, new.state, new.real_user, new.set_user, new."time");
+
+
+--
+-- Name: users_delete; Type: RULE; Schema: powerpc; Owner: wbadm
+--
+
+CREATE RULE users_delete AS ON DELETE TO users DO INSTEAD DELETE FROM public.users u WHERE ((((u.architecture)::text = 'powerpc'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
+
+
+--
+-- Name: users_insert; Type: RULE; Schema: powerpc; Owner: wbadm
+--
+
+CREATE RULE users_insert AS ON INSERT TO users DO INSTEAD INSERT INTO public.users (architecture, username, distribution, last_seen) VALUES ('powerpc'::character varying, new.username, new.distribution, new.last_seen);
+
+
+--
+-- Name: users_update; Type: RULE; Schema: powerpc; Owner: wbadm
+--
+
+CREATE RULE users_update AS ON UPDATE TO users DO INSTEAD UPDATE public.users u SET last_seen = new.last_seen WHERE ((((u.architecture)::text = 'powerpc'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
+
+
+SET search_path = s390, pg_catalog;
+
+--
+-- Name: packages_delete; Type: RULE; Schema: s390; Owner: wbadm
+--
+
+CREATE RULE packages_delete AS ON DELETE TO packages DO INSTEAD DELETE FROM public.packages p WHERE ((((p.architecture)::text = 's390'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
+
+
+--
+-- Name: packages_insert; Type: RULE; Schema: s390; Owner: wbadm
+--
+
+CREATE RULE packages_insert AS ON INSERT TO packages DO INSTEAD INSERT INTO public.packages (architecture, package, distribution, version, state, section, priority, installed_version, previous_state, state_change, notes, builder, failed, old_failed, binary_nmu_version, binary_nmu_changelog, failed_category, permbuildpri, buildpri, depends, rel, bd_problem, extra_depends, extra_conflicts, build_arch_all) VALUES ('s390'::character varying, new.package, new.distribution, new.version, new.state, new.section, new.priority, new.installed_version, new.previous_state, new.state_change, new.notes, new.builder, new.failed, new.old_failed, new.binary_nmu_version, new.binary_nmu_changelog, new.failed_category, new.permbuildpri, new.buildpri, new.depends, new.rel, new.bd_problem, new.extra_depends, new.extra_conflicts, new.build_arch_all);
+
+
+--
+-- Name: packages_update; Type: RULE; Schema: s390; Owner: wbadm
+--
+
+CREATE RULE packages_update AS ON UPDATE TO packages DO INSTEAD UPDATE public.packages p SET version = new.version, state = new.state, section = new.section, priority = new.priority, installed_version = new.installed_version, previous_state = new.previous_state, state_change = new.state_change, notes = new.notes, builder = new.builder, failed = new.failed, old_failed = new.old_failed, binary_nmu_version = new.binary_nmu_version, binary_nmu_changelog = new.binary_nmu_changelog, failed_category = new.failed_category, permbuildpri = new.permbuildpri, buildpri = new.buildpri, depends = new.depends, rel = new.rel, bd_problem = new.bd_problem, extra_depends = new.extra_depends, extra_conflicts = new.extra_conflicts, build_arch_all = new.build_arch_all WHERE ((((p.architecture)::text = 's390'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
+
+
+--
+-- Name: pkg_history_delete; Type: RULE; Schema: s390; Owner: wbadm
+--
+
+CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FROM public.pkg_history p WHERE ((((((p.architecture)::text = 's390'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: pkg_history_insert; Type: RULE; Schema: s390; Owner: wbadm
+--
+
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('s390'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+
+
+--
+-- Name: pkg_history_update; Type: RULE; Schema: s390; Owner: wbadm
+--
+
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 's390'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: transactions_insert; Type: RULE; Schema: s390; Owner: wbadm
+--
+
+CREATE RULE transactions_insert AS ON INSERT TO transactions DO INSTEAD INSERT INTO public.transactions (architecture, package, distribution, version, action, prevstate, state, real_user, set_user, "time") VALUES ('s390'::character varying, new.package, new.distribution, new.version, new.action, new.prevstate, new.state, new.real_user, new.set_user, new."time");
+
+
+--
+-- Name: users_delete; Type: RULE; Schema: s390; Owner: wbadm
+--
+
+CREATE RULE users_delete AS ON DELETE TO users DO INSTEAD DELETE FROM public.users u WHERE ((((u.architecture)::text = 's390'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
+
+
+--
+-- Name: users_insert; Type: RULE; Schema: s390; Owner: wbadm
+--
+
+CREATE RULE users_insert AS ON INSERT TO users DO INSTEAD INSERT INTO public.users (architecture, username, distribution, last_seen) VALUES ('s390'::character varying, new.username, new.distribution, new.last_seen);
+
+
+--
+-- Name: users_update; Type: RULE; Schema: s390; Owner: wbadm
+--
+
+CREATE RULE users_update AS ON UPDATE TO users DO INSTEAD UPDATE public.users u SET last_seen = new.last_seen WHERE ((((u.architecture)::text = 's390'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
+
+
+SET search_path = sparc, pg_catalog;
+
+--
+-- Name: packages_delete; Type: RULE; Schema: sparc; Owner: wbadm
+--
+
+CREATE RULE packages_delete AS ON DELETE TO packages DO INSTEAD DELETE FROM public.packages p WHERE ((((p.architecture)::text = 'sparc'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
+
+
+--
+-- Name: packages_insert; Type: RULE; Schema: sparc; Owner: wbadm
+--
+
+CREATE RULE packages_insert AS ON INSERT TO packages DO INSTEAD INSERT INTO public.packages (architecture, package, distribution, version, state, section, priority, installed_version, previous_state, state_change, notes, builder, failed, old_failed, binary_nmu_version, binary_nmu_changelog, failed_category, permbuildpri, buildpri, depends, rel, bd_problem, extra_depends, extra_conflicts, build_arch_all) VALUES ('sparc'::character varying, new.package, new.distribution, new.version, new.state, new.section, new.priority, new.installed_version, new.previous_state, new.state_change, new.notes, new.builder, new.failed, new.old_failed, new.binary_nmu_version, new.binary_nmu_changelog, new.failed_category, new.permbuildpri, new.buildpri, new.depends, new.rel, new.bd_problem, new.extra_depends, new.extra_conflicts, new.build_arch_all);
+
+
+--
+-- Name: packages_update; Type: RULE; Schema: sparc; Owner: wbadm
+--
+
+CREATE RULE packages_update AS ON UPDATE TO packages DO INSTEAD UPDATE public.packages p SET version = new.version, state = new.state, section = new.section, priority = new.priority, installed_version = new.installed_version, previous_state = new.previous_state, state_change = new.state_change, notes = new.notes, builder = new.builder, failed = new.failed, old_failed = new.old_failed, binary_nmu_version = new.binary_nmu_version, binary_nmu_changelog = new.binary_nmu_changelog, failed_category = new.failed_category, permbuildpri = new.permbuildpri, buildpri = new.buildpri, depends = new.depends, rel = new.rel, bd_problem = new.bd_problem, extra_depends = new.extra_depends, extra_conflicts = new.extra_conflicts, build_arch_all = new.build_arch_all WHERE ((((p.architecture)::text = 'sparc'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
+
+
+--
+-- Name: pkg_history_delete; Type: RULE; Schema: sparc; Owner: wbadm
+--
+
+CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FROM public.pkg_history p WHERE ((((((p.architecture)::text = 'sparc'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: pkg_history_insert; Type: RULE; Schema: sparc; Owner: wbadm
+--
+
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('sparc'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+
+
+--
+-- Name: pkg_history_update; Type: RULE; Schema: sparc; Owner: wbadm
+--
+
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 'sparc'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: transactions_insert; Type: RULE; Schema: sparc; Owner: wbadm
+--
+
+CREATE RULE transactions_insert AS ON INSERT TO transactions DO INSTEAD INSERT INTO public.transactions (architecture, package, distribution, version, action, prevstate, state, real_user, set_user, "time") VALUES ('sparc'::character varying, new.package, new.distribution, new.version, new.action, new.prevstate, new.state, new.real_user, new.set_user, new."time");
+
+
+--
+-- Name: users_delete; Type: RULE; Schema: sparc; Owner: wbadm
+--
+
+CREATE RULE users_delete AS ON DELETE TO users DO INSTEAD DELETE FROM public.users u WHERE ((((u.architecture)::text = 'sparc'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
+
+
+--
+-- Name: users_insert; Type: RULE; Schema: sparc; Owner: wbadm
+--
+
+CREATE RULE users_insert AS ON INSERT TO users DO INSTEAD INSERT INTO public.users (architecture, username, distribution, last_seen) VALUES ('sparc'::character varying, new.username, new.distribution, new.last_seen);
+
+
+--
+-- Name: users_update; Type: RULE; Schema: sparc; Owner: wbadm
+--
+
+CREATE RULE users_update AS ON UPDATE TO users DO INSTEAD UPDATE public.users u SET last_seen = new.last_seen WHERE ((((u.architecture)::text = 'sparc'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
 
 
 SET search_path = public, pg_catalog;
@@ -4049,56 +3473,28 @@ ALTER TABLE ONLY distribution_aliases
     ADD CONSTRAINT distribution_aliases_distribution_fkey FOREIGN KEY (distribution) REFERENCES distributions(distribution);
 
 
-SET search_path = s390, pg_catalog;
-
 --
--- Name: packages_distribution_fkey; Type: FK CONSTRAINT; Schema: s390; Owner: wbadm
+-- Name: distribution_architecture_fkey; Type: FK CONSTRAINT; Schema: public; Owner: wbadm
 --
 
 ALTER TABLE ONLY packages
-    ADD CONSTRAINT packages_distribution_fkey FOREIGN KEY (distribution) REFERENCES public.distributions(distribution);
+    ADD CONSTRAINT distribution_architecture_fkey FOREIGN KEY (distribution, architecture) REFERENCES distribution_architectures(distribution, architecture);
 
 
 --
--- Name: pkg_history_distribution_fk; Type: FK CONSTRAINT; Schema: s390; Owner: wbadm
---
-
-ALTER TABLE ONLY pkg_history
-    ADD CONSTRAINT pkg_history_distribution_fk FOREIGN KEY (distribution) REFERENCES public.distributions(distribution) MATCH FULL;
-
-
---
--- Name: users_distribution_fkey; Type: FK CONSTRAINT; Schema: s390; Owner: wbadm
---
-
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_distribution_fkey FOREIGN KEY (distribution) REFERENCES public.distributions(distribution);
-
-
-SET search_path = sparc, pg_catalog;
-
---
--- Name: packages_distribution_fkey; Type: FK CONSTRAINT; Schema: sparc; Owner: wbadm
+-- Name: packages_distribution_fkey; Type: FK CONSTRAINT; Schema: public; Owner: wbadm
 --
 
 ALTER TABLE ONLY packages
-    ADD CONSTRAINT packages_distribution_fkey FOREIGN KEY (distribution) REFERENCES public.distributions(distribution);
+    ADD CONSTRAINT packages_distribution_fkey FOREIGN KEY (distribution) REFERENCES distributions(distribution);
 
 
 --
--- Name: pkg_history_distribution_fk; Type: FK CONSTRAINT; Schema: sparc; Owner: wbadm
+-- Name: pkg_history_distribution_fkey; Type: FK CONSTRAINT; Schema: public; Owner: wbadm
 --
 
 ALTER TABLE ONLY pkg_history
-    ADD CONSTRAINT pkg_history_distribution_fk FOREIGN KEY (distribution) REFERENCES public.distributions(distribution) MATCH FULL;
-
-
---
--- Name: users_distribution_fkey; Type: FK CONSTRAINT; Schema: sparc; Owner: wbadm
---
-
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_distribution_fkey FOREIGN KEY (distribution) REFERENCES public.distributions(distribution);
+    ADD CONSTRAINT pkg_history_distribution_fkey FOREIGN KEY (distribution) REFERENCES distributions(distribution);
 
 
 --
@@ -4456,6 +3852,15 @@ GRANT USAGE ON SCHEMA sparc_public TO sparc;
 GRANT USAGE ON SCHEMA sparc_public TO PUBLIC;
 
 
+--
+-- Name: packages; Type: ACL; Schema: public; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE packages FROM PUBLIC;
+REVOKE ALL ON TABLE packages FROM wbadm;
+GRANT ALL ON TABLE packages TO wbadm;
+
+
 SET search_path = alpha, pg_catalog;
 
 --
@@ -4465,9 +3870,22 @@ SET search_path = alpha, pg_catalog;
 REVOKE ALL ON TABLE packages FROM PUBLIC;
 REVOKE ALL ON TABLE packages FROM wbadm;
 GRANT ALL ON TABLE packages TO wbadm;
-GRANT ALL ON TABLE packages TO alpha;
 GRANT SELECT ON TABLE packages TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE packages TO wb_all;
 
+
+SET search_path = public, pg_catalog;
+
+--
+-- Name: pkg_history; Type: ACL; Schema: public; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE pkg_history FROM PUBLIC;
+REVOKE ALL ON TABLE pkg_history FROM wbadm;
+GRANT ALL ON TABLE pkg_history TO wbadm;
+
+
+SET search_path = alpha, pg_catalog;
 
 --
 -- Name: pkg_history; Type: ACL; Schema: alpha; Owner: wbadm
@@ -4476,10 +3894,22 @@ GRANT SELECT ON TABLE packages TO wb_security;
 REVOKE ALL ON TABLE pkg_history FROM PUBLIC;
 REVOKE ALL ON TABLE pkg_history FROM wbadm;
 GRANT ALL ON TABLE pkg_history TO wbadm;
-GRANT ALL ON TABLE pkg_history TO alpha;
 GRANT SELECT ON TABLE pkg_history TO wb_security;
 GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
 
+
+SET search_path = public, pg_catalog;
+
+--
+-- Name: transactions; Type: ACL; Schema: public; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE transactions FROM PUBLIC;
+REVOKE ALL ON TABLE transactions FROM wbadm;
+GRANT ALL ON TABLE transactions TO wbadm;
+
+
+SET search_path = alpha, pg_catalog;
 
 --
 -- Name: transactions; Type: ACL; Schema: alpha; Owner: wbadm
@@ -4488,9 +3918,22 @@ GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
 REVOKE ALL ON TABLE transactions FROM PUBLIC;
 REVOKE ALL ON TABLE transactions FROM wbadm;
 GRANT ALL ON TABLE transactions TO wbadm;
-GRANT SELECT,INSERT ON TABLE transactions TO alpha;
 GRANT SELECT ON TABLE transactions TO wb_security;
+GRANT SELECT,INSERT ON TABLE transactions TO wb_all;
 
+
+SET search_path = public, pg_catalog;
+
+--
+-- Name: users; Type: ACL; Schema: public; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE users FROM PUBLIC;
+REVOKE ALL ON TABLE users FROM wbadm;
+GRANT ALL ON TABLE users TO wbadm;
+
+
+SET search_path = alpha, pg_catalog;
 
 --
 -- Name: users; Type: ACL; Schema: alpha; Owner: wbadm
@@ -4499,7 +3942,20 @@ GRANT SELECT ON TABLE transactions TO wb_security;
 REVOKE ALL ON TABLE users FROM PUBLIC;
 REVOKE ALL ON TABLE users FROM wbadm;
 GRANT ALL ON TABLE users TO wbadm;
-GRANT ALL ON TABLE users TO alpha;
+GRANT SELECT ON TABLE users TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE users TO wb_all;
+
+
+SET search_path = public, pg_catalog;
+
+--
+-- Name: distributions; Type: ACL; Schema: public; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE distributions FROM PUBLIC;
+REVOKE ALL ON TABLE distributions FROM wbadm;
+GRANT ALL ON TABLE distributions TO wbadm;
+GRANT SELECT ON TABLE distributions TO PUBLIC;
 
 
 SET search_path = alpha_public, pg_catalog;
@@ -4553,8 +4009,8 @@ SET search_path = amd64, pg_catalog;
 REVOKE ALL ON TABLE packages FROM PUBLIC;
 REVOKE ALL ON TABLE packages FROM wbadm;
 GRANT ALL ON TABLE packages TO wbadm;
-GRANT ALL ON TABLE packages TO amd64;
 GRANT SELECT ON TABLE packages TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE packages TO wb_all;
 
 
 --
@@ -4564,8 +4020,8 @@ GRANT SELECT ON TABLE packages TO wb_security;
 REVOKE ALL ON TABLE pkg_history FROM PUBLIC;
 REVOKE ALL ON TABLE pkg_history FROM wbadm;
 GRANT ALL ON TABLE pkg_history TO wbadm;
-GRANT ALL ON TABLE pkg_history TO amd64;
 GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
 
 
 --
@@ -4575,8 +4031,8 @@ GRANT SELECT ON TABLE pkg_history TO wb_security;
 REVOKE ALL ON TABLE transactions FROM PUBLIC;
 REVOKE ALL ON TABLE transactions FROM wbadm;
 GRANT ALL ON TABLE transactions TO wbadm;
-GRANT SELECT,INSERT ON TABLE transactions TO amd64;
 GRANT SELECT ON TABLE transactions TO wb_security;
+GRANT SELECT,INSERT ON TABLE transactions TO wb_all;
 
 
 --
@@ -4586,7 +4042,8 @@ GRANT SELECT ON TABLE transactions TO wb_security;
 REVOKE ALL ON TABLE users FROM PUBLIC;
 REVOKE ALL ON TABLE users FROM wbadm;
 GRANT ALL ON TABLE users TO wbadm;
-GRANT ALL ON TABLE users TO amd64;
+GRANT SELECT ON TABLE users TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE users TO wb_all;
 
 
 SET search_path = amd64_public, pg_catalog;
@@ -4640,8 +4097,8 @@ SET search_path = arm, pg_catalog;
 REVOKE ALL ON TABLE packages FROM PUBLIC;
 REVOKE ALL ON TABLE packages FROM wbadm;
 GRANT ALL ON TABLE packages TO wbadm;
-GRANT ALL ON TABLE packages TO arm;
 GRANT SELECT ON TABLE packages TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE packages TO wb_all;
 
 
 --
@@ -4651,8 +4108,8 @@ GRANT SELECT ON TABLE packages TO wb_security;
 REVOKE ALL ON TABLE pkg_history FROM PUBLIC;
 REVOKE ALL ON TABLE pkg_history FROM wbadm;
 GRANT ALL ON TABLE pkg_history TO wbadm;
-GRANT ALL ON TABLE pkg_history TO arm;
 GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
 
 
 --
@@ -4662,8 +4119,8 @@ GRANT SELECT ON TABLE pkg_history TO wb_security;
 REVOKE ALL ON TABLE transactions FROM PUBLIC;
 REVOKE ALL ON TABLE transactions FROM wbadm;
 GRANT ALL ON TABLE transactions TO wbadm;
-GRANT SELECT,INSERT ON TABLE transactions TO arm;
 GRANT SELECT ON TABLE transactions TO wb_security;
+GRANT SELECT,INSERT ON TABLE transactions TO wb_all;
 
 
 --
@@ -4673,7 +4130,8 @@ GRANT SELECT ON TABLE transactions TO wb_security;
 REVOKE ALL ON TABLE users FROM PUBLIC;
 REVOKE ALL ON TABLE users FROM wbadm;
 GRANT ALL ON TABLE users TO wbadm;
-GRANT ALL ON TABLE users TO arm;
+GRANT SELECT ON TABLE users TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE users TO wb_all;
 
 
 SET search_path = arm_public, pg_catalog;
@@ -4727,8 +4185,8 @@ SET search_path = armel, pg_catalog;
 REVOKE ALL ON TABLE packages FROM PUBLIC;
 REVOKE ALL ON TABLE packages FROM wbadm;
 GRANT ALL ON TABLE packages TO wbadm;
-GRANT ALL ON TABLE packages TO armel;
 GRANT SELECT ON TABLE packages TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE packages TO wb_all;
 
 
 --
@@ -4738,8 +4196,8 @@ GRANT SELECT ON TABLE packages TO wb_security;
 REVOKE ALL ON TABLE pkg_history FROM PUBLIC;
 REVOKE ALL ON TABLE pkg_history FROM wbadm;
 GRANT ALL ON TABLE pkg_history TO wbadm;
-GRANT ALL ON TABLE pkg_history TO armel;
 GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
 
 
 --
@@ -4749,8 +4207,8 @@ GRANT SELECT ON TABLE pkg_history TO wb_security;
 REVOKE ALL ON TABLE transactions FROM PUBLIC;
 REVOKE ALL ON TABLE transactions FROM wbadm;
 GRANT ALL ON TABLE transactions TO wbadm;
-GRANT SELECT,INSERT ON TABLE transactions TO armel;
 GRANT SELECT ON TABLE transactions TO wb_security;
+GRANT SELECT,INSERT ON TABLE transactions TO wb_all;
 
 
 --
@@ -4760,7 +4218,8 @@ GRANT SELECT ON TABLE transactions TO wb_security;
 REVOKE ALL ON TABLE users FROM PUBLIC;
 REVOKE ALL ON TABLE users FROM wbadm;
 GRANT ALL ON TABLE users TO wbadm;
-GRANT ALL ON TABLE users TO armel;
+GRANT SELECT ON TABLE users TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE users TO wb_all;
 
 
 SET search_path = armel_public, pg_catalog;
@@ -4814,8 +4273,8 @@ SET search_path = hppa, pg_catalog;
 REVOKE ALL ON TABLE packages FROM PUBLIC;
 REVOKE ALL ON TABLE packages FROM wbadm;
 GRANT ALL ON TABLE packages TO wbadm;
-GRANT ALL ON TABLE packages TO hppa;
 GRANT SELECT ON TABLE packages TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE packages TO wb_all;
 
 
 --
@@ -4825,8 +4284,8 @@ GRANT SELECT ON TABLE packages TO wb_security;
 REVOKE ALL ON TABLE pkg_history FROM PUBLIC;
 REVOKE ALL ON TABLE pkg_history FROM wbadm;
 GRANT ALL ON TABLE pkg_history TO wbadm;
-GRANT ALL ON TABLE pkg_history TO hppa;
 GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
 
 
 --
@@ -4836,8 +4295,8 @@ GRANT SELECT ON TABLE pkg_history TO wb_security;
 REVOKE ALL ON TABLE transactions FROM PUBLIC;
 REVOKE ALL ON TABLE transactions FROM wbadm;
 GRANT ALL ON TABLE transactions TO wbadm;
-GRANT SELECT,INSERT ON TABLE transactions TO hppa;
 GRANT SELECT ON TABLE transactions TO wb_security;
+GRANT SELECT,INSERT ON TABLE transactions TO wb_all;
 
 
 --
@@ -4847,7 +4306,8 @@ GRANT SELECT ON TABLE transactions TO wb_security;
 REVOKE ALL ON TABLE users FROM PUBLIC;
 REVOKE ALL ON TABLE users FROM wbadm;
 GRANT ALL ON TABLE users TO wbadm;
-GRANT ALL ON TABLE users TO hppa;
+GRANT SELECT ON TABLE users TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE users TO wb_all;
 
 
 SET search_path = hppa_public, pg_catalog;
@@ -4901,8 +4361,8 @@ SET search_path = "hurd-i386", pg_catalog;
 REVOKE ALL ON TABLE packages FROM PUBLIC;
 REVOKE ALL ON TABLE packages FROM wbadm;
 GRANT ALL ON TABLE packages TO wbadm;
-GRANT ALL ON TABLE packages TO "hurd-i386";
 GRANT SELECT ON TABLE packages TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE packages TO wb_all;
 
 
 --
@@ -4912,8 +4372,8 @@ GRANT SELECT ON TABLE packages TO wb_security;
 REVOKE ALL ON TABLE pkg_history FROM PUBLIC;
 REVOKE ALL ON TABLE pkg_history FROM wbadm;
 GRANT ALL ON TABLE pkg_history TO wbadm;
-GRANT ALL ON TABLE pkg_history TO "hurd-i386";
 GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
 
 
 --
@@ -4923,8 +4383,8 @@ GRANT SELECT ON TABLE pkg_history TO wb_security;
 REVOKE ALL ON TABLE transactions FROM PUBLIC;
 REVOKE ALL ON TABLE transactions FROM wbadm;
 GRANT ALL ON TABLE transactions TO wbadm;
-GRANT SELECT,INSERT ON TABLE transactions TO "hurd-i386";
 GRANT SELECT ON TABLE transactions TO wb_security;
+GRANT SELECT,INSERT ON TABLE transactions TO wb_all;
 
 
 --
@@ -4934,7 +4394,8 @@ GRANT SELECT ON TABLE transactions TO wb_security;
 REVOKE ALL ON TABLE users FROM PUBLIC;
 REVOKE ALL ON TABLE users FROM wbadm;
 GRANT ALL ON TABLE users TO wbadm;
-GRANT ALL ON TABLE users TO "hurd-i386";
+GRANT SELECT ON TABLE users TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE users TO wb_all;
 
 
 SET search_path = "hurd-i386_public", pg_catalog;
@@ -4988,8 +4449,8 @@ SET search_path = i386, pg_catalog;
 REVOKE ALL ON TABLE packages FROM PUBLIC;
 REVOKE ALL ON TABLE packages FROM wbadm;
 GRANT ALL ON TABLE packages TO wbadm;
-GRANT ALL ON TABLE packages TO i386;
 GRANT SELECT ON TABLE packages TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE packages TO wb_all;
 
 
 --
@@ -4999,8 +4460,8 @@ GRANT SELECT ON TABLE packages TO wb_security;
 REVOKE ALL ON TABLE pkg_history FROM PUBLIC;
 REVOKE ALL ON TABLE pkg_history FROM wbadm;
 GRANT ALL ON TABLE pkg_history TO wbadm;
-GRANT ALL ON TABLE pkg_history TO i386;
 GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
 
 
 --
@@ -5010,8 +4471,8 @@ GRANT SELECT ON TABLE pkg_history TO wb_security;
 REVOKE ALL ON TABLE transactions FROM PUBLIC;
 REVOKE ALL ON TABLE transactions FROM wbadm;
 GRANT ALL ON TABLE transactions TO wbadm;
-GRANT SELECT,INSERT ON TABLE transactions TO i386;
 GRANT SELECT ON TABLE transactions TO wb_security;
+GRANT SELECT,INSERT ON TABLE transactions TO wb_all;
 
 
 --
@@ -5021,7 +4482,8 @@ GRANT SELECT ON TABLE transactions TO wb_security;
 REVOKE ALL ON TABLE users FROM PUBLIC;
 REVOKE ALL ON TABLE users FROM wbadm;
 GRANT ALL ON TABLE users TO wbadm;
-GRANT ALL ON TABLE users TO i386;
+GRANT SELECT ON TABLE users TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE users TO wb_all;
 
 
 SET search_path = i386_public, pg_catalog;
@@ -5075,8 +4537,8 @@ SET search_path = ia64, pg_catalog;
 REVOKE ALL ON TABLE packages FROM PUBLIC;
 REVOKE ALL ON TABLE packages FROM wbadm;
 GRANT ALL ON TABLE packages TO wbadm;
-GRANT ALL ON TABLE packages TO ia64;
 GRANT SELECT ON TABLE packages TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE packages TO wb_all;
 
 
 --
@@ -5086,8 +4548,8 @@ GRANT SELECT ON TABLE packages TO wb_security;
 REVOKE ALL ON TABLE pkg_history FROM PUBLIC;
 REVOKE ALL ON TABLE pkg_history FROM wbadm;
 GRANT ALL ON TABLE pkg_history TO wbadm;
-GRANT ALL ON TABLE pkg_history TO ia64;
 GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
 
 
 --
@@ -5097,8 +4559,8 @@ GRANT SELECT ON TABLE pkg_history TO wb_security;
 REVOKE ALL ON TABLE transactions FROM PUBLIC;
 REVOKE ALL ON TABLE transactions FROM wbadm;
 GRANT ALL ON TABLE transactions TO wbadm;
-GRANT SELECT,INSERT ON TABLE transactions TO ia64;
 GRANT SELECT ON TABLE transactions TO wb_security;
+GRANT SELECT,INSERT ON TABLE transactions TO wb_all;
 
 
 --
@@ -5108,7 +4570,8 @@ GRANT SELECT ON TABLE transactions TO wb_security;
 REVOKE ALL ON TABLE users FROM PUBLIC;
 REVOKE ALL ON TABLE users FROM wbadm;
 GRANT ALL ON TABLE users TO wbadm;
-GRANT ALL ON TABLE users TO ia64;
+GRANT SELECT ON TABLE users TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE users TO wb_all;
 
 
 SET search_path = ia64_public, pg_catalog;
@@ -5162,8 +4625,8 @@ SET search_path = "kfreebsd-amd64", pg_catalog;
 REVOKE ALL ON TABLE packages FROM PUBLIC;
 REVOKE ALL ON TABLE packages FROM wbadm;
 GRANT ALL ON TABLE packages TO wbadm;
-GRANT ALL ON TABLE packages TO "kfreebsd-amd64";
 GRANT SELECT ON TABLE packages TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE packages TO wb_all;
 
 
 --
@@ -5173,8 +4636,8 @@ GRANT SELECT ON TABLE packages TO wb_security;
 REVOKE ALL ON TABLE pkg_history FROM PUBLIC;
 REVOKE ALL ON TABLE pkg_history FROM wbadm;
 GRANT ALL ON TABLE pkg_history TO wbadm;
-GRANT ALL ON TABLE pkg_history TO "kfreebsd-amd64";
 GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
 
 
 --
@@ -5184,8 +4647,8 @@ GRANT SELECT ON TABLE pkg_history TO wb_security;
 REVOKE ALL ON TABLE transactions FROM PUBLIC;
 REVOKE ALL ON TABLE transactions FROM wbadm;
 GRANT ALL ON TABLE transactions TO wbadm;
-GRANT SELECT,INSERT ON TABLE transactions TO "kfreebsd-amd64";
 GRANT SELECT ON TABLE transactions TO wb_security;
+GRANT SELECT,INSERT ON TABLE transactions TO wb_all;
 
 
 --
@@ -5195,7 +4658,8 @@ GRANT SELECT ON TABLE transactions TO wb_security;
 REVOKE ALL ON TABLE users FROM PUBLIC;
 REVOKE ALL ON TABLE users FROM wbadm;
 GRANT ALL ON TABLE users TO wbadm;
-GRANT ALL ON TABLE users TO "kfreebsd-amd64";
+GRANT SELECT ON TABLE users TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE users TO wb_all;
 
 
 SET search_path = "kfreebsd-amd64_public", pg_catalog;
@@ -5249,8 +4713,8 @@ SET search_path = "kfreebsd-i386", pg_catalog;
 REVOKE ALL ON TABLE packages FROM PUBLIC;
 REVOKE ALL ON TABLE packages FROM wbadm;
 GRANT ALL ON TABLE packages TO wbadm;
-GRANT ALL ON TABLE packages TO "kfreebsd-i386";
 GRANT SELECT ON TABLE packages TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE packages TO wb_all;
 
 
 --
@@ -5260,8 +4724,8 @@ GRANT SELECT ON TABLE packages TO wb_security;
 REVOKE ALL ON TABLE pkg_history FROM PUBLIC;
 REVOKE ALL ON TABLE pkg_history FROM wbadm;
 GRANT ALL ON TABLE pkg_history TO wbadm;
-GRANT ALL ON TABLE pkg_history TO "kfreebsd-i386";
 GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
 
 
 --
@@ -5271,8 +4735,8 @@ GRANT SELECT ON TABLE pkg_history TO wb_security;
 REVOKE ALL ON TABLE transactions FROM PUBLIC;
 REVOKE ALL ON TABLE transactions FROM wbadm;
 GRANT ALL ON TABLE transactions TO wbadm;
-GRANT SELECT,INSERT ON TABLE transactions TO "kfreebsd-i386";
 GRANT SELECT ON TABLE transactions TO wb_security;
+GRANT SELECT,INSERT ON TABLE transactions TO wb_all;
 
 
 --
@@ -5282,7 +4746,8 @@ GRANT SELECT ON TABLE transactions TO wb_security;
 REVOKE ALL ON TABLE users FROM PUBLIC;
 REVOKE ALL ON TABLE users FROM wbadm;
 GRANT ALL ON TABLE users TO wbadm;
-GRANT ALL ON TABLE users TO "kfreebsd-i386";
+GRANT SELECT ON TABLE users TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE users TO wb_all;
 
 
 SET search_path = "kfreebsd-i386_public", pg_catalog;
@@ -5336,8 +4801,8 @@ SET search_path = mips, pg_catalog;
 REVOKE ALL ON TABLE packages FROM PUBLIC;
 REVOKE ALL ON TABLE packages FROM wbadm;
 GRANT ALL ON TABLE packages TO wbadm;
-GRANT ALL ON TABLE packages TO mips;
 GRANT SELECT ON TABLE packages TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE packages TO wb_all;
 
 
 --
@@ -5347,8 +4812,8 @@ GRANT SELECT ON TABLE packages TO wb_security;
 REVOKE ALL ON TABLE pkg_history FROM PUBLIC;
 REVOKE ALL ON TABLE pkg_history FROM wbadm;
 GRANT ALL ON TABLE pkg_history TO wbadm;
-GRANT ALL ON TABLE pkg_history TO mips;
 GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
 
 
 --
@@ -5358,8 +4823,8 @@ GRANT SELECT ON TABLE pkg_history TO wb_security;
 REVOKE ALL ON TABLE transactions FROM PUBLIC;
 REVOKE ALL ON TABLE transactions FROM wbadm;
 GRANT ALL ON TABLE transactions TO wbadm;
-GRANT SELECT,INSERT ON TABLE transactions TO mips;
 GRANT SELECT ON TABLE transactions TO wb_security;
+GRANT SELECT,INSERT ON TABLE transactions TO wb_all;
 
 
 --
@@ -5369,7 +4834,8 @@ GRANT SELECT ON TABLE transactions TO wb_security;
 REVOKE ALL ON TABLE users FROM PUBLIC;
 REVOKE ALL ON TABLE users FROM wbadm;
 GRANT ALL ON TABLE users TO wbadm;
-GRANT ALL ON TABLE users TO mips;
+GRANT SELECT ON TABLE users TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE users TO wb_all;
 
 
 SET search_path = mips_public, pg_catalog;
@@ -5423,8 +4889,8 @@ SET search_path = mipsel, pg_catalog;
 REVOKE ALL ON TABLE packages FROM PUBLIC;
 REVOKE ALL ON TABLE packages FROM wbadm;
 GRANT ALL ON TABLE packages TO wbadm;
-GRANT ALL ON TABLE packages TO mipsel;
 GRANT SELECT ON TABLE packages TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE packages TO wb_all;
 
 
 --
@@ -5434,8 +4900,8 @@ GRANT SELECT ON TABLE packages TO wb_security;
 REVOKE ALL ON TABLE pkg_history FROM PUBLIC;
 REVOKE ALL ON TABLE pkg_history FROM wbadm;
 GRANT ALL ON TABLE pkg_history TO wbadm;
-GRANT ALL ON TABLE pkg_history TO mipsel;
 GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
 
 
 --
@@ -5445,8 +4911,8 @@ GRANT SELECT ON TABLE pkg_history TO wb_security;
 REVOKE ALL ON TABLE transactions FROM PUBLIC;
 REVOKE ALL ON TABLE transactions FROM wbadm;
 GRANT ALL ON TABLE transactions TO wbadm;
-GRANT SELECT,INSERT ON TABLE transactions TO mipsel;
 GRANT SELECT ON TABLE transactions TO wb_security;
+GRANT SELECT,INSERT ON TABLE transactions TO wb_all;
 
 
 --
@@ -5456,7 +4922,8 @@ GRANT SELECT ON TABLE transactions TO wb_security;
 REVOKE ALL ON TABLE users FROM PUBLIC;
 REVOKE ALL ON TABLE users FROM wbadm;
 GRANT ALL ON TABLE users TO wbadm;
-GRANT ALL ON TABLE users TO mipsel;
+GRANT SELECT ON TABLE users TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE users TO wb_all;
 
 
 SET search_path = mipsel_public, pg_catalog;
@@ -5510,8 +4977,8 @@ SET search_path = powerpc, pg_catalog;
 REVOKE ALL ON TABLE packages FROM PUBLIC;
 REVOKE ALL ON TABLE packages FROM wbadm;
 GRANT ALL ON TABLE packages TO wbadm;
-GRANT ALL ON TABLE packages TO powerpc;
 GRANT SELECT ON TABLE packages TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE packages TO wb_all;
 
 
 --
@@ -5521,8 +4988,8 @@ GRANT SELECT ON TABLE packages TO wb_security;
 REVOKE ALL ON TABLE pkg_history FROM PUBLIC;
 REVOKE ALL ON TABLE pkg_history FROM wbadm;
 GRANT ALL ON TABLE pkg_history TO wbadm;
-GRANT ALL ON TABLE pkg_history TO powerpc;
 GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
 
 
 --
@@ -5532,8 +4999,8 @@ GRANT SELECT ON TABLE pkg_history TO wb_security;
 REVOKE ALL ON TABLE transactions FROM PUBLIC;
 REVOKE ALL ON TABLE transactions FROM wbadm;
 GRANT ALL ON TABLE transactions TO wbadm;
-GRANT SELECT,INSERT ON TABLE transactions TO powerpc;
 GRANT SELECT ON TABLE transactions TO wb_security;
+GRANT SELECT,INSERT ON TABLE transactions TO wb_all;
 
 
 --
@@ -5543,7 +5010,8 @@ GRANT SELECT ON TABLE transactions TO wb_security;
 REVOKE ALL ON TABLE users FROM PUBLIC;
 REVOKE ALL ON TABLE users FROM wbadm;
 GRANT ALL ON TABLE users TO wbadm;
-GRANT ALL ON TABLE users TO powerpc;
+GRANT SELECT ON TABLE users TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE users TO wb_all;
 
 
 SET search_path = powerpc_public, pg_catalog;
@@ -5600,34 +5068,6 @@ GRANT ALL ON TABLE distribution_aliases TO wbadm;
 GRANT SELECT ON TABLE distribution_aliases TO PUBLIC;
 
 
-SET search_path = s390, pg_catalog;
-
---
--- Name: packages; Type: ACL; Schema: s390; Owner: wbadm
---
-
-REVOKE ALL ON TABLE packages FROM PUBLIC;
-REVOKE ALL ON TABLE packages FROM wbadm;
-GRANT ALL ON TABLE packages TO wbadm;
-GRANT ALL ON TABLE packages TO s390;
-GRANT SELECT ON TABLE packages TO wb_security;
-
-
-SET search_path = sparc, pg_catalog;
-
---
--- Name: packages; Type: ACL; Schema: sparc; Owner: wbadm
---
-
-REVOKE ALL ON TABLE packages FROM PUBLIC;
-REVOKE ALL ON TABLE packages FROM wbadm;
-GRANT ALL ON TABLE packages TO wbadm;
-GRANT ALL ON TABLE packages TO sparc;
-GRANT SELECT ON TABLE packages TO wb_security;
-
-
-SET search_path = public, pg_catalog;
-
 --
 -- Name: distribution_architectures; Type: ACL; Schema: public; Owner: wbadm
 --
@@ -5637,78 +5077,6 @@ REVOKE ALL ON TABLE distribution_architectures FROM wbadm;
 GRANT ALL ON TABLE distribution_architectures TO wbadm;
 GRANT SELECT ON TABLE distribution_architectures TO PUBLIC;
 
-
---
--- Name: distribution_architectures_statistics; Type: ACL; Schema: public; Owner: wbadm
---
-
-REVOKE ALL ON TABLE distribution_architectures_statistics FROM PUBLIC;
-REVOKE ALL ON TABLE distribution_architectures_statistics FROM wbadm;
-GRANT ALL ON TABLE distribution_architectures_statistics TO wbadm;
-GRANT SELECT ON TABLE distribution_architectures_statistics TO PUBLIC;
-
-
---
--- Name: distributions; Type: ACL; Schema: public; Owner: wbadm
---
-
-REVOKE ALL ON TABLE distributions FROM PUBLIC;
-REVOKE ALL ON TABLE distributions FROM wbadm;
-GRANT ALL ON TABLE distributions TO wbadm;
-GRANT SELECT ON TABLE distributions TO PUBLIC;
-
-
-SET search_path = s390, pg_catalog;
-
---
--- Name: pkg_history; Type: ACL; Schema: s390; Owner: wbadm
---
-
-REVOKE ALL ON TABLE pkg_history FROM PUBLIC;
-REVOKE ALL ON TABLE pkg_history FROM wbadm;
-GRANT ALL ON TABLE pkg_history TO wbadm;
-GRANT ALL ON TABLE pkg_history TO s390;
-GRANT SELECT ON TABLE pkg_history TO wb_security;
-
-
-SET search_path = s390_public, pg_catalog;
-
---
--- Name: pkg_history; Type: ACL; Schema: s390_public; Owner: wbadm
---
-
-REVOKE ALL ON TABLE pkg_history FROM PUBLIC;
-REVOKE ALL ON TABLE pkg_history FROM wbadm;
-GRANT ALL ON TABLE pkg_history TO wbadm;
-GRANT SELECT ON TABLE pkg_history TO PUBLIC;
-
-
-SET search_path = sparc, pg_catalog;
-
---
--- Name: pkg_history; Type: ACL; Schema: sparc; Owner: wbadm
---
-
-REVOKE ALL ON TABLE pkg_history FROM PUBLIC;
-REVOKE ALL ON TABLE pkg_history FROM wbadm;
-GRANT ALL ON TABLE pkg_history TO wbadm;
-GRANT ALL ON TABLE pkg_history TO sparc;
-GRANT SELECT ON TABLE pkg_history TO wb_security;
-
-
-SET search_path = sparc_public, pg_catalog;
-
---
--- Name: pkg_history; Type: ACL; Schema: sparc_public; Owner: wbadm
---
-
-REVOKE ALL ON TABLE pkg_history FROM PUBLIC;
-REVOKE ALL ON TABLE pkg_history FROM wbadm;
-GRANT ALL ON TABLE pkg_history TO wbadm;
-GRANT SELECT ON TABLE pkg_history TO PUBLIC;
-
-
-SET search_path = public, pg_catalog;
 
 --
 -- Name: lastlog; Type: ACL; Schema: public; Owner: wbadm
@@ -5730,6 +5098,72 @@ GRANT ALL ON TABLE log TO wbadm;
 GRANT SELECT ON TABLE log TO PUBLIC;
 
 
+--
+-- Name: packages_all; Type: ACL; Schema: public; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE packages_all FROM PUBLIC;
+REVOKE ALL ON TABLE packages_all FROM wbadm;
+GRANT ALL ON TABLE packages_all TO wbadm;
+GRANT SELECT ON TABLE packages_all TO PUBLIC;
+
+
+--
+-- Name: packages_public; Type: ACL; Schema: public; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE packages_public FROM PUBLIC;
+REVOKE ALL ON TABLE packages_public FROM wbadm;
+GRANT ALL ON TABLE packages_public TO wbadm;
+GRANT SELECT ON TABLE packages_public TO PUBLIC;
+
+
+SET search_path = s390, pg_catalog;
+
+--
+-- Name: packages; Type: ACL; Schema: s390; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE packages FROM PUBLIC;
+REVOKE ALL ON TABLE packages FROM wbadm;
+GRANT ALL ON TABLE packages TO wbadm;
+GRANT SELECT ON TABLE packages TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE packages TO wb_all;
+
+
+--
+-- Name: pkg_history; Type: ACL; Schema: s390; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE pkg_history FROM PUBLIC;
+REVOKE ALL ON TABLE pkg_history FROM wbadm;
+GRANT ALL ON TABLE pkg_history TO wbadm;
+GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
+
+
+--
+-- Name: transactions; Type: ACL; Schema: s390; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE transactions FROM PUBLIC;
+REVOKE ALL ON TABLE transactions FROM wbadm;
+GRANT ALL ON TABLE transactions TO wbadm;
+GRANT SELECT ON TABLE transactions TO wb_security;
+GRANT SELECT,INSERT ON TABLE transactions TO wb_all;
+
+
+--
+-- Name: users; Type: ACL; Schema: s390; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE users FROM PUBLIC;
+REVOKE ALL ON TABLE users FROM wbadm;
+GRANT ALL ON TABLE users TO wbadm;
+GRANT SELECT ON TABLE users TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE users TO wb_all;
+
+
 SET search_path = s390_public, pg_catalog;
 
 --
@@ -5742,54 +5176,15 @@ GRANT ALL ON TABLE packages TO wbadm;
 GRANT SELECT ON TABLE packages TO PUBLIC;
 
 
-SET search_path = sparc_public, pg_catalog;
-
 --
--- Name: packages; Type: ACL; Schema: sparc_public; Owner: wbadm
+-- Name: pkg_history; Type: ACL; Schema: s390_public; Owner: wbadm
 --
 
-REVOKE ALL ON TABLE packages FROM PUBLIC;
-REVOKE ALL ON TABLE packages FROM wbadm;
-GRANT ALL ON TABLE packages TO wbadm;
-GRANT SELECT ON TABLE packages TO PUBLIC;
+REVOKE ALL ON TABLE pkg_history FROM PUBLIC;
+REVOKE ALL ON TABLE pkg_history FROM wbadm;
+GRANT ALL ON TABLE pkg_history TO wbadm;
+GRANT SELECT ON TABLE pkg_history TO PUBLIC;
 
-
-SET search_path = public, pg_catalog;
-
---
--- Name: packages_all; Type: ACL; Schema: public; Owner: wbadm
---
-
-REVOKE ALL ON TABLE packages_all FROM PUBLIC;
-REVOKE ALL ON TABLE packages_all FROM wbadm;
-GRANT ALL ON TABLE packages_all TO wbadm;
-GRANT SELECT ON TABLE packages_all TO PUBLIC;
-
-
-SET search_path = s390, pg_catalog;
-
---
--- Name: transactions; Type: ACL; Schema: s390; Owner: wbadm
---
-
-REVOKE ALL ON TABLE transactions FROM PUBLIC;
-REVOKE ALL ON TABLE transactions FROM wbadm;
-GRANT ALL ON TABLE transactions TO wbadm;
-GRANT SELECT,INSERT ON TABLE transactions TO s390;
-GRANT SELECT ON TABLE transactions TO wb_security;
-
-
---
--- Name: users; Type: ACL; Schema: s390; Owner: wbadm
---
-
-REVOKE ALL ON TABLE users FROM PUBLIC;
-REVOKE ALL ON TABLE users FROM wbadm;
-GRANT ALL ON TABLE users TO wbadm;
-GRANT ALL ON TABLE users TO s390;
-
-
-SET search_path = s390_public, pg_catalog;
 
 --
 -- Name: transactions; Type: ACL; Schema: s390_public; Owner: wbadm
@@ -5814,14 +5209,36 @@ GRANT SELECT ON TABLE users TO PUBLIC;
 SET search_path = sparc, pg_catalog;
 
 --
+-- Name: packages; Type: ACL; Schema: sparc; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE packages FROM PUBLIC;
+REVOKE ALL ON TABLE packages FROM wbadm;
+GRANT ALL ON TABLE packages TO wbadm;
+GRANT SELECT ON TABLE packages TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE packages TO wb_all;
+
+
+--
+-- Name: pkg_history; Type: ACL; Schema: sparc; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE pkg_history FROM PUBLIC;
+REVOKE ALL ON TABLE pkg_history FROM wbadm;
+GRANT ALL ON TABLE pkg_history TO wbadm;
+GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
+
+
+--
 -- Name: transactions; Type: ACL; Schema: sparc; Owner: wbadm
 --
 
 REVOKE ALL ON TABLE transactions FROM PUBLIC;
 REVOKE ALL ON TABLE transactions FROM wbadm;
 GRANT ALL ON TABLE transactions TO wbadm;
-GRANT SELECT,INSERT ON TABLE transactions TO sparc;
 GRANT SELECT ON TABLE transactions TO wb_security;
+GRANT SELECT,INSERT ON TABLE transactions TO wb_all;
 
 
 --
@@ -5831,10 +5248,31 @@ GRANT SELECT ON TABLE transactions TO wb_security;
 REVOKE ALL ON TABLE users FROM PUBLIC;
 REVOKE ALL ON TABLE users FROM wbadm;
 GRANT ALL ON TABLE users TO wbadm;
-GRANT ALL ON TABLE users TO sparc;
+GRANT SELECT ON TABLE users TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE users TO wb_all;
 
 
 SET search_path = sparc_public, pg_catalog;
+
+--
+-- Name: packages; Type: ACL; Schema: sparc_public; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE packages FROM PUBLIC;
+REVOKE ALL ON TABLE packages FROM wbadm;
+GRANT ALL ON TABLE packages TO wbadm;
+GRANT SELECT ON TABLE packages TO PUBLIC;
+
+
+--
+-- Name: pkg_history; Type: ACL; Schema: sparc_public; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE pkg_history FROM PUBLIC;
+REVOKE ALL ON TABLE pkg_history FROM wbadm;
+GRANT ALL ON TABLE pkg_history TO wbadm;
+GRANT SELECT ON TABLE pkg_history TO PUBLIC;
+
 
 --
 -- Name: transactions; Type: ACL; Schema: sparc_public; Owner: wbadm
