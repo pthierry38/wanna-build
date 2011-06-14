@@ -219,7 +219,6 @@ GRANT wb_security TO jmm GRANTED BY wbadm;
 GRANT wb_security TO joey GRANTED BY wbadm;
 GRANT wb_security TO nion GRANTED BY wbadm;
 GRANT wb_security TO noahm GRANTED BY wbadm;
-GRANT wb_security TO pkern GRANTED BY wbadm;
 GRANT wb_security TO seb GRANTED BY wbadm;
 GRANT wb_security TO sf GRANTED BY wbadm;
 GRANT wb_security TO thijs GRANTED BY wbadm;

@@ -2065,6 +2065,17 @@ ALTER TABLE powerpc_public.users OWNER TO wbadm;
 SET search_path = public, pg_catalog;
 
 --
+-- Name: architectures; Type: TABLE; Schema: public; Owner: wbadm; Tablespace: 
+--
+
+CREATE TABLE architectures (
+    architecture character varying NOT NULL
+);
+
+
+ALTER TABLE public.architectures OWNER TO wbadm;
+
+--
 -- Name: distribution_aliases; Type: TABLE; Schema: public; Owner: wbadm; Tablespace: 
 --
 
@@ -2307,6 +2318,14 @@ CREATE VIEW users AS
 ALTER TABLE sparc_public.users OWNER TO wbadm;
 
 SET search_path = public, pg_catalog;
+
+--
+-- Name: architectures_pkey; Type: CONSTRAINT; Schema: public; Owner: wbadm; Tablespace: 
+--
+
+ALTER TABLE ONLY architectures
+    ADD CONSTRAINT architectures_pkey PRIMARY KEY (architecture);
+
 
 --
 -- Name: distribution_aliases_pkey; Type: CONSTRAINT; Schema: public; Owner: wbadm; Tablespace: 
@@ -3479,6 +3498,14 @@ ALTER TABLE ONLY distribution_aliases
 
 ALTER TABLE ONLY packages
     ADD CONSTRAINT distribution_architecture_fkey FOREIGN KEY (distribution, architecture) REFERENCES distribution_architectures(distribution, architecture);
+
+
+--
+-- Name: packages_architecture_fkey; Type: FK CONSTRAINT; Schema: public; Owner: wbadm
+--
+
+ALTER TABLE ONLY packages
+    ADD CONSTRAINT packages_architecture_fkey FOREIGN KEY (architecture) REFERENCES architectures(architecture);
 
 
 --
@@ -5059,6 +5086,16 @@ GRANT SELECT ON TABLE users TO PUBLIC;
 SET search_path = public, pg_catalog;
 
 --
+-- Name: architectures; Type: ACL; Schema: public; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE architectures FROM PUBLIC;
+REVOKE ALL ON TABLE architectures FROM wbadm;
+GRANT ALL ON TABLE architectures TO wbadm;
+GRANT SELECT ON TABLE architectures TO PUBLIC;
+
+
+--
 -- Name: distribution_aliases; Type: ACL; Schema: public; Owner: wbadm
 --
 
@@ -5076,6 +5113,16 @@ REVOKE ALL ON TABLE distribution_architectures FROM PUBLIC;
 REVOKE ALL ON TABLE distribution_architectures FROM wbadm;
 GRANT ALL ON TABLE distribution_architectures TO wbadm;
 GRANT SELECT ON TABLE distribution_architectures TO PUBLIC;
+
+
+--
+-- Name: distribution_architectures_statistics; Type: ACL; Schema: public; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE distribution_architectures_statistics FROM PUBLIC;
+REVOKE ALL ON TABLE distribution_architectures_statistics FROM wbadm;
+GRANT ALL ON TABLE distribution_architectures_statistics TO wbadm;
+GRANT SELECT ON TABLE distribution_architectures_statistics TO PUBLIC;
 
 
 --
