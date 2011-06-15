@@ -3824,12 +3824,12 @@ GRANT USAGE ON SCHEMA powerpc_public TO PUBLIC;
 
 
 --
--- Name: public; Type: ACL; Schema: -; Owner: postgres
+-- Name: public; Type: ACL; Schema: -; Owner: wbadm
 --
 
 REVOKE ALL ON SCHEMA public FROM PUBLIC;
-REVOKE ALL ON SCHEMA public FROM postgres;
-GRANT ALL ON SCHEMA public TO postgres;
+REVOKE ALL ON SCHEMA public FROM wbadm;
+GRANT ALL ON SCHEMA public TO wbadm;
 GRANT ALL ON SCHEMA public TO PUBLIC;
 
 
