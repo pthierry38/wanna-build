@@ -2083,7 +2083,7 @@ sub add_user_info {
 sub lock_table {
         return if $simulate;
 	$dbh->do('SELECT 1 FROM ' . table_name() .
-		' FOR UPDATE', undef) or die $dbh->errstr;
+		' WHERE distribution = ? FOR UPDATE', undef, $distribution) or die $dbh->errstr;
 }
 
 sub parse_argv {
