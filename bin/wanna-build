@@ -385,13 +385,16 @@ undef $distribution if $distribution eq 'any';
                         lock_table() unless $simulate;
                         my $replacemap = { '%ARCH%' => $arch, '%SUITE%' => $distribution };
                         map { my $k = $_; grep { $k =~ s,$_,$replacemap->{$_}, } keys %{$replacemap}; $_ = $k; } @ARGV;
-                        my @ipkgs = &parse_argv( \@ARGV, '.');
-                        my @isrcs = &parse_argv( \@ARGV, '.');
-                        my @bpkgs = &parse_argv( \@ARGV, '.');
-                        my @psrcs = &parse_argv( \@ARGV, '.');
+                        my @ipkgs = &parse_argv( \@ARGV, '.'); # installed packages
+                        my @isrcs = &parse_argv( \@ARGV, '.'); # installed sources
+                        my @bpkgs = &parse_argv( \@ARGV, '.'); # packages available for building (edos-debcheck)
+                        my @psrcs = &parse_argv( \@ARGV, '.'); # consider as installed sources
                         use WB::QD;
                         my $srcs = WB::QD::readsourcebins($arch, $Pas, \@isrcs, \@ipkgs);
                         if (@psrcs) {
+                            # Installed sources of the base suite: only add them as related, not
+                            # installed; skip the entries if we got something in installed
+                            # sources already.
                             my $psrcs = WB::QD::readsourcebins($arch, $Pas, \@psrcs, []);
                             foreach my $k (keys %$$psrcs) {
                                 next if $$srcs->{$k};
@@ -401,6 +404,8 @@ undef $distribution if $distribution eq 'any';
                             }
                         }
                         parse_all_v3($$srcs, {'arch' => $arch, 'suite' => $distribution, 'time' => $curr_date});
+                        # The packages passed to edos-debcheck are normally the binaries available,
+                        # unless you've also a base suite the builder will take packages from.
                         @bpkgs = @ipkgs unless @bpkgs;
                         call_edos_depcheck( {'arch' => $arch, 'pkgs' => \@bpkgs, 'srcs' => $$srcs, 'depwait' => 1 });
                         last SWITCH;
@@ -1657,7 +1662,9 @@ sub call_edos_depcheck {
     my $args = shift;
     my $srcs = $args->{'srcs'};
     my $key;
-    
+   
+    # Do not dispatch edos-debcheck if BD-Uninstallable is deactivated for the target.
+    # ("noadw")  Depwait will always be 1 in normal use.
     return if defined ($distributions{$distribution}{noadw}) && not defined $args->{'depwait'};
 
     # We need to check all of needs-build, as any new upload could make
@@ -1665,13 +1672,14 @@ sub call_edos_depcheck {
     # We also check everything in bd-uninstallable, as any new upload could
     # make that work again
     my (%interesting_packages, %interesting_packages_depwait);
-    my $db = get_all_source_info();
+    my $db = get_all_source_info(); # TODO: Filter for needs-build bd-uninst dep-wait, that's all we need.
     foreach $key (keys %$db) {
 	my $pkg = $db->{$key};
         if (defined $pkg and isin($pkg->{'state'}, qw/Needs-Build BD-Uninstallable/) and not defined ($distributions{$distribution}{noadw})) {
-		$interesting_packages{$key} = undef;
+		$interesting_packages{$key} = undef; # add key to interesting packages
 	}
         if (defined $pkg and isin($pkg->{'state'}, qw/Dep-Wait/) and defined $args->{'depwait'}) {
+                # Depwaits are checked by creating pseudo binaries for edos-debcheck, so collect them.
 		$interesting_packages_depwait{$key} = undef;
                 # we always check for BD-Uninstallability in depwait - could be that depwait is satisfied but package is uninstallable
 		$interesting_packages{$key} = undef unless defined ($distributions{$distribution}{noadw});
@@ -1744,6 +1752,7 @@ sub call_edos_depcheck {
     for my $key (keys %interesting_packages) {
         next if defined $interesting_packages_depwait{$key};
 	my $pkg = $db->{$key};
+        # (defined $interesting_packages{$key}) => edos found an uninstallability
 	my $change = 
 	    (defined $interesting_packages{$key} and $pkg->{'state'} eq 'Needs-Build') ||
 	    (not defined $interesting_packages{$key} and $pkg->{'state'} eq 'BD-Uninstallable');
@@ -1776,12 +1785,13 @@ sub call_edos_depcheck {
             next;
         }
 	my $pkg = $db->{$key};
-	    if (defined $interesting_packages{$key}) {
-		    change_state( \$pkg, 'BD-Uninstallable' );
-		    $pkg->{'bd_problem'} = $interesting_packages{$key};
-	    } else {
-		    change_state( \$pkg, 'Needs-Build' );
-	    }
+        # The depwait could be cleared with the result still being uninstallable.
+        if (defined $interesting_packages{$key}) {
+    	    change_state( \$pkg, 'BD-Uninstallable' );
+    	    $pkg->{'bd_problem'} = $interesting_packages{$key};
+        } else {
+    	    change_state( \$pkg, 'Needs-Build' );
+        }
 	log_ta( $pkg, "edos_depcheck: depwait" ) unless $simulate;
 	update_source_info($pkg) unless $simulate;
 	print "edos-builddebchange changed state of ${key}_$pkg->{'version'} ($args->{'arch'}) from dep-wait to $pkg->{'state'}\n" if $verbose || $simulate;
