@@ -1795,7 +1795,10 @@ sub usage {
 Usage: $prgname <options...> <package_version...>
 Options:
     -v, --verbose: Verbose execution.
-    -A arch: Architecture this operation is for.
+    --simulate: Do not actually execute the action.
+        (Not yet implemented for all operations.  Check the source.)
+    -A arch: Architecture this operation is for.  (REQUIRED)
+    -d dist: Distribution/suite this operation is for.  (REQUIRED)
     --take: Take package for building [default operation]
     -f, --failed: Record in database that a build failed due to
         deficiencies in the package (that aren't fixable without a new
@@ -1815,10 +1818,20 @@ Options:
 	 BD-Uninstallable, until the installability of its Build-Dependencies
 	 were verified. This happens at each call of --merge-all, usually
 	 every 15 minutes.
+    --build-priority=VALUE: Adjust the build priority of the currently
+        queued build.
+    --permanent-build-priority=VALUE: Adjust the permanent build
+        priority of a source package in a given distribution.
+    --extra-depends=BUILD-DEPENDS: Specify additional build-dependencies
+        used for the build.
+    --extra-conflicts=BUILD-DEPENDS: Specify additional build-conflicts
+        used for the build.
     -i SRC_PKG, --info SRC_PKG: Show information for source package
     -l STATE, --list=STATE: List all packages in state STATE; can be
         combined with -U to restrict to a specific user; STATE can
         also be 'all'
+    --min-age=VALUE, --max-age=VALUE: Filter the output of --list
+        by the age of the builds.
     -m MESSAGE, --message=MESSAGE: Give reason why package failed or
         source dependency list
         (used with -f, --dep-wait, and --binNMU)
