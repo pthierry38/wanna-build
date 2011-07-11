@@ -76,16 +76,28 @@ sub readsourcebins {
             /^Source:\s*(\S+)\s+\((\S+)\)$/mi and $p->{'source'} = $1 and $p->{'version'} = $2;
 
             # consider packages as non-existant if it's all but outdated
+            # arch:all and ver(binary) < ver(source) => skip
             next if $p->{'arch'} eq 'all' && $srcs->{$p->{'source'}} && $srcs->{$p->{'source'}}->{'version'} && vercmp($srcs->{$p->{'source'}}->{'version'}, $p->{'version'}) > 0;
+            # not for the current architecture or arch:all => skip
             next unless $p->{'arch'} eq 'all' || $p->{'arch'} eq ${arch};
-            $binary->{$p->{'binary'}} = { 'version' => $p->{'version'}, 'arch' => $p->{'arch'}} unless $binary->{$p->{'binary'}} and vercmp($binary->{$p->{'binary'}}->{'version'}, $p->{'version'}) < 0;
+            # register the binary if there isn't a newer one in the hash yet
+            $binary->{$p->{'binary'}} = { 'version' => $p->{'version'}, 'arch' => $p->{'arch'}}
+                unless $binary->{$p->{'binary'}} and vercmp($binary->{$p->{'binary'}}->{'version'}, $p->{'version'}) < 0;
 
             #next if $pas->{$p->{'binary'}} && pasignore($pas->{$p->{'binary'}}, $arch);
+
+            # only continue if it's arch-specific...
             next if $p->{'arch'} eq 'all';
+
+            # annotate the source package if present, continue otherwise
             next unless $srcs->{$p->{'source'}};
+
             $srcs->{$p->{'source'}}->{'compiled'} = 1;
+
+            # TODO: ???
             next unless $srcs->{$p->{'source'}}->{'version'} eq $p->{'version'};
             $srcs->{$p->{'source'}}->{'installed'} = 1;
+
             next unless $p->{'binnmu'};
             next if ($srcs->{$p->{'source'}}->{'binnmu'}) && ($srcs->{$p->{'source'}}->{'binnmu'} > $p->{'binnmu'});
             $srcs->{$p->{'source'}}->{'binnmu'} = $p->{'binnmu'};
