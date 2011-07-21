@@ -289,7 +289,7 @@ SET search_path = "alpha_public", public;
 DROP VIEW pkg_history;
 
 CREATE OR REPLACE VIEW pkg_history AS
- SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space
+ SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder
    FROM pkg_history
 NATURAL JOIN distributions
   WHERE distributions.public = true AND pkg_history.architecture::text = 'alpha'::text;
@@ -302,7 +302,7 @@ SET search_path = "amd64_public", public;
 DROP VIEW pkg_history;
 
 CREATE OR REPLACE VIEW pkg_history AS
- SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space
+ SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder
    FROM pkg_history
 NATURAL JOIN distributions
   WHERE distributions.public = true AND pkg_history.architecture::text = 'amd64'::text;
@@ -315,7 +315,7 @@ SET search_path = "arm_public", public;
 DROP VIEW pkg_history;
 
 CREATE OR REPLACE VIEW pkg_history AS
- SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space
+ SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder
    FROM pkg_history
 NATURAL JOIN distributions
   WHERE distributions.public = true AND pkg_history.architecture::text = 'arm'::text;
@@ -328,7 +328,7 @@ SET search_path = "armel_public", public;
 DROP VIEW pkg_history;
 
 CREATE OR REPLACE VIEW pkg_history AS
- SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space
+ SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder
    FROM pkg_history
 NATURAL JOIN distributions
   WHERE distributions.public = true AND pkg_history.architecture::text = 'armel'::text;
@@ -341,7 +341,7 @@ SET search_path = "hppa_public", public;
 DROP VIEW pkg_history;
 
 CREATE OR REPLACE VIEW pkg_history AS
- SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space
+ SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder
    FROM pkg_history
 NATURAL JOIN distributions
   WHERE distributions.public = true AND pkg_history.architecture::text = 'hppa'::text;
@@ -354,7 +354,7 @@ SET search_path = "hurd-i386_public", public;
 DROP VIEW pkg_history;
 
 CREATE OR REPLACE VIEW pkg_history AS
- SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space
+ SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder
    FROM pkg_history
 NATURAL JOIN distributions
   WHERE distributions.public = true AND pkg_history.architecture::text = 'hurd-i386'::text;
@@ -367,7 +367,7 @@ SET search_path = "i386_public", public;
 DROP VIEW pkg_history;
 
 CREATE OR REPLACE VIEW pkg_history AS
- SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space
+ SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder
    FROM pkg_history
 NATURAL JOIN distributions
   WHERE distributions.public = true AND pkg_history.architecture::text = 'i386'::text;
@@ -380,7 +380,7 @@ SET search_path = "ia64_public", public;
 DROP VIEW pkg_history;
 
 CREATE OR REPLACE VIEW pkg_history AS
- SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space
+ SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder
    FROM pkg_history
 NATURAL JOIN distributions
   WHERE distributions.public = true AND pkg_history.architecture::text = 'ia64'::text;
@@ -393,7 +393,7 @@ SET search_path = "kfreebsd-amd64_public", public;
 DROP VIEW pkg_history;
 
 CREATE OR REPLACE VIEW pkg_history AS
- SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space
+ SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder
    FROM pkg_history
 NATURAL JOIN distributions
   WHERE distributions.public = true AND pkg_history.architecture::text = 'kfreebsd-amd64'::text;
@@ -406,7 +406,7 @@ SET search_path = "kfreebsd-i386_public", public;
 DROP VIEW pkg_history;
 
 CREATE OR REPLACE VIEW pkg_history AS
- SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space
+ SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder
    FROM pkg_history
 NATURAL JOIN distributions
   WHERE distributions.public = true AND pkg_history.architecture::text = 'kfreebsd-i386'::text;
@@ -419,7 +419,7 @@ SET search_path = "mips_public", public;
 DROP VIEW pkg_history;
 
 CREATE OR REPLACE VIEW pkg_history AS
- SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space
+ SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder
    FROM pkg_history
 NATURAL JOIN distributions
   WHERE distributions.public = true AND pkg_history.architecture::text = 'mips'::text;
@@ -432,7 +432,7 @@ SET search_path = "mipsel_public", public;
 DROP VIEW pkg_history;
 
 CREATE OR REPLACE VIEW pkg_history AS
- SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space
+ SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder
    FROM pkg_history
 NATURAL JOIN distributions
   WHERE distributions.public = true AND pkg_history.architecture::text = 'mipsel'::text;
@@ -445,7 +445,7 @@ SET search_path = "powerpc_public", public;
 DROP VIEW pkg_history;
 
 CREATE OR REPLACE VIEW pkg_history AS
- SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space
+ SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder
    FROM pkg_history
 NATURAL JOIN distributions
   WHERE distributions.public = true AND pkg_history.architecture::text = 'powerpc'::text;
@@ -458,7 +458,7 @@ SET search_path = "s390_public", public;
 DROP VIEW pkg_history;
 
 CREATE OR REPLACE VIEW pkg_history AS
- SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space
+ SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder
    FROM pkg_history
 NATURAL JOIN distributions
   WHERE distributions.public = true AND pkg_history.architecture::text = 's390'::text;
@@ -471,7 +471,7 @@ SET search_path = "sparc_public", public;
 DROP VIEW pkg_history;
 
 CREATE OR REPLACE VIEW pkg_history AS
- SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space
+ SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder
    FROM pkg_history
 NATURAL JOIN distributions
   WHERE distributions.public = true AND pkg_history.architecture::text = 'sparc'::text;
