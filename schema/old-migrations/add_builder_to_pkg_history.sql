@@ -14,6 +14,10 @@ CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INT
 
 CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 'alpha'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
 
+GRANT ALL ON TABLE pkg_history TO wbadm;
+GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
+
 SET search_path = "amd64", public;
 
 DROP VIEW pkg_history;
@@ -28,6 +32,10 @@ CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FRO
 CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space, builder) VALUES ('amd64'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space, new.builder);
 
 CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 'amd64'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+GRANT ALL ON TABLE pkg_history TO wbadm;
+GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
 
 SET search_path = "arm", public;
 
@@ -44,6 +52,10 @@ CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INT
 
 CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 'arm'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
 
+GRANT ALL ON TABLE pkg_history TO wbadm;
+GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
+
 SET search_path = "armel", public;
 
 DROP VIEW pkg_history;
@@ -58,6 +70,10 @@ CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FRO
 CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space, builder) VALUES ('armel'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space, new.builder);
 
 CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 'armel'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+GRANT ALL ON TABLE pkg_history TO wbadm;
+GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
 
 SET search_path = "hppa", public;
 
@@ -74,6 +90,10 @@ CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INT
 
 CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 'hppa'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
 
+GRANT ALL ON TABLE pkg_history TO wbadm;
+GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
+
 SET search_path = "hurd-i386", public;
 
 DROP VIEW pkg_history;
@@ -88,6 +108,10 @@ CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FRO
 CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space, builder) VALUES ('hurd-i386'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space, new.builder);
 
 CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 'hurd-i386'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+GRANT ALL ON TABLE pkg_history TO wbadm;
+GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
 
 SET search_path = "i386", public;
 
@@ -104,6 +128,10 @@ CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INT
 
 CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 'i386'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
 
+GRANT ALL ON TABLE pkg_history TO wbadm;
+GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
+
 SET search_path = "ia64", public;
 
 DROP VIEW pkg_history;
@@ -118,6 +146,10 @@ CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FRO
 CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space, builder) VALUES ('ia64'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space, new.builder);
 
 CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 'ia64'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+GRANT ALL ON TABLE pkg_history TO wbadm;
+GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
 
 SET search_path = "kfreebsd-amd64", public;
 
@@ -134,6 +166,10 @@ CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INT
 
 CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 'kfreebsd-amd64'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
 
+GRANT ALL ON TABLE pkg_history TO wbadm;
+GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
+
 SET search_path = "kfreebsd-i386", public;
 
 DROP VIEW pkg_history;
@@ -148,6 +184,10 @@ CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FRO
 CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space, builder) VALUES ('kfreebsd-i386'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space, new.builder);
 
 CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 'kfreebsd-i386'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+GRANT ALL ON TABLE pkg_history TO wbadm;
+GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
 
 SET search_path = "mips", public;
 
@@ -164,6 +204,10 @@ CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INT
 
 CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 'mips'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
 
+GRANT ALL ON TABLE pkg_history TO wbadm;
+GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
+
 SET search_path = "mipsel", public;
 
 DROP VIEW pkg_history;
@@ -178,6 +222,10 @@ CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FRO
 CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space, builder) VALUES ('mipsel'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space, new.builder);
 
 CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 'mipsel'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+GRANT ALL ON TABLE pkg_history TO wbadm;
+GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
 
 SET search_path = "powerpc", public;
 
@@ -194,6 +242,10 @@ CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INT
 
 CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 'powerpc'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
 
+GRANT ALL ON TABLE pkg_history TO wbadm;
+GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
+
 SET search_path = "s390", public;
 
 DROP VIEW pkg_history;
@@ -209,6 +261,10 @@ CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INT
 
 CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 's390'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
 
+GRANT ALL ON TABLE pkg_history TO wbadm;
+GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
+
 SET search_path = "sparc", public;
 
 DROP VIEW pkg_history;
@@ -223,4 +279,8 @@ CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FRO
 CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space, builder) VALUES ('sparc'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space, new.builder);
 
 CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 'sparc'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+GRANT ALL ON TABLE pkg_history TO wbadm;
+GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
 
