@@ -226,4 +226,5 @@ GRANT wb_security TO white GRANTED BY wbadm;
 GRANT wbadm TO aba GRANTED BY wbadm;
 GRANT wbadm TO he GRANTED BY wbadm;
 GRANT wbadm TO kroeckx GRANTED BY wbadm;
+GRANT wbadm TO mehdi GRANTED BY wbadm;
 GRANT wbadm TO pkern GRANTED BY wbadm;
