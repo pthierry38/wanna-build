@@ -1187,10 +1187,8 @@ sub list_packages {
         @list = grep { !$_->{'extra_depends'} and !$_->{'extra_conflicts'} } @list if $api < 1 ;
         # filter out packages for needs-build in noautobuild state - same could exist for weaknoautobuild if buildds would tell us what they do
         if (($state eq 'needs-build') && ($yamlmap->{"restrict"}) && ($yamlmap->{"restrict"}{"noautobuild"})) {
-            foreach my $key (@{$yamlmap->{"restrict"}{"noautobuild"}}) {
-                foreach my $k (keys %$key) {
-                    @list = grep { $_->{'package'} ne $k } @list;
-                }
+            foreach my $key (map {keys %$_} @{$yamlmap->{"restrict"}{"noautobuild"}}) {
+                @list = grep { $_->{'package'} ne $key } @list;
             }
         }
 
