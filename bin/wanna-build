@@ -1185,6 +1185,14 @@ sub list_packages {
         @list = grep { my $i = $_->{'component'}; grep { $i eq $_ } split /[, ]+/, $yamlmap->{"restrict"}{'component'} } @list;
         # extra depends / conflicts only from api 1 on
         @list = grep { !$_->{'extra_depends'} and !$_->{'extra_conflicts'} } @list if $api < 1 ;
+        # filter out packages for needs-build in noautobuild state - same could exist for weaknoautobuild if buildds would tell us what they do
+        if (($state eq 'needs-build') && ($yamlmap->{"restrict"}) && ($yamlmap->{"restrict"}{"noautobuild"})) {
+            foreach my $key (@{$yamlmap->{"restrict"}{"noautobuild"}}) {
+                foreach my $k (keys %$key) {
+                    @list = grep { $_->{'package'} ne $k } @list;
+                }
+            }
+        }
 
         # first adjust ownprintformat, then set printformat accordingly
         $printformat ||= $yamlmap->{"format"}{$ownprintformat} if $ownprintformat;
