@@ -1808,7 +1808,7 @@ Options:
     --simulate: Do not actually execute the action.
         (Not yet implemented for all operations.  Check the source.)
     -A arch: Architecture this operation is for.  (REQUIRED)
-    -d dist: Distribution/suite this operation is for.  (REQUIRED)
+    -d dist: Distribution/suite this operation is for. Defaults to unstable.
     --take: Take package for building [default operation]
     -f, --failed: Record in database that a build failed due to
         deficiencies in the package (that aren't fixable without a new
@@ -1853,13 +1853,16 @@ Options:
         automatically choosen
     --import FILE: Import database from a ASCII file FILE
     --export FILE: Export database to a ASCII file FILE
+    --format string, --own-format name: specify how the listing of packages
+        should look like. Please check the source for details. Own-Format
+        definitions are in ~/.wanna-build.yaml within the format section.
+
+There are more options not relevant for normal usage - please check source
+if you need them.
 
 The remaining arguments (depending on operation) usually start with
 "name_version", the trailer is ignored. This allows to pass the names
 of .dsc files, for which file name completion can be used.
---merge-packages and --merge-quinn take Package/quin--diff file names
-on the command line or read stdin. --list needs nothing more on the
-command line. --info takes source package names (without version).
 EOF
 	exit 1;
 }

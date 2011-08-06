@@ -926,7 +926,7 @@ SET search_path = alpha, pg_catalog;
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'alpha'::text);
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'alpha'::text);
 
 
 ALTER TABLE alpha.pkg_history OWNER TO wbadm;
@@ -1029,7 +1029,7 @@ ALTER TABLE alpha_public.packages OWNER TO wbadm;
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'alpha'::text));
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'alpha'::text));
 
 
 ALTER TABLE alpha_public.pkg_history OWNER TO wbadm;
@@ -1071,7 +1071,7 @@ ALTER TABLE amd64.packages OWNER TO wbadm;
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'amd64'::text);
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'amd64'::text);
 
 
 ALTER TABLE amd64.pkg_history OWNER TO wbadm;
@@ -1113,7 +1113,7 @@ ALTER TABLE amd64_public.packages OWNER TO wbadm;
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'amd64'::text));
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'amd64'::text));
 
 
 ALTER TABLE amd64_public.pkg_history OWNER TO wbadm;
@@ -1155,7 +1155,7 @@ ALTER TABLE arm.packages OWNER TO wbadm;
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'arm'::text);
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'arm'::text);
 
 
 ALTER TABLE arm.pkg_history OWNER TO wbadm;
@@ -1197,7 +1197,7 @@ ALTER TABLE arm_public.packages OWNER TO wbadm;
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'arm'::text));
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'arm'::text));
 
 
 ALTER TABLE arm_public.pkg_history OWNER TO wbadm;
@@ -1239,7 +1239,7 @@ ALTER TABLE armel.packages OWNER TO wbadm;
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'armel'::text);
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'armel'::text);
 
 
 ALTER TABLE armel.pkg_history OWNER TO wbadm;
@@ -1281,7 +1281,7 @@ ALTER TABLE armel_public.packages OWNER TO wbadm;
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'armel'::text));
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'armel'::text));
 
 
 ALTER TABLE armel_public.pkg_history OWNER TO wbadm;
@@ -1323,7 +1323,7 @@ ALTER TABLE hppa.packages OWNER TO wbadm;
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'hppa'::text);
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'hppa'::text);
 
 
 ALTER TABLE hppa.pkg_history OWNER TO wbadm;
@@ -1365,7 +1365,7 @@ ALTER TABLE hppa_public.packages OWNER TO wbadm;
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'hppa'::text));
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'hppa'::text));
 
 
 ALTER TABLE hppa_public.pkg_history OWNER TO wbadm;
@@ -1407,7 +1407,7 @@ ALTER TABLE "hurd-i386".packages OWNER TO wbadm;
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'hurd-i386'::text);
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'hurd-i386'::text);
 
 
 ALTER TABLE "hurd-i386".pkg_history OWNER TO wbadm;
@@ -1449,7 +1449,7 @@ ALTER TABLE "hurd-i386_public".packages OWNER TO wbadm;
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'hurd-i386'::text));
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'hurd-i386'::text));
 
 
 ALTER TABLE "hurd-i386_public".pkg_history OWNER TO wbadm;
@@ -1491,7 +1491,7 @@ ALTER TABLE i386.packages OWNER TO wbadm;
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'i386'::text);
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'i386'::text);
 
 
 ALTER TABLE i386.pkg_history OWNER TO wbadm;
@@ -1533,7 +1533,7 @@ ALTER TABLE i386_public.packages OWNER TO wbadm;
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'i386'::text));
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'i386'::text));
 
 
 ALTER TABLE i386_public.pkg_history OWNER TO wbadm;
@@ -1575,7 +1575,7 @@ ALTER TABLE ia64.packages OWNER TO wbadm;
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'ia64'::text);
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'ia64'::text);
 
 
 ALTER TABLE ia64.pkg_history OWNER TO wbadm;
@@ -1617,7 +1617,7 @@ ALTER TABLE ia64_public.packages OWNER TO wbadm;
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'ia64'::text));
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'ia64'::text));
 
 
 ALTER TABLE ia64_public.pkg_history OWNER TO wbadm;
@@ -1659,7 +1659,7 @@ ALTER TABLE "kfreebsd-amd64".packages OWNER TO wbadm;
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'kfreebsd-amd64'::text);
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'kfreebsd-amd64'::text);
 
 
 ALTER TABLE "kfreebsd-amd64".pkg_history OWNER TO wbadm;
@@ -1701,7 +1701,7 @@ ALTER TABLE "kfreebsd-amd64_public".packages OWNER TO wbadm;
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'kfreebsd-amd64'::text));
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'kfreebsd-amd64'::text));
 
 
 ALTER TABLE "kfreebsd-amd64_public".pkg_history OWNER TO wbadm;
@@ -1743,7 +1743,7 @@ ALTER TABLE "kfreebsd-i386".packages OWNER TO wbadm;
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'kfreebsd-i386'::text);
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'kfreebsd-i386'::text);
 
 
 ALTER TABLE "kfreebsd-i386".pkg_history OWNER TO wbadm;
@@ -1785,7 +1785,7 @@ ALTER TABLE "kfreebsd-i386_public".packages OWNER TO wbadm;
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'kfreebsd-i386'::text));
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'kfreebsd-i386'::text));
 
 
 ALTER TABLE "kfreebsd-i386_public".pkg_history OWNER TO wbadm;
@@ -1827,7 +1827,7 @@ ALTER TABLE mips.packages OWNER TO wbadm;
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'mips'::text);
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'mips'::text);
 
 
 ALTER TABLE mips.pkg_history OWNER TO wbadm;
@@ -1869,7 +1869,7 @@ ALTER TABLE mips_public.packages OWNER TO wbadm;
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'mips'::text));
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'mips'::text));
 
 
 ALTER TABLE mips_public.pkg_history OWNER TO wbadm;
@@ -1911,7 +1911,7 @@ ALTER TABLE mipsel.packages OWNER TO wbadm;
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'mipsel'::text);
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'mipsel'::text);
 
 
 ALTER TABLE mipsel.pkg_history OWNER TO wbadm;
@@ -1953,7 +1953,7 @@ ALTER TABLE mipsel_public.packages OWNER TO wbadm;
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'mipsel'::text));
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'mipsel'::text));
 
 
 ALTER TABLE mipsel_public.pkg_history OWNER TO wbadm;
@@ -1995,7 +1995,7 @@ ALTER TABLE powerpc.packages OWNER TO wbadm;
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'powerpc'::text);
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'powerpc'::text);
 
 
 ALTER TABLE powerpc.pkg_history OWNER TO wbadm;
@@ -2037,7 +2037,7 @@ ALTER TABLE powerpc_public.packages OWNER TO wbadm;
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'powerpc'::text));
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'powerpc'::text));
 
 
 ALTER TABLE powerpc_public.pkg_history OWNER TO wbadm;
@@ -2166,7 +2166,7 @@ ALTER TABLE s390.packages OWNER TO wbadm;
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 's390'::text);
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 's390'::text);
 
 
 ALTER TABLE s390.pkg_history OWNER TO wbadm;
@@ -2208,7 +2208,7 @@ ALTER TABLE s390_public.packages OWNER TO wbadm;
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 's390'::text));
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 's390'::text));
 
 
 ALTER TABLE s390_public.pkg_history OWNER TO wbadm;
@@ -2250,7 +2250,7 @@ ALTER TABLE sparc.packages OWNER TO wbadm;
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'sparc'::text);
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'sparc'::text);
 
 
 ALTER TABLE sparc.pkg_history OWNER TO wbadm;
@@ -2292,7 +2292,7 @@ ALTER TABLE sparc_public.packages OWNER TO wbadm;
 --
 
 CREATE VIEW pkg_history AS
-    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'sparc'::text));
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'sparc'::text));
 
 
 ALTER TABLE sparc_public.pkg_history OWNER TO wbadm;
@@ -2436,14 +2436,14 @@ CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FRO
 -- Name: pkg_history_insert; Type: RULE; Schema: alpha; Owner: wbadm
 --
 
-CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('alpha'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space, builder) VALUES ('alpha'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space, new.builder);
 
 
 --
 -- Name: pkg_history_update; Type: RULE; Schema: alpha; Owner: wbadm
 --
 
-CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 'alpha'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 'alpha'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
 
 
 --
@@ -2508,14 +2508,14 @@ CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FRO
 -- Name: pkg_history_insert; Type: RULE; Schema: amd64; Owner: wbadm
 --
 
-CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('amd64'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space, builder) VALUES ('amd64'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space, new.builder);
 
 
 --
 -- Name: pkg_history_update; Type: RULE; Schema: amd64; Owner: wbadm
 --
 
-CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 'amd64'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 'amd64'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
 
 
 --
@@ -2580,14 +2580,14 @@ CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FRO
 -- Name: pkg_history_insert; Type: RULE; Schema: arm; Owner: wbadm
 --
 
-CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('arm'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space, builder) VALUES ('arm'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space, new.builder);
 
 
 --
 -- Name: pkg_history_update; Type: RULE; Schema: arm; Owner: wbadm
 --
 
-CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 'arm'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 'arm'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
 
 
 --
@@ -2652,14 +2652,14 @@ CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FRO
 -- Name: pkg_history_insert; Type: RULE; Schema: armel; Owner: wbadm
 --
 
-CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('armel'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space, builder) VALUES ('armel'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space, new.builder);
 
 
 --
 -- Name: pkg_history_update; Type: RULE; Schema: armel; Owner: wbadm
 --
 
-CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 'armel'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 'armel'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
 
 
 --
@@ -2724,14 +2724,14 @@ CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FRO
 -- Name: pkg_history_insert; Type: RULE; Schema: hppa; Owner: wbadm
 --
 
-CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('hppa'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space, builder) VALUES ('hppa'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space, new.builder);
 
 
 --
 -- Name: pkg_history_update; Type: RULE; Schema: hppa; Owner: wbadm
 --
 
-CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 'hppa'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 'hppa'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
 
 
 --
@@ -2796,14 +2796,14 @@ CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FRO
 -- Name: pkg_history_insert; Type: RULE; Schema: hurd-i386; Owner: wbadm
 --
 
-CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('hurd-i386'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space, builder) VALUES ('hurd-i386'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space, new.builder);
 
 
 --
 -- Name: pkg_history_update; Type: RULE; Schema: hurd-i386; Owner: wbadm
 --
 
-CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 'hurd-i386'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 'hurd-i386'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
 
 
 --
@@ -2868,14 +2868,14 @@ CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FRO
 -- Name: pkg_history_insert; Type: RULE; Schema: i386; Owner: wbadm
 --
 
-CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('i386'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space, builder) VALUES ('i386'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space, new.builder);
 
 
 --
 -- Name: pkg_history_update; Type: RULE; Schema: i386; Owner: wbadm
 --
 
-CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 'i386'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 'i386'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
 
 
 --
@@ -2940,14 +2940,14 @@ CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FRO
 -- Name: pkg_history_insert; Type: RULE; Schema: ia64; Owner: wbadm
 --
 
-CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('ia64'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space, builder) VALUES ('ia64'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space, new.builder);
 
 
 --
 -- Name: pkg_history_update; Type: RULE; Schema: ia64; Owner: wbadm
 --
 
-CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 'ia64'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 'ia64'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
 
 
 --
@@ -3012,14 +3012,14 @@ CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FRO
 -- Name: pkg_history_insert; Type: RULE; Schema: kfreebsd-amd64; Owner: wbadm
 --
 
-CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('kfreebsd-amd64'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space, builder) VALUES ('kfreebsd-amd64'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space, new.builder);
 
 
 --
 -- Name: pkg_history_update; Type: RULE; Schema: kfreebsd-amd64; Owner: wbadm
 --
 
-CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 'kfreebsd-amd64'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 'kfreebsd-amd64'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
 
 
 --
@@ -3084,14 +3084,14 @@ CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FRO
 -- Name: pkg_history_insert; Type: RULE; Schema: kfreebsd-i386; Owner: wbadm
 --
 
-CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('kfreebsd-i386'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space, builder) VALUES ('kfreebsd-i386'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space, new.builder);
 
 
 --
 -- Name: pkg_history_update; Type: RULE; Schema: kfreebsd-i386; Owner: wbadm
 --
 
-CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 'kfreebsd-i386'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 'kfreebsd-i386'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
 
 
 --
@@ -3156,14 +3156,14 @@ CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FRO
 -- Name: pkg_history_insert; Type: RULE; Schema: mips; Owner: wbadm
 --
 
-CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('mips'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space, builder) VALUES ('mips'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space, new.builder);
 
 
 --
 -- Name: pkg_history_update; Type: RULE; Schema: mips; Owner: wbadm
 --
 
-CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 'mips'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 'mips'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
 
 
 --
@@ -3228,14 +3228,14 @@ CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FRO
 -- Name: pkg_history_insert; Type: RULE; Schema: mipsel; Owner: wbadm
 --
 
-CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('mipsel'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space, builder) VALUES ('mipsel'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space, new.builder);
 
 
 --
 -- Name: pkg_history_update; Type: RULE; Schema: mipsel; Owner: wbadm
 --
 
-CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 'mipsel'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 'mipsel'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
 
 
 --
@@ -3300,14 +3300,14 @@ CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FRO
 -- Name: pkg_history_insert; Type: RULE; Schema: powerpc; Owner: wbadm
 --
 
-CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('powerpc'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space, builder) VALUES ('powerpc'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space, new.builder);
 
 
 --
 -- Name: pkg_history_update; Type: RULE; Schema: powerpc; Owner: wbadm
 --
 
-CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 'powerpc'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 'powerpc'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
 
 
 --
@@ -3372,14 +3372,14 @@ CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FRO
 -- Name: pkg_history_insert; Type: RULE; Schema: s390; Owner: wbadm
 --
 
-CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('s390'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space, builder) VALUES ('s390'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space, new.builder);
 
 
 --
 -- Name: pkg_history_update; Type: RULE; Schema: s390; Owner: wbadm
 --
 
-CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 's390'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 's390'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
 
 
 --
@@ -3444,14 +3444,14 @@ CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FRO
 -- Name: pkg_history_insert; Type: RULE; Schema: sparc; Owner: wbadm
 --
 
-CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('sparc'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space, builder) VALUES ('sparc'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space, new.builder);
 
 
 --
 -- Name: pkg_history_update; Type: RULE; Schema: sparc; Owner: wbadm
 --
 
-CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 'sparc'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 'sparc'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
 
 
 --
