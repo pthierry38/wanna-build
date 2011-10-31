@@ -1917,9 +1917,9 @@ sub get_readonly_source_info {
 sub get_source_info {
 	my $name = shift;
         return get_readonly_source_info($name) if $simulate;
+	lock_table();
 	my $pkg = $dbh->selectrow_hashref('SELECT *, extract(days from date_trunc(\'days\', now() - state_change)) as state_days, floor(extract(epoch from now()) - extract(epoch from state_change)) as state_time FROM ' . 
-		table_name() . ' WHERE package = ? AND distribution = ?' .
-		' FOR UPDATE',
+		table_name() . ' WHERE package = ? AND distribution = ?',
 		undef, $name, $distribution);
 	return $pkg;
 }
@@ -2114,8 +2114,10 @@ sub add_user_info {
 
 sub lock_table {
         return if $simulate;
-	$dbh->do('SELECT 1 FROM ' . table_name() .
-		' WHERE distribution = ? FOR UPDATE', undef, $distribution) or die $dbh->errstr;
+	$q = 'SELECT 1 AS result FROM public.locks' .
+	     ' WHERE architecture = ? AND distribution = ? FOR UPDATE';
+	my $result = $dbh->selectrow_hashref($q, undef, $arch, $distribution) or die $dbh->errstr;
+	die unless $result->{'result'} == 1;
 }
 
 sub parse_argv {
