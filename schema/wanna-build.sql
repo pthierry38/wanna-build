@@ -2120,6 +2120,18 @@ CREATE VIEW lastlog AS
 ALTER TABLE public.lastlog OWNER TO wbadm;
 
 --
+-- Name: locks; Type: TABLE; Schema: public; Owner: wbadm; Tablespace: 
+--
+
+CREATE TABLE locks (
+    distribution character varying,
+    architecture character varying
+);
+
+
+ALTER TABLE public.locks OWNER TO wbadm;
+
+--
 -- Name: log; Type: VIEW; Schema: public; Owner: wbadm
 --
 
@@ -5133,6 +5145,17 @@ REVOKE ALL ON TABLE lastlog FROM PUBLIC;
 REVOKE ALL ON TABLE lastlog FROM wbadm;
 GRANT ALL ON TABLE lastlog TO wbadm;
 GRANT SELECT ON TABLE lastlog TO PUBLIC;
+
+
+--
+-- Name: locks; Type: ACL; Schema: public; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE locks FROM PUBLIC;
+REVOKE ALL ON TABLE locks FROM wbadm;
+GRANT ALL ON TABLE locks TO wbadm;
+GRANT SELECT ON TABLE locks TO PUBLIC;
+GRANT UPDATE ON TABLE locks TO wb_all;
 
 
 --
