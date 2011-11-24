@@ -1,5 +1,6 @@
-arch <- c("amd64", "armel", "hurd-i386", "i386", "ia64", "kfreebsd-amd64",
-	"kfreebsd-i386", "mips", "mipsel", "powerpc", "s390", "sparc")
+arch <- c("amd64", "armel", "armhf", "hurd-i386", "i386", "ia64",
+	"kfreebsd-amd64", "kfreebsd-i386", "mips", "mipsel", "powerpc",
+	"s390", "s390x", "sparc")
 palette(c("black", "turquoise", "red", "OrangeRed", "green3", "cyan", 
 	"blue", "yellow", "magenta",
 	"violetred2","thistle4", "steelblue2", "springgreen4",
@@ -10,7 +11,8 @@ readdata <- function (file,start) {
 	sep=",",col.names=c("date","alpha","at","arm","art","hppa","ht","hurd-i386",
 	"hit","i386","it","ia64","i6t","m68k","mt","mips","mit","mipsel","mipt",
 	"powerpc","pt","s390","st","amd64","amdt","sparc","spt","armel","aret",
-	"kfreebsd-amd64", "kfreebsd-amd64-t", "kfreebsd-i386", "kfreebsd-i386-t"))
+	"kfreebsd-amd64", "kfreebsd-amd64-t", "kfreebsd-i386", "kfreebsd-i386-t",
+	"armhf", "armhf-t", "s390x", "s390x-t"))
 	ts(as.matrix(data.frame(
 	t[23]/t[24]*100, #amd64
 	t[27]/t[28]*100, #armel
@@ -24,22 +26,24 @@ readdata <- function (file,start) {
 	t[19]/t[20]*100, #powerpc
 	t[21]/t[22]*100, #s390
 	t[25]/t[26]*100 #sparc
+	t[33]/t[34]*100, #armhf
+	t[35]/t[36]*100, #s390x
 	)),c(2001,start),frequency=365.25)
 }
 
-plotwb <- function (file,title,p,linept=85,height=7.5,width=10,pch=1:16) {
+plotwb <- function (file,title,p,linept=85,height=7.5,width=10,pch=1:18) {
 	bitmap(file=file,type="png16m",width=width,height=height,res=64)
 	layout(matrix(c(1,1,2,2),2,2),widths=c(0.85,0.15))
 	par(mar=c(5,4,4,2)+0.1) 
 	par(lab=c(10,10,7))
-	plot(p,type="o",plot.type="single",col=1:16,pch=pch,xlab="date",
+	plot(p,type="o",plot.type="single",col=1:18,pch=pch,xlab="date",
 		ylab="percentage of packages",main=title,cex=2)
 	abline(h=90,lty=2,col=3)
 	abline(h=linept,lty=2,col=3)
 	axis(4)
 	plot.new()
 	par(plt=c(0,1,0,1))        
-	legend(-1.2,1, arch, col=1:16, pch=pch, lwd=2, bg='gray90', cex=1.5)  
+	legend(-1.2,1, arch, col=1:18, pch=pch, lwd=2, bg='gray90', cex=1.5)  
 }
 v <- readdata("/org/wanna-build/etc/graph-data",164)
 plotwb("/org/buildd.debian.org/web/stats/graph.png","What percent is built for each architecture",v,85,7.5,10,".")
