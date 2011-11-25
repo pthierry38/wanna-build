@@ -82,6 +82,24 @@ CREATE SCHEMA armel_public;
 ALTER SCHEMA armel_public OWNER TO wbadm;
 
 --
+-- Name: armhf; Type: SCHEMA; Schema: -; Owner: wbadm
+--
+
+CREATE SCHEMA armhf;
+
+
+ALTER SCHEMA armhf OWNER TO wbadm;
+
+--
+-- Name: armhf_public; Type: SCHEMA; Schema: -; Owner: wbadm
+--
+
+CREATE SCHEMA armhf_public;
+
+
+ALTER SCHEMA armhf_public OWNER TO wbadm;
+
+--
 -- Name: hppa; Type: SCHEMA; Schema: -; Owner: wbadm
 --
 
@@ -260,6 +278,24 @@ CREATE SCHEMA s390_public;
 
 
 ALTER SCHEMA s390_public OWNER TO wbadm;
+
+--
+-- Name: s390x; Type: SCHEMA; Schema: -; Owner: wbadm
+--
+
+CREATE SCHEMA s390x;
+
+
+ALTER SCHEMA s390x OWNER TO wbadm;
+
+--
+-- Name: s390x_public; Type: SCHEMA; Schema: -; Owner: wbadm
+--
+
+CREATE SCHEMA s390x_public;
+
+
+ALTER SCHEMA s390x_public OWNER TO wbadm;
 
 --
 -- Name: sparc; Type: SCHEMA; Schema: -; Owner: wbadm
@@ -1306,6 +1342,90 @@ CREATE VIEW users AS
 
 ALTER TABLE armel_public.users OWNER TO wbadm;
 
+SET search_path = armhf, pg_catalog;
+
+--
+-- Name: packages; Type: VIEW; Schema: armhf; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM public.packages packages WHERE ((packages.architecture)::text = 'armhf'::text);
+
+
+ALTER TABLE armhf.packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: armhf; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 'armhf'::text);
+
+
+ALTER TABLE armhf.pkg_history OWNER TO wbadm;
+
+--
+-- Name: transactions; Type: VIEW; Schema: armhf; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM public.transactions WHERE ((transactions.architecture)::text = 'armhf'::text);
+
+
+ALTER TABLE armhf.transactions OWNER TO wbadm;
+
+--
+-- Name: users; Type: VIEW; Schema: armhf; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM public.users WHERE ((users.architecture)::text = 'armhf'::text);
+
+
+ALTER TABLE armhf.users OWNER TO wbadm;
+
+SET search_path = armhf_public, pg_catalog;
+
+--
+-- Name: packages; Type: VIEW; Schema: armhf_public; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM (public.packages NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((packages.architecture)::text = 'armhf'::text));
+
+
+ALTER TABLE armhf_public.packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: armhf_public; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 'armhf'::text));
+
+
+ALTER TABLE armhf_public.pkg_history OWNER TO wbadm;
+
+--
+-- Name: transactions; Type: VIEW; Schema: armhf_public; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM (public.transactions NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((transactions.architecture)::text = 'armhf'::text));
+
+
+ALTER TABLE armhf_public.transactions OWNER TO wbadm;
+
+--
+-- Name: users; Type: VIEW; Schema: armhf_public; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM (public.users NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((users.architecture)::text = 'armhf'::text));
+
+
+ALTER TABLE armhf_public.users OWNER TO wbadm;
+
 SET search_path = hppa, pg_catalog;
 
 --
@@ -2245,6 +2365,90 @@ CREATE VIEW users AS
 
 ALTER TABLE s390_public.users OWNER TO wbadm;
 
+SET search_path = s390x, pg_catalog;
+
+--
+-- Name: packages; Type: VIEW; Schema: s390x; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM public.packages packages WHERE ((packages.architecture)::text = 's390x'::text);
+
+
+ALTER TABLE s390x.packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: s390x; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM public.pkg_history WHERE ((pkg_history.architecture)::text = 's390x'::text);
+
+
+ALTER TABLE s390x.pkg_history OWNER TO wbadm;
+
+--
+-- Name: transactions; Type: VIEW; Schema: s390x; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM public.transactions WHERE ((transactions.architecture)::text = 's390x'::text);
+
+
+ALTER TABLE s390x.transactions OWNER TO wbadm;
+
+--
+-- Name: users; Type: VIEW; Schema: s390x; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM public.users WHERE ((users.architecture)::text = 's390x'::text);
+
+
+ALTER TABLE s390x.users OWNER TO wbadm;
+
+SET search_path = s390x_public, pg_catalog;
+
+--
+-- Name: packages; Type: VIEW; Schema: s390x_public; Owner: wbadm
+--
+
+CREATE VIEW packages AS
+    SELECT packages.package, packages.distribution, packages.version, packages.state, packages.section, packages.priority, packages.installed_version, packages.previous_state, packages.state_change, packages.notes, packages.builder, packages.failed, packages.old_failed, packages.binary_nmu_version, packages.binary_nmu_changelog, packages.failed_category, packages.permbuildpri, packages.buildpri, packages.depends, packages.rel, packages.bd_problem, packages.extra_depends, packages.extra_conflicts, packages.build_arch_all FROM (public.packages NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((packages.architecture)::text = 's390x'::text));
+
+
+ALTER TABLE s390x_public.packages OWNER TO wbadm;
+
+--
+-- Name: pkg_history; Type: VIEW; Schema: s390x_public; Owner: wbadm
+--
+
+CREATE VIEW pkg_history AS
+    SELECT pkg_history.package, pkg_history.distribution, pkg_history.version, pkg_history."timestamp", pkg_history.result, pkg_history.build_time, pkg_history.disk_space, pkg_history.builder FROM (public.pkg_history NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((pkg_history.architecture)::text = 's390x'::text));
+
+
+ALTER TABLE s390x_public.pkg_history OWNER TO wbadm;
+
+--
+-- Name: transactions; Type: VIEW; Schema: s390x_public; Owner: wbadm
+--
+
+CREATE VIEW transactions AS
+    SELECT transactions.package, transactions.distribution, transactions.version, transactions.action, transactions.prevstate, transactions.state, transactions.real_user, transactions.set_user, transactions."time" FROM (public.transactions NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((transactions.architecture)::text = 's390x'::text));
+
+
+ALTER TABLE s390x_public.transactions OWNER TO wbadm;
+
+--
+-- Name: users; Type: VIEW; Schema: s390x_public; Owner: wbadm
+--
+
+CREATE VIEW users AS
+    SELECT users.username, users.distribution, users.last_seen FROM (public.users NATURAL JOIN public.distributions) WHERE ((distributions.public = true) AND ((users.architecture)::text = 's390x'::text));
+
+
+ALTER TABLE s390x_public.users OWNER TO wbadm;
+
 SET search_path = sparc, pg_catalog;
 
 --
@@ -2700,6 +2904,78 @@ CREATE RULE users_insert AS ON INSERT TO users DO INSTEAD INSERT INTO public.use
 --
 
 CREATE RULE users_update AS ON UPDATE TO users DO INSTEAD UPDATE public.users u SET last_seen = new.last_seen WHERE ((((u.architecture)::text = 'armel'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
+
+
+SET search_path = armhf, pg_catalog;
+
+--
+-- Name: packages_delete; Type: RULE; Schema: armhf; Owner: wbadm
+--
+
+CREATE RULE packages_delete AS ON DELETE TO packages DO INSTEAD DELETE FROM public.packages p WHERE ((((p.architecture)::text = 'armhf'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
+
+
+--
+-- Name: packages_insert; Type: RULE; Schema: armhf; Owner: wbadm
+--
+
+CREATE RULE packages_insert AS ON INSERT TO packages DO INSTEAD INSERT INTO public.packages (architecture, package, distribution, version, state, section, priority, installed_version, previous_state, state_change, notes, builder, failed, old_failed, binary_nmu_version, binary_nmu_changelog, failed_category, permbuildpri, buildpri, depends, rel, bd_problem, extra_depends, extra_conflicts, build_arch_all) VALUES ('armhf'::character varying, new.package, new.distribution, new.version, new.state, new.section, new.priority, new.installed_version, new.previous_state, new.state_change, new.notes, new.builder, new.failed, new.old_failed, new.binary_nmu_version, new.binary_nmu_changelog, new.failed_category, new.permbuildpri, new.buildpri, new.depends, new.rel, new.bd_problem, new.extra_depends, new.extra_conflicts, new.build_arch_all);
+
+
+--
+-- Name: packages_update; Type: RULE; Schema: armhf; Owner: wbadm
+--
+
+CREATE RULE packages_update AS ON UPDATE TO packages DO INSTEAD UPDATE public.packages p SET version = new.version, state = new.state, section = new.section, priority = new.priority, installed_version = new.installed_version, previous_state = new.previous_state, state_change = new.state_change, notes = new.notes, builder = new.builder, failed = new.failed, old_failed = new.old_failed, binary_nmu_version = new.binary_nmu_version, binary_nmu_changelog = new.binary_nmu_changelog, failed_category = new.failed_category, permbuildpri = new.permbuildpri, buildpri = new.buildpri, depends = new.depends, rel = new.rel, bd_problem = new.bd_problem, extra_depends = new.extra_depends, extra_conflicts = new.extra_conflicts, build_arch_all = new.build_arch_all WHERE ((((p.architecture)::text = 'armhf'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
+
+
+--
+-- Name: pkg_history_delete; Type: RULE; Schema: armhf; Owner: wbadm
+--
+
+CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FROM public.pkg_history p WHERE ((((((p.architecture)::text = 'armhf'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: pkg_history_insert; Type: RULE; Schema: armhf; Owner: wbadm
+--
+
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('armhf'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+
+
+--
+-- Name: pkg_history_update; Type: RULE; Schema: armhf; Owner: wbadm
+--
+
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 'armhf'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: transactions_insert; Type: RULE; Schema: armhf; Owner: wbadm
+--
+
+CREATE RULE transactions_insert AS ON INSERT TO transactions DO INSTEAD INSERT INTO public.transactions (architecture, package, distribution, version, action, prevstate, state, real_user, set_user, "time") VALUES ('armhf'::character varying, new.package, new.distribution, new.version, new.action, new.prevstate, new.state, new.real_user, new.set_user, new."time");
+
+
+--
+-- Name: users_delete; Type: RULE; Schema: armhf; Owner: wbadm
+--
+
+CREATE RULE users_delete AS ON DELETE TO users DO INSTEAD DELETE FROM public.users u WHERE ((((u.architecture)::text = 'armhf'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
+
+
+--
+-- Name: users_insert; Type: RULE; Schema: armhf; Owner: wbadm
+--
+
+CREATE RULE users_insert AS ON INSERT TO users DO INSTEAD INSERT INTO public.users (architecture, username, distribution, last_seen) VALUES ('armhf'::character varying, new.username, new.distribution, new.last_seen);
+
+
+--
+-- Name: users_update; Type: RULE; Schema: armhf; Owner: wbadm
+--
+
+CREATE RULE users_update AS ON UPDATE TO users DO INSTEAD UPDATE public.users u SET last_seen = new.last_seen WHERE ((((u.architecture)::text = 'armhf'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
 
 
 SET search_path = hppa, pg_catalog;
@@ -3422,6 +3698,78 @@ CREATE RULE users_insert AS ON INSERT TO users DO INSTEAD INSERT INTO public.use
 CREATE RULE users_update AS ON UPDATE TO users DO INSTEAD UPDATE public.users u SET last_seen = new.last_seen WHERE ((((u.architecture)::text = 's390'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
 
 
+SET search_path = s390x, pg_catalog;
+
+--
+-- Name: packages_delete; Type: RULE; Schema: s390x; Owner: wbadm
+--
+
+CREATE RULE packages_delete AS ON DELETE TO packages DO INSTEAD DELETE FROM public.packages p WHERE ((((p.architecture)::text = 's390x'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
+
+
+--
+-- Name: packages_insert; Type: RULE; Schema: s390x; Owner: wbadm
+--
+
+CREATE RULE packages_insert AS ON INSERT TO packages DO INSTEAD INSERT INTO public.packages (architecture, package, distribution, version, state, section, priority, installed_version, previous_state, state_change, notes, builder, failed, old_failed, binary_nmu_version, binary_nmu_changelog, failed_category, permbuildpri, buildpri, depends, rel, bd_problem, extra_depends, extra_conflicts, build_arch_all) VALUES ('s390x'::character varying, new.package, new.distribution, new.version, new.state, new.section, new.priority, new.installed_version, new.previous_state, new.state_change, new.notes, new.builder, new.failed, new.old_failed, new.binary_nmu_version, new.binary_nmu_changelog, new.failed_category, new.permbuildpri, new.buildpri, new.depends, new.rel, new.bd_problem, new.extra_depends, new.extra_conflicts, new.build_arch_all);
+
+
+--
+-- Name: packages_update; Type: RULE; Schema: s390x; Owner: wbadm
+--
+
+CREATE RULE packages_update AS ON UPDATE TO packages DO INSTEAD UPDATE public.packages p SET version = new.version, state = new.state, section = new.section, priority = new.priority, installed_version = new.installed_version, previous_state = new.previous_state, state_change = new.state_change, notes = new.notes, builder = new.builder, failed = new.failed, old_failed = new.old_failed, binary_nmu_version = new.binary_nmu_version, binary_nmu_changelog = new.binary_nmu_changelog, failed_category = new.failed_category, permbuildpri = new.permbuildpri, buildpri = new.buildpri, depends = new.depends, rel = new.rel, bd_problem = new.bd_problem, extra_depends = new.extra_depends, extra_conflicts = new.extra_conflicts, build_arch_all = new.build_arch_all WHERE ((((p.architecture)::text = 's390x'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text));
+
+
+--
+-- Name: pkg_history_delete; Type: RULE; Schema: s390x; Owner: wbadm
+--
+
+CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FROM public.pkg_history p WHERE ((((((p.architecture)::text = 's390x'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: pkg_history_insert; Type: RULE; Schema: s390x; Owner: wbadm
+--
+
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('s390x'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+
+
+--
+-- Name: pkg_history_update; Type: RULE; Schema: s390x; Owner: wbadm
+--
+
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 's390x'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+
+
+--
+-- Name: transactions_insert; Type: RULE; Schema: s390x; Owner: wbadm
+--
+
+CREATE RULE transactions_insert AS ON INSERT TO transactions DO INSTEAD INSERT INTO public.transactions (architecture, package, distribution, version, action, prevstate, state, real_user, set_user, "time") VALUES ('s390x'::character varying, new.package, new.distribution, new.version, new.action, new.prevstate, new.state, new.real_user, new.set_user, new."time");
+
+
+--
+-- Name: users_delete; Type: RULE; Schema: s390x; Owner: wbadm
+--
+
+CREATE RULE users_delete AS ON DELETE TO users DO INSTEAD DELETE FROM public.users u WHERE ((((u.architecture)::text = 's390x'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
+
+
+--
+-- Name: users_insert; Type: RULE; Schema: s390x; Owner: wbadm
+--
+
+CREATE RULE users_insert AS ON INSERT TO users DO INSTEAD INSERT INTO public.users (architecture, username, distribution, last_seen) VALUES ('s390x'::character varying, new.username, new.distribution, new.last_seen);
+
+
+--
+-- Name: users_update; Type: RULE; Schema: s390x; Owner: wbadm
+--
+
+CREATE RULE users_update AS ON UPDATE TO users DO INSTEAD UPDATE public.users u SET last_seen = new.last_seen WHERE ((((u.architecture)::text = 's390x'::text) AND ((u.distribution)::text = (old.distribution)::text)) AND ((u.username)::text = (old.username)::text));
+
+
 SET search_path = sparc, pg_catalog;
 
 --
@@ -3626,6 +3974,27 @@ REVOKE ALL ON SCHEMA armel_public FROM wbadm;
 GRANT ALL ON SCHEMA armel_public TO wbadm;
 GRANT USAGE ON SCHEMA armel_public TO armel;
 GRANT USAGE ON SCHEMA armel_public TO PUBLIC;
+
+
+--
+-- Name: armhf; Type: ACL; Schema: -; Owner: wbadm
+--
+
+REVOKE ALL ON SCHEMA armhf FROM PUBLIC;
+REVOKE ALL ON SCHEMA armhf FROM wbadm;
+GRANT ALL ON SCHEMA armhf TO wbadm;
+GRANT USAGE ON SCHEMA armhf TO wb_all;
+GRANT USAGE ON SCHEMA armhf TO wb_security;
+
+
+--
+-- Name: armhf_public; Type: ACL; Schema: -; Owner: wbadm
+--
+
+REVOKE ALL ON SCHEMA armhf_public FROM PUBLIC;
+REVOKE ALL ON SCHEMA armhf_public FROM wbadm;
+GRANT ALL ON SCHEMA armhf_public TO wbadm;
+GRANT USAGE ON SCHEMA armhf_public TO PUBLIC;
 
 
 --
@@ -3866,6 +4235,27 @@ REVOKE ALL ON SCHEMA s390_public FROM wbadm;
 GRANT ALL ON SCHEMA s390_public TO wbadm;
 GRANT USAGE ON SCHEMA s390_public TO s390;
 GRANT USAGE ON SCHEMA s390_public TO PUBLIC;
+
+
+--
+-- Name: s390x; Type: ACL; Schema: -; Owner: wbadm
+--
+
+REVOKE ALL ON SCHEMA s390x FROM PUBLIC;
+REVOKE ALL ON SCHEMA s390x FROM wbadm;
+GRANT ALL ON SCHEMA s390x TO wbadm;
+GRANT USAGE ON SCHEMA s390x TO wb_all;
+GRANT USAGE ON SCHEMA s390x TO wb_security;
+
+
+--
+-- Name: s390x_public; Type: ACL; Schema: -; Owner: wbadm
+--
+
+REVOKE ALL ON SCHEMA s390x_public FROM PUBLIC;
+REVOKE ALL ON SCHEMA s390x_public FROM wbadm;
+GRANT ALL ON SCHEMA s390x_public TO wbadm;
+GRANT USAGE ON SCHEMA s390x_public TO PUBLIC;
 
 
 --
@@ -4295,6 +4685,94 @@ GRANT SELECT ON TABLE transactions TO PUBLIC;
 
 --
 -- Name: users; Type: ACL; Schema: armel_public; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE users FROM PUBLIC;
+REVOKE ALL ON TABLE users FROM wbadm;
+GRANT ALL ON TABLE users TO wbadm;
+GRANT SELECT ON TABLE users TO PUBLIC;
+
+
+SET search_path = armhf, pg_catalog;
+
+--
+-- Name: packages; Type: ACL; Schema: armhf; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE packages FROM PUBLIC;
+REVOKE ALL ON TABLE packages FROM wbadm;
+GRANT ALL ON TABLE packages TO wbadm;
+GRANT SELECT ON TABLE packages TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE packages TO wb_all;
+
+
+--
+-- Name: pkg_history; Type: ACL; Schema: armhf; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE pkg_history FROM PUBLIC;
+REVOKE ALL ON TABLE pkg_history FROM wbadm;
+GRANT ALL ON TABLE pkg_history TO wbadm;
+GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
+
+
+--
+-- Name: transactions; Type: ACL; Schema: armhf; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE transactions FROM PUBLIC;
+REVOKE ALL ON TABLE transactions FROM wbadm;
+GRANT ALL ON TABLE transactions TO wbadm;
+GRANT SELECT ON TABLE transactions TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE transactions TO wb_all;
+
+
+--
+-- Name: users; Type: ACL; Schema: armhf; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE users FROM PUBLIC;
+REVOKE ALL ON TABLE users FROM wbadm;
+GRANT ALL ON TABLE users TO wbadm;
+GRANT SELECT ON TABLE users TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE users TO wb_all;
+
+
+SET search_path = armhf_public, pg_catalog;
+
+--
+-- Name: packages; Type: ACL; Schema: armhf_public; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE packages FROM PUBLIC;
+REVOKE ALL ON TABLE packages FROM wbadm;
+GRANT ALL ON TABLE packages TO wbadm;
+GRANT SELECT ON TABLE packages TO PUBLIC;
+
+
+--
+-- Name: pkg_history; Type: ACL; Schema: armhf_public; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE pkg_history FROM PUBLIC;
+REVOKE ALL ON TABLE pkg_history FROM wbadm;
+GRANT ALL ON TABLE pkg_history TO wbadm;
+GRANT SELECT ON TABLE pkg_history TO PUBLIC;
+
+
+--
+-- Name: transactions; Type: ACL; Schema: armhf_public; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE transactions FROM PUBLIC;
+REVOKE ALL ON TABLE transactions FROM wbadm;
+GRANT ALL ON TABLE transactions TO wbadm;
+GRANT SELECT ON TABLE transactions TO PUBLIC;
+
+
+--
+-- Name: users; Type: ACL; Schema: armhf_public; Owner: wbadm
 --
 
 REVOKE ALL ON TABLE users FROM PUBLIC;
@@ -5268,6 +5746,94 @@ GRANT SELECT ON TABLE transactions TO PUBLIC;
 
 --
 -- Name: users; Type: ACL; Schema: s390_public; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE users FROM PUBLIC;
+REVOKE ALL ON TABLE users FROM wbadm;
+GRANT ALL ON TABLE users TO wbadm;
+GRANT SELECT ON TABLE users TO PUBLIC;
+
+
+SET search_path = s390x, pg_catalog;
+
+--
+-- Name: packages; Type: ACL; Schema: s390x; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE packages FROM PUBLIC;
+REVOKE ALL ON TABLE packages FROM wbadm;
+GRANT ALL ON TABLE packages TO wbadm;
+GRANT SELECT ON TABLE packages TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE packages TO wb_all;
+
+
+--
+-- Name: pkg_history; Type: ACL; Schema: s390x; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE pkg_history FROM PUBLIC;
+REVOKE ALL ON TABLE pkg_history FROM wbadm;
+GRANT ALL ON TABLE pkg_history TO wbadm;
+GRANT SELECT ON TABLE pkg_history TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE pkg_history TO wb_all;
+
+
+--
+-- Name: transactions; Type: ACL; Schema: s390x; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE transactions FROM PUBLIC;
+REVOKE ALL ON TABLE transactions FROM wbadm;
+GRANT ALL ON TABLE transactions TO wbadm;
+GRANT SELECT ON TABLE transactions TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE transactions TO wb_all;
+
+
+--
+-- Name: users; Type: ACL; Schema: s390x; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE users FROM PUBLIC;
+REVOKE ALL ON TABLE users FROM wbadm;
+GRANT ALL ON TABLE users TO wbadm;
+GRANT SELECT ON TABLE users TO wb_security;
+GRANT SELECT,INSERT,UPDATE ON TABLE users TO wb_all;
+
+
+SET search_path = s390x_public, pg_catalog;
+
+--
+-- Name: packages; Type: ACL; Schema: s390x_public; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE packages FROM PUBLIC;
+REVOKE ALL ON TABLE packages FROM wbadm;
+GRANT ALL ON TABLE packages TO wbadm;
+GRANT SELECT ON TABLE packages TO PUBLIC;
+
+
+--
+-- Name: pkg_history; Type: ACL; Schema: s390x_public; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE pkg_history FROM PUBLIC;
+REVOKE ALL ON TABLE pkg_history FROM wbadm;
+GRANT ALL ON TABLE pkg_history TO wbadm;
+GRANT SELECT ON TABLE pkg_history TO PUBLIC;
+
+
+--
+-- Name: transactions; Type: ACL; Schema: s390x_public; Owner: wbadm
+--
+
+REVOKE ALL ON TABLE transactions FROM PUBLIC;
+REVOKE ALL ON TABLE transactions FROM wbadm;
+GRANT ALL ON TABLE transactions TO wbadm;
+GRANT SELECT ON TABLE transactions TO PUBLIC;
+
+
+--
+-- Name: users; Type: ACL; Schema: s390x_public; Owner: wbadm
 --
 
 REVOKE ALL ON TABLE users FROM PUBLIC;
