@@ -25,9 +25,9 @@ readdata <- function (file,start) {
 	t[17]/t[18]*100, #mipsel
 	t[19]/t[20]*100, #powerpc
 	t[21]/t[22]*100, #s390
-	t[25]/t[26]*100 #sparc
+	t[25]/t[26]*100, #sparc
 	t[33]/t[34]*100, #armhf
-	t[35]/t[36]*100, #s390x
+	t[35]/t[36]*100 #s390x
 	)),c(2001,start),frequency=365.25)
 }
 
