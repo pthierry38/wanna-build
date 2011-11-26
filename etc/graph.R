@@ -16,6 +16,7 @@ readdata <- function (file,start) {
 	ts(as.matrix(data.frame(
 	t[23]/t[24]*100, #amd64
 	t[27]/t[28]*100, #armel
+	t[33]/t[34]*100, #armhf
 	t[7]/t[8]*100, #hurd-i386
 	t[9]/t[10]*100, #i386
 	t[11]/t[12]*100, #ia64
@@ -25,9 +26,8 @@ readdata <- function (file,start) {
 	t[17]/t[18]*100, #mipsel
 	t[19]/t[20]*100, #powerpc
 	t[21]/t[22]*100, #s390
-	t[25]/t[26]*100, #sparc
-	t[33]/t[34]*100, #armhf
-	t[35]/t[36]*100 #s390x
+	t[35]/t[36]*100, #s390x
+	t[25]/t[26]*100 #sparc
 	)),c(2001,start),frequency=365.25)
 }
 
