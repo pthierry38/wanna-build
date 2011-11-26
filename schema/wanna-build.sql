@@ -2605,13 +2605,6 @@ CREATE INDEX packages_arch_dist_state ON packages USING btree (architecture, dis
 
 
 --
--- Name: packages_distribution_package; Type: INDEX; Schema: public; Owner: wbadm; Tablespace: 
---
-
-CREATE INDEX packages_distribution_package ON packages USING btree (distribution, package);
-
-
---
 -- Name: pkg_history_timestamp; Type: INDEX; Schema: public; Owner: wbadm; Tablespace: 
 --
 
