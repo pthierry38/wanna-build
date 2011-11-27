@@ -2153,7 +2153,8 @@ sub parse_all_v3 {
 
             # does at least one binary exist in the database and is more recent - if so, we're probably just outdated, ignore the source package
             for my $bin (@{$pkgs->{'binary'}}) {
-                if ($binary->{$bin} and vercmp($pkgs->{'version'}, $binary->{$bin}->{'version'}) < 0) {
+                if ($binary->{$bin} and $binary->{$bin}->{'arch'} ne 'all' and vercmp($pkgs->{'version'}, $binary->{$bin}->{'version'}) < 0) {
+		    print Dumper($binary->{$bin}) . "\n";
                     print "$logstr skipped because binaries (assumed to be) overwritten (" .
 			$bin . ", " . $pkgs->{'version'} . " vs. " . $binary->{$bin}->{'version'} . ")\n" if $verbose || $simulate;
                     next SRCS;
