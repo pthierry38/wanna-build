@@ -12,7 +12,7 @@ LOCKFILE="${ARCHIVE_BASE}/lock"
 ARCHS_lenny="alpha amd64 arm armel hppa i386 ia64 mips mipsel powerpc s390 sparc"
 ARCHS_squeeze="amd64 armel i386 ia64 mips mipsel powerpc s390 sparc kfreebsd-amd64 kfreebsd-i386"
 ARCHS_wheezy="amd64 armel i386 ia64 mips mipsel powerpc s390 sparc kfreebsd-amd64 kfreebsd-i386"
-ARCHS_sid="$ARCHS_squeeze hurd-i386"
+ARCHS_sid="$ARCHS_squeeze hurd-i386 armhf s390x"
 
 # Creates a working environment within the corresponding archive
 # directory and jumps there.
