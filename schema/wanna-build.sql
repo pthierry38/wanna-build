@@ -2281,6 +2281,19 @@ CREATE VIEW packages_public AS
 
 ALTER TABLE public.packages_public OWNER TO wbadm;
 
+--
+-- Name: priorities; Type: TABLE; Schema: public; Owner: pkern; Tablespace: 
+--
+
+CREATE TABLE priorities (
+    type character varying NOT NULL,
+    value character varying NOT NULL,
+    priority integer DEFAULT 0 NOT NULL
+);
+
+
+ALTER TABLE public.priorities OWNER TO pkern;
+
 SET search_path = s390, pg_catalog;
 
 --
@@ -2573,6 +2586,14 @@ ALTER TABLE ONLY packages
 
 ALTER TABLE ONLY pkg_history
     ADD CONSTRAINT pkg_history_pkey PRIMARY KEY (architecture, package, distribution, version, "timestamp");
+
+
+--
+-- Name: priorities_pkey; Type: CONSTRAINT; Schema: public; Owner: pkern; Tablespace: 
+--
+
+ALTER TABLE ONLY priorities
+    ADD CONSTRAINT priorities_pkey PRIMARY KEY (type, value);
 
 
 --
@@ -5657,6 +5678,16 @@ REVOKE ALL ON TABLE packages_public FROM PUBLIC;
 REVOKE ALL ON TABLE packages_public FROM wbadm;
 GRANT ALL ON TABLE packages_public TO wbadm;
 GRANT SELECT ON TABLE packages_public TO PUBLIC;
+
+
+--
+-- Name: priorities; Type: ACL; Schema: public; Owner: pkern
+--
+
+REVOKE ALL ON TABLE priorities FROM PUBLIC;
+REVOKE ALL ON TABLE priorities FROM pkern;
+GRANT ALL ON TABLE priorities TO pkern;
+GRANT SELECT ON TABLE priorities TO PUBLIC;
 
 
 SET search_path = s390, pg_catalog;
