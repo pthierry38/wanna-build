@@ -1572,6 +1572,7 @@ sub build_deplist {
 
 sub filterarch {
     return "" unless $_[0];
+    return "not-existing-builddepency-for-any" if $_[0] =~ /:any/;
     return Dpkg::Deps::deps_parse($_[0], ("reduce_arch" => 1, "host_arch" => $_[1]))->output();
 }
 
