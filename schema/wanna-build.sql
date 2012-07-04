@@ -403,7 +403,7 @@ COMMENT ON TYPE debversion IS 'Debian package version number';
 
 
 --
--- Name: commacat(text, text); Type: FUNCTION; Schema: public; Owner: pkern
+-- Name: commacat(text, text); Type: FUNCTION; Schema: public; Owner: wbadm
 --
 
 CREATE FUNCTION commacat(acc text, instr text) RETURNS text
@@ -419,7 +419,7 @@ CREATE FUNCTION commacat(acc text, instr text) RETURNS text
 $$;
 
 
-ALTER FUNCTION public.commacat(acc text, instr text) OWNER TO pkern;
+ALTER FUNCTION public.commacat(acc text, instr text) OWNER TO wbadm;
 
 --
 -- Name: debversion(character); Type: FUNCTION; Schema: public; Owner: postgres
@@ -607,7 +607,7 @@ $$;
 ALTER FUNCTION public.query_source_package(param_dist character varying, param_srcpkg character varying) OWNER TO wbadm;
 
 --
--- Name: spacecat(text, text); Type: FUNCTION; Schema: public; Owner: pkern
+-- Name: spacecat(text, text); Type: FUNCTION; Schema: public; Owner: wbadm
 --
 
 CREATE FUNCTION spacecat(acc text, instr text) RETURNS text
@@ -623,10 +623,10 @@ CREATE FUNCTION spacecat(acc text, instr text) RETURNS text
 $$;
 
 
-ALTER FUNCTION public.spacecat(acc text, instr text) OWNER TO pkern;
+ALTER FUNCTION public.spacecat(acc text, instr text) OWNER TO wbadm;
 
 --
--- Name: commacat_all(text); Type: AGGREGATE; Schema: public; Owner: pkern
+-- Name: commacat_all(text); Type: AGGREGATE; Schema: public; Owner: wbadm
 --
 
 CREATE AGGREGATE commacat_all(text) (
@@ -636,7 +636,7 @@ CREATE AGGREGATE commacat_all(text) (
 );
 
 
-ALTER AGGREGATE public.commacat_all(text) OWNER TO pkern;
+ALTER AGGREGATE public.commacat_all(text) OWNER TO wbadm;
 
 --
 -- Name: >; Type: OPERATOR; Schema: public; Owner: postgres
@@ -709,7 +709,7 @@ CREATE AGGREGATE min(debversion) (
 ALTER AGGREGATE public.min(debversion) OWNER TO postgres;
 
 --
--- Name: spacecat_all(text); Type: AGGREGATE; Schema: public; Owner: pkern
+-- Name: spacecat_all(text); Type: AGGREGATE; Schema: public; Owner: wbadm
 --
 
 CREATE AGGREGATE spacecat_all(text) (
@@ -719,7 +719,7 @@ CREATE AGGREGATE spacecat_all(text) (
 );
 
 
-ALTER AGGREGATE public.spacecat_all(text) OWNER TO pkern;
+ALTER AGGREGATE public.spacecat_all(text) OWNER TO wbadm;
 
 --
 -- Name: <=; Type: OPERATOR; Schema: public; Owner: postgres
