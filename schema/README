@@ -1,0 +1,76 @@
+Wanna-build PostgreSQL database setup
+=====================================
+
+wanna-build.sql is a PostgreSQL database dump. It contains the main
+tables, view, rules, etc… as well as all necessary tables and view
+for all architectures. So, if you're setting up a wanna-build instance
+and do not want all Debian architectures in your DB, you don't want
+to use wanna-build.sql.
+
+Installing PostgreSQL
+=====================
+
+You'll need a PostgreSQL server and Debian version number type for
+PostgreSQL:
+
+$ apt-get install postgresql-${version} postgresql-${version}-debversion
+
+where ${version} is the default PostgreSQL version of your distribution.
+
+Create the PostgreSQL database
+==============================
+
+CREATE DATABASE wannadb;
+CREATE USER wbadm WITH PASSWORD 'passw0rd';
+GRANT ALL PRIVILEGES ON DATABASE wannadb to wbadm;
+ALTER USER wbadm CREATEUSER CREATEROLE;
+
+Configure wanna-build PG service
+================================
+
+$ cat >> /etc/postgresql-common/pg_service.conf
+[wanna-build]
+dbname=wanna-build
+port=5433
+host=localhost
+user=guest
+
+[wanna-build-privileged]
+dbname=wanna-build
+port=5433
+
+$ # (adapt it to your specific installation)
+
+Import roles, main tables and views
+===================================
+
+$ psql -d wannadb -f roles.sql
+$ psql -d wannadb -f main-tables.sql
+
+Architecture specific material
+==============================
+
+0) $ cd /org/wanna-build/schema/
+1) Edit arch-tables.sh and set ARCHS as you wish.
+2) ./arches-tables.sh
+3) $ psql -d wannadb -f arches-tables.sql
+
+IMPORTANT: Note that arches-tables.in is maintained on a best effort basis
+and can be outdated from time to time. If you notice an issue, please feel
+free to contact us (debian-wb-team@lists.debian.org).
+
+Basic configuration
+===================
+
+You may want to tell to Wanna-Build which distributions and architectures
+are supported:
+
+INSERT INTO distributions(distribution,build_dep_resolver,archive) VALUES ('sid','','');
+INSERT INTO architectures(architecture) VALUES ('amd64'),('i386');
+INSERT INTO distribution_architectures(distribution,architecture) VALUES ('sid','amd64'),('sid','i386');
+INSERT INTO locks(distribution,architecture) VALUES ('sid','amd64'),('sid','i386');
+
+And (optionally) set up distributions aliases:
+
+INSERT INTO distribution_aliases(distribution,alias) VALUES('sid','unstable');
+
