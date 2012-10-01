@@ -3,10 +3,10 @@
 set -eE
 
 LANG=C
-PATH="/bin:/usr/bin:/org/wanna-build/bin:/org/buildd.debian.org/bin:/org/wanna-build/triggers"
-ARCHIVE_MAIN="/org/wanna-build/tmp/archive/debian"
-ARCHIVE_BASE="/org/wanna-build/tmp/archive/${ARCHIVE}"
-PAS_BASE="/org/buildd.debian.org/web/quinn-diff"
+PATH="/bin:/usr/bin:/srv/wanna-build/bin:/srv/buildd.debian.org/bin:/srv/wanna-build/triggers"
+ARCHIVE_MAIN="/srv/wanna-build/tmp/archive/debian"
+ARCHIVE_BASE="/srv/wanna-build/tmp/archive/${ARCHIVE}"
+PAS_BASE="/srv/buildd.debian.org/web/quinn-diff"
 PAS_FILE="$PAS_BASE/$SUITE/Packages-arch-specific"
 LOCKFILE="${ARCHIVE_BASE}/lock"
 ARCHS_lenny="alpha amd64 arm armel hppa i386 ia64 mips mipsel powerpc s390 sparc"

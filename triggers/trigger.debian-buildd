@@ -3,11 +3,11 @@
 
 ARCHIVE="debian"
 
-. /org/wanna-build/triggers/common
+. /srv/wanna-build/triggers/common
 
-exec >> /org/wanna-build/db/merge.$ARCHIVE.log 2>&1
+exec >> /srv/wanna-build/db/merge.$ARCHIVE.log 2>&1
 
-if [ -f /org/wanna-build/NO-TRIGGERS ]
+if [ -f /srv/wanna-build/NO-TRIGGERS ]
 then
     echo Trigger for $ARCHIVE skipped due to NO-TRIGGERS, aborting. >&2
     exit 0

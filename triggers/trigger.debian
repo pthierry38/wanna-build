@@ -7,11 +7,11 @@ SUITES="lenny squeeze wheezy"
 # because there was no need for that yet.
 SUITES_FAST_AUTOBUILD="sid experimental"
 
-. /org/wanna-build/triggers/common
+. /srv/wanna-build/triggers/common
 
-exec >> /org/wanna-build/db/merge.$ARCHIVE.log 2>&1
+exec >> /srv/wanna-build/db/merge.$ARCHIVE.log 2>&1
 
-if [ -f /org/wanna-build/NO-TRIGGERS -a -z "$1" ]
+if [ -f /srv/wanna-build/NO-TRIGGERS -a -z "$1" ]
 then
     echo Trigger for $ARCHIVE skipped due to NO-TRIGGERS, aborting. >&2
     exit 0
@@ -37,7 +37,7 @@ main_sync() {
         PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/archive/${SUITE}-proposed-updates/{main,contrib}/debian-installer/binary-%ARCH%/Packages.gz"
         NFPACKAGES="${ARCHIVE_BASE}/archive/${SUITE}-proposed-updates/non-free/binary-%ARCH%/Packages.gz"
         NFPACKAGES="${NFPACKAGES} ${ARCHIVE_BASE}/archive/${SUITE}-proposed-updates/non-free/debian-installer/binary-%ARCH%/Packages.gz"
-        /org/wanna-build/bin/filter-nonfree /org/wanna-build/etc/non-free-include-list "`get_architectures $SUITE`" Sources.${SUITE}.non-free Packages.${SUITE}.%ARCH%.non-free ${NFSOURCES} . ${NFPACKAGES} || true
+        /srv/wanna-build/bin/filter-nonfree /srv/wanna-build/etc/non-free-include-list "`get_architectures $SUITE`" Sources.${SUITE}.non-free Packages.${SUITE}.%ARCH%.non-free ${NFSOURCES} . ${NFPACKAGES} || true
         # Now add the overlay suite as above.
         SOURCES_BASE="${ARCHIVE_BASE}/archive/${SUITE}/{main,contrib}/source/Sources.gz"
         PACKAGES_BASE="${ARCHIVE_BASE}/archive/${SUITE}/{main,contrib}/binary-%ARCH%/Packages.gz"
@@ -56,7 +56,7 @@ main_sync() {
         PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/buildd-${SUITE}/Packages.gz"
         NFPACKAGES="${ARCHIVE_BASE}/archive/${SUITE}/non-free/binary-%ARCH%/Packages.gz"
         NFPACKAGES="${NFPACKAGES} ${ARCHIVE_BASE}/archive/${SUITE}/non-free/debian-installer/binary-%ARCH%/Packages.gz"
-        /org/wanna-build/bin/filter-nonfree /org/wanna-build/etc/non-free-include-list "`get_architectures $SUITE`" Sources.${SUITE}.non-free Packages.${SUITE}.%ARCH%.non-free ${NFSOURCES} . ${NFPACKAGES} || true
+        /srv/wanna-build/bin/filter-nonfree /srv/wanna-build/etc/non-free-include-list "`get_architectures $SUITE`" Sources.${SUITE}.non-free Packages.${SUITE}.%ARCH%.non-free ${NFSOURCES} . ${NFPACKAGES} || true
 
         if [ "$SUITE" != "experimental" ]
         then
