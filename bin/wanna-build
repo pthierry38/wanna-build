@@ -107,7 +107,7 @@ my @wannabuildoptions = (
         $api = $_[1];
         die "$api too large" unless $api <= 1;
     },
-    'verbose|v'       => \$verbose,
+    'verbose|v'       => sub { $verbose++; },
     'override|o'      => \$opt_override,
     'correct-compare' => \$WannaBuild::opt_correct_version_cmp,
 
@@ -1583,6 +1583,8 @@ sub wb_edos_builddebcheck {
 # Foundation, version 2 of the License.
 # integrated into wanna-builds code by Andreas Barth 2010
 
+my $start = time;
+
     my $args = shift;
     my $sourceprefix="source---";
     my $architecture=$args->{'arch'};
@@ -1659,6 +1661,7 @@ sub wb_edos_builddebcheck {
 
     close $result_cmd;
     $result->{$binpkg} = $explanation if $binpkg;
+print "edos-debcheck for ".$args->{'arch'} ." took ".(time - $start)."\n";
     return $result;
 
 }
