@@ -1583,8 +1583,6 @@ sub wb_edos_builddebcheck {
 # Foundation, version 2 of the License.
 # integrated into wanna-builds code by Andreas Barth 2010
 
-my $start = time;
-
     my $args = shift;
     my $sourceprefix="source---";
     my $architecture=$args->{'arch'};
@@ -1661,7 +1659,6 @@ my $start = time;
 
     close $result_cmd;
     $result->{$binpkg} = $explanation if $binpkg;
-print "edos-debcheck for ".$args->{'arch'} ." took ".(time - $start)."\n";
     return $result;
 
 }
