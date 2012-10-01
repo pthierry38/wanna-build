@@ -6,7 +6,7 @@
 #
 
 # directory for the databases, lock files and log files
-$basedir = "/org/wanna-build/db";
+$basedir = "/srv/wanna-build/db";
 
 # ignore all epochs? (needed if quinn-diff prints no epochs)
 #$ignore_epochs = 0;
