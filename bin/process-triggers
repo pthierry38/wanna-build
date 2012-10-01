@@ -1,7 +1,7 @@
 #!/bin/bash
 # vim:set et ts=4 sw=4:
 
-LOCKFILE=/org/wanna-build/triggers/lock
+LOCKFILE=/srv/wanna-build/triggers/lock
 
 set -eE
 
@@ -24,12 +24,12 @@ while [ $work -eq 1 ]
 do
     # No further runs unless at least one signal is found.
     work=0
-    find /org/wanna-build/signals -type f | while read signal_file
+    find /srv/wanna-build/signals -type f | while read signal_file
     do
         # Process it.
         work=1
         signal=$(basename $signal_file)
-        /org/wanna-build/triggers/trigger.${signal/.?*} ${signal/?*./}
+        /srv/wanna-build/triggers/trigger.${signal/.?*} ${signal/?*./}
         rm $signal_file
     done
 done

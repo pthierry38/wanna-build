@@ -17,16 +17,16 @@ then
     args=""
 fi
 
-echo "$(date): $trigger_name | $args" >> /org/wanna-build/db/signal.log
+echo "$(date): $trigger_name | $args" >> /srv/wanna-build/db/signal.log
 
 if [ ! -z "$args" ]
 then
     # Pass arguments in the filename because we might get triggered for
     # multiple suites.  A simple append wouldn't be race-free on the
     # reader side.
-    touch "/org/wanna-build/signals/${trigger_name}.${args}"
+    touch "/srv/wanna-build/signals/${trigger_name}.${args}"
 else
-    touch "/org/wanna-build/signals/$trigger_name"
+    touch "/srv/wanna-build/signals/$trigger_name"
 fi
 
 exit 0

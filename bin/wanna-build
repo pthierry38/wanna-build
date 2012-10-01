@@ -23,7 +23,7 @@ use strict;
 use warnings;
 use 5.010;
 
-die "wanna-build disabled" if -f "/org/wanna-build/NO-WANNA-BUILD";
+die "wanna-build disabled" if -f "/srv/wanna-build/NO-WANNA-BUILD";
 
 package conf;
 
@@ -33,7 +33,7 @@ $basedir ||= "/var/lib/debbuild";
 $dbbase ||= "build-db";
 $transactlog ||= "transactions.log";
 $mailprog ||= "/usr/sbin/sendmail";
-require "/org/wanna-build/etc/wanna-build.conf";
+require "/srv/wanna-build/etc/wanna-build.conf";
 die "$conf::basedir is not a directory\n" if ! -d $conf::basedir;
 die "dbbase is empty\n" if ! $dbbase;
 die "transactlog is empty\n" if ! $transactlog;
@@ -46,7 +46,7 @@ use FileHandle;
 use File::Copy;
 use DBI;
 use Getopt::Long qw ( :config gnu_getopt );
-use lib '/org/wanna-build/lib';
+use lib '/srv/wanna-build/lib';
 #use lib 'lib';
 use WannaBuild;
 use YAML::Tiny;
@@ -75,14 +75,14 @@ our ($verbose, $mail_logs, $list_order, $list_state,
     %distributions, %distribution_aliases, $actions,
     $sshwrapper,
     );
-our $Pas = '/org/buildd.debian.org/etc/packages-arch-specific/Packages-arch-specific';
+our $Pas = '/srv/buildd.debian.org/etc/packages-arch-specific/Packages-arch-specific';
 our $simulate = 0;
 our $simulate_edos = 0;
 our $api = undef; # allow buildds to specify an different api
 our $recorduser = undef;
 
 # global vars
-$ENV{'PATH'} = "/bin:/usr/bin:/usr/local/bin:/org/wanna-build/bin/";
+$ENV{'PATH'} = "/bin:/usr/bin:/usr/local/bin:/srv/wanna-build/bin/";
 $ENV{'LC_ALL'} = 'C';
 $verbose = 0;
 $mail_logs = "";
@@ -322,7 +322,7 @@ if (!$fail_reason) {
 }
 
 my $yamlmap = ();
-my $yamldir = "/org/wanna-build/etc/yaml";
+my $yamldir = "/srv/wanna-build/etc/yaml";
 my @files = ('wanna-build.yaml');
 if ((getpwuid($>))[7]) { push (@files, ((getpwuid($>))[7])."/.wanna-build.yaml"); }
 if ($user && $user =~ /(buildd.*)-/) { push (@files, "$1.yaml") };

@@ -45,7 +45,7 @@ def replarch(arch, pkgs):
 
 def main():
     # call me:
-    # /org/wanna-build/etc/non-free-include-list "arch1 arch2" write-sources write-packages Sources* . Packages*
+    # /srv/wanna-build/etc/non-free-include-list "arch1 arch2" write-sources write-packages Sources* . Packages*
     if len(sys.argv) <= 4:
         print "Error - too few args"
         return

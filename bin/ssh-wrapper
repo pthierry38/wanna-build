@@ -1,6 +1,6 @@
 #!/bin/bash
 
-bin=/org/wanna-build/bin/wanna-build
+bin=/srv/wanna-build/bin/wanna-build
 
 [ -n "$SSH_ORIGINAL_COMMAND" ] || exit 1
 

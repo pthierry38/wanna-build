@@ -12,10 +12,10 @@ fi
 
 # START OF OPTIONS ######################################################
 
-TARGET_BASE=/org/wanna-build/tmp/archive
+TARGET_BASE=/srv/wanna-build/tmp/archive
 TARGET="$TARGET_BASE/$1"
 
-PASSWORD_BASE=/org/wanna-build/etc
+PASSWORD_BASE=/srv/wanna-build/etc
 PASSWORD_FILE="$PASSWORD_BASE/$1.rsync-password"
 
 RSYNC_OPTIONS="--delete --delete-excluded -av"

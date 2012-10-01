@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. /org/wanna-build/triggers/common
+. /srv/wanna-build/triggers/common
 
 STATS_DISTS="sid wheezy squeeze lenny"
 ALL_ARCHES=$(echo $ARCHS_lenny $ARCHS_squeeze $ARCHS_wheezy $ARCHS_unstable \
