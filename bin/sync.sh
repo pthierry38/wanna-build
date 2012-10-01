@@ -63,7 +63,6 @@ debian-security)
 	rsync $MIRROR_OPTIONS $USER@security-master.debian.org::debian-security/dists/ "$TARGET/archive"
 	rsync --password-file "$PASSWORD_BASE/$1-buildd.rsync-password" $BUILDD_QUEUE_OPTIONS $USER@security-master.debian.org::buildd-wheezy/ "$TARGET/buildd-wheezy"
 	rsync --password-file "$PASSWORD_BASE/$1-buildd.rsync-password" $BUILDD_QUEUE_OPTIONS $USER@security-master.debian.org::buildd-squeeze/ "$TARGET/buildd-squeeze"
-	rsync --password-file "$PASSWORD_BASE/$1-buildd.rsync-password" $BUILDD_QUEUE_OPTIONS $USER@security-master.debian.org::buildd-lenny/ "$TARGET/buildd-lenny"
 	;;
 debian-volatile)
 	rsync $MIRROR_OPTIONS volatile-master.debian.org::debian-volatile/dists/ "$TARGET/archive"
