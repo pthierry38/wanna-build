@@ -403,7 +403,7 @@ COMMENT ON TYPE debversion IS 'Debian package version number';
 
 
 --
--- Name: commacat(text, text); Type: FUNCTION; Schema: public; Owner: pkern
+-- Name: commacat(text, text); Type: FUNCTION; Schema: public; Owner: wbadm
 --
 
 CREATE FUNCTION commacat(acc text, instr text) RETURNS text
@@ -419,7 +419,7 @@ CREATE FUNCTION commacat(acc text, instr text) RETURNS text
 $$;
 
 
-ALTER FUNCTION public.commacat(acc text, instr text) OWNER TO pkern;
+ALTER FUNCTION public.commacat(acc text, instr text) OWNER TO wbadm;
 
 --
 -- Name: debversion(character); Type: FUNCTION; Schema: public; Owner: postgres
@@ -607,7 +607,7 @@ $$;
 ALTER FUNCTION public.query_source_package(param_dist character varying, param_srcpkg character varying) OWNER TO wbadm;
 
 --
--- Name: spacecat(text, text); Type: FUNCTION; Schema: public; Owner: pkern
+-- Name: spacecat(text, text); Type: FUNCTION; Schema: public; Owner: wbadm
 --
 
 CREATE FUNCTION spacecat(acc text, instr text) RETURNS text
@@ -623,10 +623,10 @@ CREATE FUNCTION spacecat(acc text, instr text) RETURNS text
 $$;
 
 
-ALTER FUNCTION public.spacecat(acc text, instr text) OWNER TO pkern;
+ALTER FUNCTION public.spacecat(acc text, instr text) OWNER TO wbadm;
 
 --
--- Name: commacat_all(text); Type: AGGREGATE; Schema: public; Owner: pkern
+-- Name: commacat_all(text); Type: AGGREGATE; Schema: public; Owner: wbadm
 --
 
 CREATE AGGREGATE commacat_all(text) (
@@ -636,7 +636,7 @@ CREATE AGGREGATE commacat_all(text) (
 );
 
 
-ALTER AGGREGATE public.commacat_all(text) OWNER TO pkern;
+ALTER AGGREGATE public.commacat_all(text) OWNER TO wbadm;
 
 --
 -- Name: >; Type: OPERATOR; Schema: public; Owner: postgres
@@ -709,7 +709,7 @@ CREATE AGGREGATE min(debversion) (
 ALTER AGGREGATE public.min(debversion) OWNER TO postgres;
 
 --
--- Name: spacecat_all(text); Type: AGGREGATE; Schema: public; Owner: pkern
+-- Name: spacecat_all(text); Type: AGGREGATE; Schema: public; Owner: wbadm
 --
 
 CREATE AGGREGATE spacecat_all(text) (
@@ -719,7 +719,7 @@ CREATE AGGREGATE spacecat_all(text) (
 );
 
 
-ALTER AGGREGATE public.spacecat_all(text) OWNER TO pkern;
+ALTER AGGREGATE public.spacecat_all(text) OWNER TO wbadm;
 
 --
 -- Name: <=; Type: OPERATOR; Schema: public; Owner: postgres
@@ -2633,6 +2633,13 @@ CREATE INDEX packages_dist_pkg ON packages USING btree (distribution, package);
 
 
 --
+-- Name: packages_state; Type: INDEX; Schema: public; Owner: wbadm; Tablespace: 
+--
+
+CREATE INDEX packages_state ON packages USING btree (state);
+
+
+--
 -- Name: pkg_history_timestamp; Type: INDEX; Schema: public; Owner: wbadm; Tablespace: 
 --
 
@@ -2961,14 +2968,14 @@ CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FRO
 -- Name: pkg_history_insert; Type: RULE; Schema: armhf; Owner: wbadm
 --
 
-CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('armhf'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space, builder) VALUES ('armhf'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space, new.builder);
 
 
 --
 -- Name: pkg_history_update; Type: RULE; Schema: armhf; Owner: wbadm
 --
 
-CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 'armhf'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 'armhf'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
 
 
 --
@@ -3753,14 +3760,14 @@ CREATE RULE pkg_history_delete AS ON DELETE TO pkg_history DO INSTEAD DELETE FRO
 -- Name: pkg_history_insert; Type: RULE; Schema: s390x; Owner: wbadm
 --
 
-CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space) VALUES ('s390x'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space);
+CREATE RULE pkg_history_insert AS ON INSERT TO pkg_history DO INSTEAD INSERT INTO public.pkg_history (architecture, package, distribution, version, "timestamp", result, build_time, disk_space, builder) VALUES ('s390x'::character varying, new.package, new.distribution, new.version, new."timestamp", new.result, new.build_time, new.disk_space, new.builder);
 
 
 --
 -- Name: pkg_history_update; Type: RULE; Schema: s390x; Owner: wbadm
 --
 
-CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space WHERE ((((((p.architecture)::text = 's390x'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
+CREATE RULE pkg_history_update AS ON UPDATE TO pkg_history DO INSTEAD UPDATE public.pkg_history p SET result = new.result, build_time = new.build_time, disk_space = new.disk_space, builder = new.builder WHERE ((((((p.architecture)::text = 's390x'::text) AND ((p.package)::text = (old.package)::text)) AND ((p.distribution)::text = (old.distribution)::text)) AND (p.version OPERATOR(public.=) old.version)) AND (p."timestamp" = old."timestamp"));
 
 
 --

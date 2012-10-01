@@ -27,18 +27,12 @@ die "wanna-build disabled" if -f "/srv/wanna-build/NO-WANNA-BUILD";
 
 package conf;
 
-use vars qw< $basedir $dbbase $transactlog $mailprog $buildd_domain >;
+use vars qw< $mailprog $buildd_domain >;
 # defaults
-$basedir ||= "/var/lib/debbuild";
-$dbbase ||= "build-db";
-$transactlog ||= "transactions.log";
 $mailprog ||= "/usr/sbin/sendmail";
 require "/srv/wanna-build/etc/wanna-build.conf";
-die "$conf::basedir is not a directory\n" if ! -d $conf::basedir;
-die "dbbase is empty\n" if ! $dbbase;
-die "transactlog is empty\n" if ! $transactlog;
 die "mailprog binary $conf::mailprog does not exist or isn't executable\n"
-	if !-x $conf::mailprog;
+        if !-x $conf::mailprog;
 package main;
 
 use POSIX;
