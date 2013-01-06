@@ -48,10 +48,9 @@ fi
 case $1 in
 debian)
 	USER=cimarosa
-	BUILDD_QUEUE_OPTIONS="--include=Packages.gz --include=Sources.gz --include=**Release* --exclude=* $RSYNC_OPTIONS"
+	BUILDD_QUEUE_OPTIONS="--exclude=*.bz2 $RSYNC_OPTIONS"
 	rsync --password-file "$PASSWORD_FILE" $MIRROR_OPTIONS $USER@ftp-master.debian.org::debian/dists/ "$TARGET/archive"
-	rsync --password-file "$PASSWORD_BASE/$1-buildd.rsync-password" $BUILDD_QUEUE_OPTIONS $USER@ftp-master.debian.org::buildd-sid/ "$TARGET/buildd-sid"
-	rsync --password-file "$PASSWORD_BASE/$1-buildd.rsync-password" $BUILDD_QUEUE_OPTIONS $USER@ftp-master.debian.org::buildd-experimental/ "$TARGET/buildd-experimental"
+	rsync --password-file "$PASSWORD_BASE/$1-buildd.rsync-password" $BUILDD_QUEUE_OPTIONS $USER@ftp-master.debian.org::debian-buildd-dists/ "$TARGET/debian-buildd-dists/"
 	# Also sync the Maintainers and Uploaders files for consumption through the web interface.
 	rsync --password-file "$PASSWORD_FILE" $MIRROR_OPTIONS $USER@ftp-master.debian.org::debian/indices/Maintainers /srv/buildd.debian.org/etc/Maintainers
 	rsync --password-file "$PASSWORD_FILE" $MIRROR_OPTIONS $USER@ftp-master.debian.org::debian/indices/Uploaders /srv/buildd.debian.org/etc/Uploaders
@@ -59,10 +58,9 @@ debian)
 debian-security)
 	chmod 0700 "$TARGET"
 	USER=cimarosa
-	BUILDD_QUEUE_OPTIONS="--include=Packages.gz --include=Sources.gz --include=**Release* --exclude=* $RSYNC_OPTIONS"
+	BUILDD_QUEUE_OPTIONS="--exclude=*.bz2 $RSYNC_OPTIONS"
 	rsync $MIRROR_OPTIONS $USER@security-master.debian.org::debian-security/dists/ "$TARGET/archive"
-	rsync --password-file "$PASSWORD_BASE/$1-buildd.rsync-password" $BUILDD_QUEUE_OPTIONS $USER@security-master.debian.org::buildd-wheezy/ "$TARGET/buildd-wheezy"
-	rsync --password-file "$PASSWORD_BASE/$1-buildd.rsync-password" $BUILDD_QUEUE_OPTIONS $USER@security-master.debian.org::buildd-squeeze/ "$TARGET/buildd-squeeze"
+	rsync --password-file "$PASSWORD_BASE/$1-buildd.rsync-password" $BUILDD_QUEUE_OPTIONS $USER@security-master.debian.org::debian-security-buildd-dists/ "$TARGET/debian-security-buildd-dists/"
 	;;
 debian-volatile)
 	rsync $MIRROR_OPTIONS volatile-master.debian.org::debian-volatile/dists/ "$TARGET/archive"

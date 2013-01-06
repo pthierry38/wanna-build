@@ -48,12 +48,11 @@ main_sync() {
     for SUITE in $SUITES_FAST_AUTOBUILD
     do
         SOURCES="${ARCHIVE_BASE}/archive/${SUITE}/{main,contrib}/source/Sources.gz"
-        filter_out_nonfree "${ARCHIVE_BASE}/buildd-${SUITE}/Sources.gz" "Sources.${SUITE}.incoming-filtered.gz"
-        SOURCES="${SOURCES} Sources.${SUITE}.incoming-filtered.gz"
+        SOURCES="${SOURCES} ${ARCHIVE_BASE}/debian-buildd-dists/buildd-${SUITE}/{main,contrib}/source/Sources.gz"
         NFSOURCES="${ARCHIVE_BASE}/archive/${SUITE}/non-free/source/Sources.gz"
         PACKAGES="${ARCHIVE_BASE}/archive/${SUITE}/{main,contrib}/binary-%ARCH%/Packages.gz"
         PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/archive/${SUITE}/{main,contrib}/debian-installer/binary-%ARCH%/Packages.gz"
-        PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/buildd-${SUITE}/Packages.gz"
+        PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/debian-buildd-dists/buildd-${SUITE}/{main,contrib}/binary-%ARCH%/Packages.gz"
         NFPACKAGES="${ARCHIVE_BASE}/archive/${SUITE}/non-free/binary-%ARCH%/Packages.gz"
         NFPACKAGES="${NFPACKAGES} ${ARCHIVE_BASE}/archive/${SUITE}/non-free/debian-installer/binary-%ARCH%/Packages.gz"
         /srv/wanna-build/bin/filter-nonfree /srv/wanna-build/etc/non-free-include-list "`get_architectures $SUITE`" Sources.${SUITE}.non-free Packages.${SUITE}.%ARCH%.non-free ${NFSOURCES} . ${NFPACKAGES} || true
@@ -66,7 +65,7 @@ main_sync() {
             BASE_SUITE=sid
             PACKAGES_BASE="${ARCHIVE_MAIN}/archive/${BASE_SUITE}/{main,contrib}/binary-%ARCH%/Packages.gz"
             PACKAGES_BASE="${PACKAGES_BASE} ${ARCHIVE_MAIN}/archive/${BASE_SUITE}/{main,contrib}/debian-installer/binary-%ARCH%/Packages.gz"
-            #PACKAGES_BASE="${PACKAGES_BASE} ${ARCHIVE_MAIN}/buildd-${BASE_SUITE}/Packages.gz"
+            PACKAGES_BASE="${PACKAGES_BASE} ${ARCHIVE_MAIN}/debian-buildd-dists/buildd-${BASE_SUITE}/{main,contrib}/binary-%ARCH%/Packages.gz"
             trigger_wb_update_with_secondary "$SUITE" "`get_architectures $SUITE`" "$PACKAGES_BASE" "$SOURCES" "$PACKAGES"
         fi
     done

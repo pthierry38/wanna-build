@@ -28,25 +28,23 @@ main() {
     # Handle unstable as a normal suite.
     suite=sid
     SOURCES="${ARCHIVE_BASE}/archive/${suite}/{main,contrib}/source/Sources.gz"
-    filter_out_nonfree "${ARCHIVE_BASE}/buildd-${suite}/Sources.gz" "Sources.${suite}.incoming-filtered.gz"
-    SOURCES="${SOURCES} Sources.${suite}.incoming-filtered.gz"
+    SOURCES="${SOURCES} ${ARCHIVE_BASE}/debian-buildd-dists/buildd-${suite}/{main,contrib}/source/Sources.gz"
     PACKAGES="${ARCHIVE_BASE}/archive/${suite}/{main,contrib}/binary-%ARCH%/Packages.gz"
     PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/archive/${suite}/main/debian-installer/binary-%ARCH%/Packages.gz"
-    PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/buildd-${suite}/Packages.gz"
+    PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/debian-buildd-dists/buildd-${suite}/{main,contrib}/binary-%ARCH%/Packages.gz"
     trigger_wb_update "$suite" "`get_architectures $suite`" "$SOURCES" "$PACKAGES"
 
     # Handle experimental as an overlay suite.
     suite=experimental
     base_suite=sid
     SOURCES="${ARCHIVE_BASE}/archive/${suite}/{main,contrib}/source/Sources.gz"
-    filter_out_nonfree "${ARCHIVE_BASE}/buildd-${suite}/Sources.gz" "Sources.${suite}.incoming-filtered.gz"
-    SOURCES="${SOURCES} Sources.${suite}.incoming-filtered.gz"
+    SOURCES="${SOURCES} ${ARCHIVE_BASE}/debian-buildd-dists/buildd-${suite}/{main,contrib}/source/Sources.gz"
     PACKAGES="${ARCHIVE_BASE}/archive/${suite}/{main,contrib}/binary-%ARCH%/Packages.gz"
-    PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/buildd-${suite}/Packages.gz"
+    PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/debian-buildd-dists/buildd-${suite}/{main,contrib}/binary-%ARCH%/Packages.gz"
 
     PACKAGES_BASE="${ARCHIVE_MAIN}/archive/${base_suite}/{main,contrib}/binary-%ARCH%/Packages.gz"
     PACKAGES_BASE="${PACKAGES_BASE} ${ARCHIVE_MAIN}/archive/${base_suite}/main/debian-installer/binary-%ARCH%/Packages.gz"
-    #PACKAGES_BASE="${PACKAGES_BASE} ${ARCHIVE_MAIN}/buildd-${BASE_SUITE}/Packages.gz"
+    PACKAGES_BASE="${PACKAGES_BASE} ${ARCHIVE_BASE}/debian-buildd-dists/buildd-${base_suite}/{main,contrib}/binary-%ARCH%/Packages.gz"
     trigger_wb_update_with_secondary "$suite" "`get_architectures $suite`" "$PACKAGES_BASE" "$SOURCES" "$PACKAGES"
 
     cleanup
