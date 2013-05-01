@@ -205,6 +205,7 @@ my @wannabuildoptions = (
     'recorduser'        => \$recorduser,
     );
 
+my $printargv = join('#', @ARGV);
 GetOptions(@wannabuildoptions) or usage();
 
 my $dbh;
@@ -269,7 +270,7 @@ if (!isin ( $op_mode, qw(list) ) && ( ($distribution//"") =~ /[ ,]/)) {
 if ($verbose) {
 	my $version = '$Id$';
 	$version =~ s/^.* ([a-f0-9]+) .*$/$1/g;
-	print "wanna-build $version for ".($distribution//"sid")." on $arch\n";
+	print "wanna-build $version for ".($distribution//"sid")." on $arch - $printargv\n";
 }
 
 if (!@ARGV && !isin( $op_mode, qw(list merge-quinn merge-partial-quinn import export
