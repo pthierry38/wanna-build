@@ -11,14 +11,14 @@ def check_source(ok, srcs, fw):
     for f in srcs:
         #f = open(f, 'r')
         f = subprocess.Popen("zcat %s" % (f), shell=True, stdout=subprocess.PIPE).stdout
-        pkg = apt_pkg.ParseTagFile(f)
-        while pkg.Step():
-            if not pkg.Section.get('Package'): continue
-            if pkg.Section.get('Section','').startswith('non-free'):
-                if pkg.Section.get('Autobuild') != 'yes': continue
-                if pkg.Section['Package'] not in ok: continue
-            ret += [pkg.Section['Package']]
-            fw.write(str(pkg.Section))
+        pkg = apt_pkg.TagFile(f)
+        while pkg.step():
+            if not pkg.section.get('Package'): continue
+            if pkg.section.get('Section','').startswith('non-free'):
+                if pkg.section.get('Autobuild') != 'yes': continue
+                if pkg.section['Package'] not in ok: continue
+            ret += [pkg.section['Package']]
+            fw.write(str(pkg.section))
             fw.write("\n")
         f.close()
     fw.close()
@@ -27,10 +27,10 @@ def check_source(ok, srcs, fw):
 def check_binary(ok, bins, fw):
     for f in bins:
         f = subprocess.Popen("zcat %s" % (f), shell=True, stdout=subprocess.PIPE).stdout
-        pkg = apt_pkg.ParseTagFile(f)
-        while pkg.Step():
-            if pkg.Section.get('Source', pkg.Section.get('Package')).split(" ")[0] not in ok: continue
-            fw.write(str(pkg.Section))
+        pkg = apt_pkg.TagFile(f)
+        while pkg.step():
+            if pkg.section.get('Source', pkg.section.get('Package')).split(" ")[0] not in ok: continue
+            fw.write(str(pkg.section))
             fw.write("\n")
         f.close()
     fw.close()
