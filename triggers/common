@@ -9,10 +9,10 @@ ARCHIVE_BASE="/srv/wanna-build/tmp/archive/${ARCHIVE}"
 PAS_BASE="/srv/buildd.debian.org/web/quinn-diff"
 PAS_FILE="$PAS_BASE/$SUITE/Packages-arch-specific"
 LOCKFILE="${ARCHIVE_BASE}/lock"
-ARCHS_lenny="alpha amd64 arm armel hppa i386 ia64 mips mipsel powerpc s390 sparc"
 ARCHS_squeeze="amd64 armel i386 ia64 mips mipsel powerpc s390 sparc kfreebsd-amd64 kfreebsd-i386"
 ARCHS_wheezy="amd64 armel armhf i386 ia64 mips mipsel powerpc s390 s390x sparc kfreebsd-amd64 kfreebsd-i386"
-ARCHS_sid="$ARCHS_wheezy hurd-i386"
+ARCHS_jessie="amd64 armel armhf i386 ia64 mips mipsel powerpc s390 s390x sparc kfreebsd-amd64 kfreebsd-i386"
+ARCHS_sid="$ARCHS_jessie hurd-i386"
 
 # Creates a working environment within the corresponding archive
 # directory and jumps there.
@@ -25,9 +25,9 @@ ensure_workdir() {
 get_architectures() {
     SUITE="$1"
 
-    if [ "$SUITE" = "lenny" -o "$SUITE" = "oldstable" ]; then echo $ARCHS_lenny
-    elif [ "$SUITE" = "squeeze" -o "$SUITE" = "stable" ]; then echo $ARCHS_squeeze
-    elif [ "$SUITE" = "wheezy" -o "$SUITE" = "testing" ]; then echo $ARCHS_wheezy
+    if [ "$SUITE" = "squeeze" -o "$SUITE" = "oldstable" ]; then echo $ARCHS_squeeze
+    elif [ "$SUITE" = "wheezy" -o "$SUITE" = "stable" ]; then echo $ARCHS_wheezy
+    elif [ "$SUITE" = "jessie" -o "$SUITE" = "testing" ]; then echo $ARCHS_jessie
     elif [ "$SUITE" = "unstable" -o "$SUITE" = "sid" ]; then echo $ARCHS_sid
     elif [ "$SUITE" = "experimental" ]; then echo $ARCHS_sid
     else
