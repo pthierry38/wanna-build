@@ -66,7 +66,7 @@ debian-volatile)
 	rsync $MIRROR_OPTIONS volatile-master.debian.org::debian-volatile/dists/ "$TARGET/archive"
 	;;
 backports)
-	rsync --password-file "$PASSWORD_FILE" $MIRROR_OPTIONS wbadm@backports-master.debian.org::debian-backports/dists/ "$TARGET/archive"
+	rsync --password-file "$PASSWORD_FILE" $MIRROR_OPTIONS wbadm@ftp-master.debian.org::debian-backports/dists/ "$TARGET/archive"
 	;;
 debian-edu)
 	rsync $MIRROR_OPTIONS --exclude=woody/ ftp.skolelinux.no::skolelinux-dist/dists/ "$TARGET/archive"
