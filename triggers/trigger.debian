@@ -92,5 +92,6 @@ main() {
 }
 
 main
+/srv/wanna-build/triggers/trigger.backports
 exit 0
 

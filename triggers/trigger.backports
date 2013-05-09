@@ -23,7 +23,7 @@ main() {
     ensure_workdir
 
     # Fetch the most recent Packages and Sources files.
-    sync.sh debian
+    # no need to sync the debian archive as this is called from within debians trigger now
     sync.sh $ARCHIVE nolock
 
     # Autodetect suites by inspecting the directories in dists/.
