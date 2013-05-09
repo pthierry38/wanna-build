@@ -47,7 +47,7 @@ main_sync() {
         if [ -f "${ARCHIVE_BASE}/archive/${SUITE}-backports/main/source/Sources.gz" ]; then
             SOURCES_BP="${ARCHIVE_BASE}/archive/${SUITE}/{main,contrib}/source/Sources.gz"
             PACKAGES_BP="${ARCHIVE_BASE}/archive/${SUITE}/{main,contrib}/binary-%ARCH%/Packages.gz"
-            trigger_wb_update_with_secondary "${SUITE}-backports" "`get_architectures $SUITE`" "$PACKAGES" "$SOURCES_BP" "$PACKAGES_BP" "${SUITE}-backports"
+            trigger_wb_update_with_secondary "${SUITE}-backports" "`get_architectures $SUITE`" "$PACKAGES_BASE" "$SOURCES_BP" "$PACKAGES_BP" "${SUITE}-backports"
         fi
     done
 
