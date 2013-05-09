@@ -45,8 +45,8 @@ main_sync() {
         trigger_wb_update_for_overlay "$SUITE" "`get_architectures $SUITE`" "$SOURCES_BASE" "$PACKAGES_BASE" "$SOURCES" "$PACKAGES"
 
         if [ -f "${ARCHIVE_BASE}/archive/${SUITE}-backports/main/source/Sources.gz" ]; then
-            SOURCES_BP="${ARCHIVE_BASE}/archive/${SUITE}/{main,contrib}/source/Sources.gz"
-            PACKAGES_BP="${ARCHIVE_BASE}/archive/${SUITE}/{main,contrib}/binary-%ARCH%/Packages.gz"
+            SOURCES_BP="${ARCHIVE_BASE}/archive/${SUITE}-backports/{main,contrib}/source/Sources.gz"
+            PACKAGES_BP="${ARCHIVE_BASE}/archive/${SUITE}-backports/{main,contrib}/binary-%ARCH%/Packages.gz"
             trigger_wb_update_with_secondary "${SUITE}-backports" "`get_architectures $SUITE`" "$PACKAGES_BASE" "$SOURCES_BP" "$PACKAGES_BP" "${SUITE}-backports"
         fi
     done
