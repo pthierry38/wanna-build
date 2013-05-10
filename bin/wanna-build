@@ -186,8 +186,8 @@ my @wannabuildoptions = (
     },
     'arch|A=s'     => \$arch,
     'user|U=s'     => \$user,
-    'min-age|a=i'       => \$list_min_age,
-    'max-age=i'         => sub { $list_min_age = -1 * ($_[1]); },
+    'min-age|a=f'       => \$list_min_age,
+    'max-age=f'         => \$list_max_age,
     'format=s'          => \$printformat,
     'own-format=s'      => \$ownprintformat,
     'Pas=s'             => \$Pas,
@@ -1954,14 +1954,14 @@ sub get_all_source_info {
 		push @args, $options{user};
 	}
 
-	if ($options{list_min_age} && $options{list_min_age} > 0) {
-		$q .= ' AND age(state_change) > ? ';
+	if ($options{list_min_age}) {
+                $q .= ' AND age(now(),state_change) > ?';
 		push @args, $options{list_min_age} . " days";
 	}
 
-	if ($options{list_min_age} && $options{list_min_age} < 0) {
-		$q .= ' AND age(state_change) < ? ';
-		push @args, -$options{list_min_age} . " days";
+	if ($options{list_max_age}) {
+                $q .= ' AND age(now(),state_change) < ?';
+		push @args, -$options{list_max_age} . " days";
 	}
 
 	my $db;
