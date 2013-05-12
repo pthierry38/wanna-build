@@ -2619,10 +2619,24 @@ CREATE INDEX distributions_distribution ON distributions USING hash (distributio
 
 
 --
+-- Name: locks_pkey; Type: INDEX; Schema: public; Owner: wbadm; Tablespace: 
+--
+
+CREATE INDEX locks_pkey ON locks USING btree (distribution, architecture);
+
+
+--
 -- Name: packages_arch_dist_state; Type: INDEX; Schema: public; Owner: wbadm; Tablespace: 
 --
 
 CREATE INDEX packages_arch_dist_state ON packages USING btree (architecture, distribution, upper((state)::text));
+
+
+--
+-- Name: packages_dist_arch; Type: INDEX; Schema: public; Owner: wbadm; Tablespace: 
+--
+
+CREATE INDEX packages_dist_arch ON packages USING btree (distribution, architecture);
 
 
 --
@@ -2633,10 +2647,31 @@ CREATE INDEX packages_dist_pkg ON packages USING btree (distribution, package);
 
 
 --
+-- Name: packages_dist_pkg_arch_state; Type: INDEX; Schema: public; Owner: wbadm; Tablespace: 
+--
+
+CREATE INDEX packages_dist_pkg_arch_state ON packages USING btree (distribution, package, architecture, upper((state)::text));
+
+
+--
+-- Name: packages_dist_pkg_arch_state_state_change; Type: INDEX; Schema: public; Owner: wbadm; Tablespace: 
+--
+
+CREATE INDEX packages_dist_pkg_arch_state_state_change ON packages USING btree (distribution, package, architecture, upper((state)::text), state, state_change);
+
+
+--
 -- Name: packages_state; Type: INDEX; Schema: public; Owner: wbadm; Tablespace: 
 --
 
 CREATE INDEX packages_state ON packages USING btree (state);
+
+
+--
+-- Name: pkg_history_pkey1; Type: INDEX; Schema: public; Owner: wbadm; Tablespace: 
+--
+
+CREATE INDEX pkg_history_pkey1 ON pkg_history USING btree (architecture, package, distribution, version, "timestamp", result);
 
 
 --
