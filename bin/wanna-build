@@ -1170,7 +1170,7 @@ sub list_packages {
 	my %scnt;
 	my $ctime = time;
 
- 	my $db = get_all_source_info(state => $state, user => $user, list_min_age => $list_min_age, multisuite => 1);
+ 	my $db = get_all_source_info(state => $state, user => $user, list_min_age => $list_min_age, list_max_age => $list_max_age, multisuite => 1);
 	foreach my $key (keys %$db) {
 		next if $key =~ /^_/;
 		push @list, calculate_prio($db->{$key});
@@ -1961,7 +1961,7 @@ sub get_all_source_info {
 
 	if ($options{list_max_age}) {
                 $q .= ' AND age(now(),state_change) < ?';
-		push @args, -$options{list_max_age} . " days";
+		push @args, $options{list_max_age} . " days";
 	}
 
 	my $db;
