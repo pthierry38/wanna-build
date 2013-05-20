@@ -273,7 +273,7 @@ if ($verbose) {
 	print "wanna-build $version for ".($distribution//"sid")." on $arch - $printargv\n";
 }
 
-if (!@ARGV && !isin( $op_mode, qw(list merge-quinn merge-partial-quinn import export
+if (!@ARGV && !isin( $op_mode, qw(list merge-import export
 				  merge-packages manual-edit
 				  merge-sources distribution-architectures
 				  distribution-aliases))) {
