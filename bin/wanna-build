@@ -659,26 +659,12 @@ sub add_one_building {
 			if (version_less($pkg->{'version'},$version)) {
 				print "$name: Warning: Older version $pkg->{'version'} ",
 				      "is being built by $pkg->{'builder'}\n";
-				if ($pkg->{'builder'} ne $user) {
-					send_mail( $pkg->{'builder'},
-							   "package takeover in newer version",
-							   "You are building package '$name' in ".
-							   "version $version\n".
-							   "(as far as I'm informed).\n".
-							   "$user now has taken the newer ".
-							   "version $version for building.".
-							   "You can abort the build if you like.\n" );
-				}
 			}
 			else {
 				if ($opt_override) {
 					print "User $pkg->{'builder'} had already ",
 					      "taken the following package,\n",
 						  "but overriding this as you request:\n";
-					send_mail( $pkg->{'builder'}, "package takeover",
-							   "The package '$name' (version $version) that ".
-							   "was taken by you\n".
-							   "has been taken over by $user\n" );
 				}
 				elsif ($pkg->{'builder'} eq $user) {
 					print "$name: Note: already taken by you.\n";
@@ -699,12 +685,6 @@ sub add_one_building {
 				print "The following package previously failed ",
 					  "(by $pkg->{'builder'})\n",
 					  "but overriding this as you request:\n";
-				send_mail( $pkg->{'builder'}, "failed package takeover",
-						   "The package '$name' (version $version) that ".
-						   "is taken by you\n".
-						   "and has failed previously has been taken over ".
-						   "by $user\n" )
-					if $pkg->{'builder'} ne $user;
 			}
 			else {
 				$ok = 0;
@@ -2216,18 +2196,6 @@ sub parse_all_v3 {
         next if $pkgs->{'version'} eq $pkg->{'version'} and !isin( $pkg->{'state'}, qw(Installed));
         next if isin( $pkg->{'state'}, qw(Not-For-Us Failed-Removed));
 
-        if (defined( $pkg->{'state'} ) && isin( $pkg->{'state'}, qw(Building Built Build-Attempted))) {
-            send_mail( $pkg->{'builder'},
-                "new version of $name (dist=$distribution)",
-                "As far as I'm informed, you're currently building the package $name\n".
-                "in version $pkg->{'version'}.\n\n".
-                "Now there's a new source version $pkgs->{'version'}. If you haven't finished\n".
-                "compiling $name yet, you can stop it to save some work.\n".
-                "Just to inform you...\n".
-                "(This is an automated message)\n" ) unless $simulate;
-	    print "$logstr new version while building $pkg->{'version'} -- sending mail to builder ($pkg->{'builder'})\n"
-				  if $verbose || $simulate;
-	    }
         change_state( \$pkg, 'Needs-Build');
         $pkg->{'notes'} = $pkgs->{'status'};
         $pkg->{'version'} = $pkgs->{'version'};
