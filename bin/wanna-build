@@ -234,7 +234,7 @@ $dbh->{pg_server_prepare} = 0;
 
 $dbh->begin_work or die $dbh->errstr;
 
-my $q = 'SELECT distribution, public, auto_dep_wait, build_dep_resolver, suppress_successful_logs, archive FROM distributions';
+my $q = 'SELECT distribution, public, auto_dep_wait, build_dep_resolver, suppress_successful_logs, archive, mail_logs FROM distributions';
 my $rows = $dbh->selectall_hashref($q, 'distribution');
 foreach my $name (keys %$rows) {
 	$distributions{$name} = {};
@@ -242,6 +242,7 @@ foreach my $name (keys %$rows) {
 	$distributions{$name}->{'hidden'} = 1 if !($rows->{$name}->{'public'});
 	$distributions{$name}->{'build_dep_resolver'} = $rows->{$name}->{'build_dep_resolver'} if $rows->{$name}->{'build_dep_resolver'};
 	$distributions{$name}->{'suppress_successful_logs'} = $rows->{$name}->{'suppress_successful_logs'} if $rows->{$name}->{'suppress_successful_logs'};
+	$distributions{$name}->{'mail_logs'} = $rows->{$name}->{'mail_logs'} if $rows->{$name}->{'mail_logs'};
 	$distributions{$name}->{'archive'} = $rows->{$name}->{'archive'} if $rows->{$name}->{'archive'};
 }
 
@@ -731,6 +732,7 @@ sub add_one_building {
                 print  "    - build_dep_resolver: $distributions{$distribution}->{'build_dep_resolver'}\n" if $distributions{$distribution}->{'build_dep_resolver'};
                 print  "    - arch_all: $pkg->{'build_arch_all'}\n" if $pkg->{'build_arch_all'};
                 print  "    - suppress_successful_logs: $distributions{$distribution}->{'suppress_successful_logs'}\n" if $distributions{$distribution}->{'suppress_successful_logs'};
+                print  "    - mail_logs: $distributions{$distribution}->{'mail_logs'}\n" if $distributions{$distribution}->{'mail_logs'};
             }
 		change_state( \$pkg, 'Building' );
 		$pkg->{'package'} = $name;
