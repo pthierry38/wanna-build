@@ -464,6 +464,17 @@ BEGIN {
         'set-update'    => { 'noversion' => 1, },
         'set-needs-build' => { builder => 1, to => 'BD-Uninstallable', action => 'give-back'},
     };
+    # documentation of flags for the state machine below
+    #
+    # to: new state
+    # from: states the package might have
+    # warnfrom: states the package might also have but generates warnings
+    #
+    # action: action name for logging
+    # nopkgdef: package needs to exist for this
+    # builder: only the user marked as handling this package might do this
+    # noversion: skip the version check below
+    # binversion: use the full (binNMU) version for the version check
 }
 
 sub add_packages {
