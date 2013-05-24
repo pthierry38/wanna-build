@@ -230,7 +230,7 @@ END {
 
 my $schema_suffix = '';
 if ((
-    (!($commands->{$op_mode}) || !($commands->{$op_mode}->{'nopriv'}))
+    ($commands->{$op_mode} && $commands->{$op_mode}->{'nopriv'})
     && !$recorduser && !$privmode) || $simulate) {
 	$dbh = DBI->connect("DBI:Pg:service=wanna-build") || 
 		die "FATAL: Cannot open database: $DBI::errstr\n";
