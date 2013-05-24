@@ -218,6 +218,7 @@ my $commands = {
 
 my $printargv = join('#', @ARGV);
 GetOptions(@wannabuildoptions) or usage();
+$op_mode ||= "set-building";
 
 my $dbh;
 
@@ -266,7 +267,6 @@ foreach my $name (keys %$rows) {
 }
 $distribution = $distribution_aliases{$distribution} if (isin($distribution, keys %distribution_aliases));
 
-$op_mode ||= "set-building";
 if ($distribution) {
     my @dists = split(/[, ]+/, $distribution);
     foreach my $dist (@dists) {
