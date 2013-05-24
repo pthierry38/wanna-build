@@ -197,13 +197,24 @@ my @wannabuildoptions = (
     # special actions
     'export=s' => sub { _set_mode(@_); $export_to   = $_[1]; },
     'import=s' => sub { _set_mode(@_); $import_from = $_[1]; },
-    'manual-edit'                => \&_set_mode,
     'distribution-architectures' => \&_set_mode,
     'distribution-aliases'       => \&_set_mode,
 
     'ssh-wrapper'       => \$sshwrapper,
     'recorduser'        => \$recorduser,
     );
+
+# this indicates what is not necessary/used for the given commands
+# nopriv: command doesn't need privileged database connection
+# nopkg:  command doesn't operate on packages
+# noarch: command doesn't know/use architectures
+my $commands = {
+    'list' => {'nopriv' => 1, 'nopkg' => 1},
+    'info' => {'nopriv' => 1, },
+    'distribution-architectures' => {'nopriv' => 1, 'nopkg' => 1, 'noarch' => 1,},
+    'distribution-aliases' => {'nopriv' => 1, 'nopkg' => 1, 'noarch' => 1,},
+    'export' => { 'nopkg' => 1},
+};
 
 my $printargv = join('#', @ARGV);
 GetOptions(@wannabuildoptions) or usage();
@@ -218,7 +229,9 @@ END {
 }
 
 my $schema_suffix = '';
-if ((isin( $op_mode, qw(list info distribution-architectures distribution-aliases)) && !$recorduser && !$privmode) || $simulate) {
+if ((
+    (!($commands->{$op_mode}) || !($commands->{$op_mode}->{'nopriv'}))
+    && !$recorduser && !$privmode) || $simulate) {
 	$dbh = DBI->connect("DBI:Pg:service=wanna-build") || 
 		die "FATAL: Cannot open database: $DBI::errstr\n";
 	$schema_suffix = '_public';
@@ -274,10 +287,9 @@ if ($verbose) {
 	print "wanna-build $version for ".($distribution//"sid")." on $arch - $printargv\n";
 }
 
-if (!@ARGV && !isin( $op_mode, qw(list merge-import export
-				  merge-packages manual-edit
-				  merge-sources distribution-architectures
-				  distribution-aliases))) {
+if (!@ARGV && 
+    (!($commands->{$op_mode}) || !($commands->{$op_mode}->{'nopkg'}))
+                                  ) {
 	warn "No packages given.\n";
 	usage();
 }
@@ -342,7 +354,7 @@ $api //= 0;
 if (isin($op_mode, qw<forget-user merge-v3 import>) && defined @conf::admin_users && !isin( $real_user, @conf::admin_users) && !$simulate ) {
     die "This operation is restricted to admin users";
 }
-if (!isin($op_mode, qw<distribution-architectures distribution-aliases>)) {
+if (!($commands->{$op_mode}) || !($commands->{$op_mode}->{'noarch'})) {
     die "need an architecture" unless $arch;
     my $rows = $dbh->selectall_hashref('SELECT distribution as d from distribution_architectures where architecture=? and distribution=?', [qw<d>], undef, ($arch, $distribution//"sid")) if ($distribution//"") ne 'any';
     $rows = $dbh->selectall_hashref('SELECT distribution as d from distribution_architectures where architecture=?', [qw<d>], undef, ($arch,)) unless $rows;
@@ -1373,8 +1385,6 @@ sub check_entry {
 	my $pkg = shift;
 	my $field;
 
-	return if $op_mode eq "manual-edit"; # no checks then
-	
 	# check for required fields
 	if (exists $pkg->{'user'}) {
 		return;
