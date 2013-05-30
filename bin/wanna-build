@@ -147,7 +147,9 @@ my @wannabuildoptions = (
                   reupload-wait bd-uninstallable ) ];
     },
     'dist|d=s' => sub {
-        $distribution = $_[1];
+        my $c;
+        ($distribution, $c) = split("/", $_[1]);
+        $arch = $c if $c;
         given ( $_[1] ) {
             when ( [qw< a all >] ) {
                 $info_all_dists = 1;
@@ -184,7 +186,7 @@ my @wannabuildoptions = (
         $_[1] =~ m#^([^/]+)#;
         $arch ||= $1;
     },
-    'arch|A=s'     => \$arch,
+    'arch|A=s'     => sub { $arch //= $_[1]; },
     'user|U=s'     => \$user,
     'min-age|a=f'       => \$list_min_age,
     'max-age=f'         => \$list_max_age,
