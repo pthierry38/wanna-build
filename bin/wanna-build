@@ -738,6 +738,8 @@ sub add_one_building {
                 print  "- $name:\n";
                 print  "    - status: ok\n";
                 printf "    - pkg-ver: %s_%s\n", $name, $version;
+                printf "    - suite: %s\n", $distribution;
+                printf "    - arch: %s\n", $arch;
                 print  "    - binNMU: $pkg->{'binary_nmu_version'}\n" if $pkg->{'binary_nmu_version'};
                 print  "    - extra-changelog: $pkg->{'binary_nmu_changelog'}\n" if $pkg->{'binary_nmu_changelog'} && $pkg->{'binary_nmu_version'};
                 print  "    - extra-depends: $pkg->{'extra_depends'}\n" if $pkg->{'extra_depends'};
