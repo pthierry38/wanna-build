@@ -39,7 +39,7 @@ use POSIX;
 use FileHandle;
 use File::Copy;
 use DBI;
-use Getopt::Long qw ( :config gnu_getopt );
+use Getopt::Long qw (GetOptionsFromString :config gnu_getopt );
 use lib '/srv/wanna-build/lib';
 #use lib 'lib';
 use WannaBuild;
@@ -206,6 +206,10 @@ my @wannabuildoptions = (
     'recorduser'        => \$recorduser,
     );
 
+my @sshwrapperoptions = (
+    'ssh-wrapper'   => \$sshwrapper,
+);
+
 # this indicates what is not necessary/used for the given commands
 # nopriv: command doesn't need privileged database connection
 # nopkg:  command doesn't operate on packages
@@ -219,11 +223,52 @@ my $commands = {
 };
 
 my $printargv = join('#', @ARGV);
-GetOptions(@wannabuildoptions) or usage();
+my $hostdefaults = {};
+if ($ARGV[0] eq '--ssh-wrapper') {
+    die ("no SSH_ORIGINAL_COMMAND") unless exists $ENV{'SSH_ORIGINAL_COMMAND'};
+    GetOptions(@sshwrapperoptions) or usage();
+    $#ARGV == 0 or die("need exactly one host name");
+    my $hosts = YAML::Tiny->read( '/srv/wanna-build/etc/buildd/buildd.yaml' )->[0];
+    my ($hostyaml, $defaultyaml);
+    foreach my $host (@$hosts) {
+        $hostyaml = $host->{$ARGV[0]} if (keys %$host)[0] eq $ARGV[0];
+        $defaultyaml = $host->{'default'} if (keys %$host)[0] eq 'default';
+    }
+    if (!$hostyaml) {
+        die("ERROR: unknown host $ARGV[0]");
+    }
+    my $mergedyaml = merge($defaultyaml, $hostyaml);
+    $mergedyaml //= $hostyaml;
+    foreach my $k (@$mergedyaml) {
+        foreach my $l (keys %$k) {
+            $hostdefaults->{$l} = $k->{$l};
+        }
+    }
+    $hostdefaults->{'host'} = $ARGV[0];
+    my $arg = $ENV{'SSH_ORIGINAL_COMMAND'};
+    $arg =~ s,^([^ ]*wanna-build) ,, || die ("command needs to call wanna-build");
+
+    my ($ret, $args) = GetOptionsFromString($arg,@wannabuildoptions);
+    $ret or usage();
+    @ARGV = @$args;
+
+    $hostdefaults->{'db-user'} //= 'buildd-'.$hostdefaults->{'host'};
+    ($arch, ) = split(" ",$hostdefaults->{'architecture'}) unless defined $arch;
+    $user //= $hostdefaults->{'db-user'};
+    $recorduser=1 unless $simulate;
+    die("architecture $arch not allowed for this buildd") if defined $hostdefaults->{'architecture'} and not isin($arch, split(" ",$hostdefaults->{'architecture'}));
+
+    if ($distribution !~ /security/) {
+        use Sys::Syslog qw(:standard :macros);
+        openlog("wanna-build::ssh-wrapper", "", "user");
+        syslog("debug", "%s: %s", ($hostdefaults->{'host'}, $ENV{'SSH_ORIGINAL_COMMAND'}));
+    }
+} else {
+    GetOptions(@wannabuildoptions) or usage();
+}
 $op_mode ||= "set-building";
 
 my $dbh;
-
 END {
 	if (defined $dbh)
 	{
