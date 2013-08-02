@@ -676,7 +676,8 @@ CREATE TABLE distributions (
     auto_dep_wait boolean DEFAULT true,
     build_dep_resolver character varying,
     archive character varying,
-    suppress_successful_logs boolean DEFAULT false NOT NULL
+    suppress_successful_logs boolean DEFAULT false NOT NULL,
+    mail_logs character varying
 );
 
 
