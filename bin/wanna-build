@@ -1641,10 +1641,27 @@ sub build_deplist {
 }
 
 
+sub remove_archqual {
+    if ($_[0]->isa('Dpkg::Deps::Simple')) {
+        if (defined $_[0]->{'archqual'}) {
+            if (grep { $_ eq $_[0]->{'archqual'} } ('any', 'native')) {
+                undef $_[0]->{'archqual'};
+            } else {
+                return "invalid-architecture-qualifier-$_[0]->{'archqual'}";
+            }
+        }
+    } else {
+        for my $dep ($_[0]->get_deps()) {
+            remove_archqual($dep);
+        }
+    }
+}
+
 sub filterarch {
     return "" unless $_[0];
-    return "not-existing-build-dependency-for-any" if $_[0] =~ /:any/;
-    return Dpkg::Deps::deps_parse($_[0], ("reduce_arch" => 1, "host_arch" => $_[1]))->output();
+    my $deps = Dpkg::Deps::deps_parse($_[0], ("reduce_arch" => 1, "host_arch" => $_[1], "build_dep" => 1));
+    remove_archqual($deps);
+    return $deps->output();
 }
 
 sub wb_edos_builddebcheck {
