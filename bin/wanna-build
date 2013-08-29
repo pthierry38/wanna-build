@@ -259,11 +259,14 @@ if ($ARGV[0] eq '--ssh-wrapper') {
     ($arch, ) = split(" ",$hostdefaults->{'architecture'}) unless defined $arch;
     $user //= $hostdefaults->{'db-user'};
     $recorduser=1 unless $simulate;
-    die("architecture $arch not allowed for this buildd") if defined $hostdefaults->{'architecture'} and not isin($arch, split(" ",$hostdefaults->{'architecture'}));
+    use Sys::Syslog qw(:standard :macros);
+    openlog("wanna-build::ssh-wrapper", "", "user");
+    if (defined $hostdefaults->{'architecture'} and not isin($arch, split(" ",$hostdefaults->{'architecture'}))) {
+        syslog("debug", "%s: %s", ($hostdefaults->{'host'}, "architecture not allowed: $arch"));
+        die("architecture $arch not allowed for this buildd") ;
+    }
 
     if (not $distribution or $distribution !~ /security/) {
-        use Sys::Syslog qw(:standard :macros);
-        openlog("wanna-build::ssh-wrapper", "", "user");
         syslog("debug", "%s: %s", ($hostdefaults->{'host'}, $ENV{'SSH_ORIGINAL_COMMAND'}));
     }
 } else {
