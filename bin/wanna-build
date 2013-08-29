@@ -262,7 +262,7 @@ if ($ARGV[0] eq '--ssh-wrapper') {
     use Sys::Syslog qw(:standard :macros);
     openlog("wanna-build::ssh-wrapper", "", "user");
     if (defined $hostdefaults->{'architecture'} and not isin($arch, split(" ",$hostdefaults->{'architecture'}))) {
-        syslog("debug", "%s: %s", ($hostdefaults->{'host'}, "architecture not allowed: $arch"));
+        syslog("debug", "%s: ERROR: %s", ($hostdefaults->{'host'}, "architecture not allowed: $arch"));
         die("architecture $arch not allowed for this buildd") ;
     }
 
