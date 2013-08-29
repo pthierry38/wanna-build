@@ -73,6 +73,7 @@ our $Pas = '/srv/buildd.debian.org/etc/packages-arch-specific/Packages-arch-spec
 our $simulate = 0;
 our $simulate_edos = 0;
 our $api = undef; # allow buildds to specify an different api
+our $defaultapi = undef;
 our $recorduser = undef;
 
 # global vars
@@ -269,8 +270,10 @@ if ($ARGV[0] eq '--ssh-wrapper') {
     if (not $distribution or $distribution !~ /security/) {
         syslog("debug", "%s: %s", ($hostdefaults->{'host'}, $ENV{'SSH_ORIGINAL_COMMAND'}));
     }
+    $defaultapi = 0;
 } else {
     GetOptions(@wannabuildoptions) or usage();
+    $defaultapi = 1;
 }
 $op_mode ||= "set-building";
 
@@ -402,7 +405,7 @@ if (not $yamlmap) {
 $list_order = $yamlmap->{"list-order"}{$list_state} if !$list_order and $list_state;
 $list_order ||= $yamlmap->{"list-order"}{'default'};
 $api //= $yamlmap->{"api"};
-$api //= 0;
+$api //= $defaultapi;
 
 if (isin($op_mode, qw<forget-user merge-v3 import>) && defined @conf::admin_users && !isin( $real_user, @conf::admin_users) && !$simulate ) {
     die "This operation is restricted to admin users";
