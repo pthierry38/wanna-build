@@ -1660,6 +1660,9 @@ sub remove_archqual {
 sub filterarch {
     return "" unless $_[0];
     my $deps = Dpkg::Deps::deps_parse($_[0], ("reduce_arch" => 1, "host_arch" => $_[1], "build_dep" => 1));
+    # Think: Would it be possible that a package has an empty list on some architectures? 
+    # At least as of now, empty is also an error from Dpkg::Deps, so better just prevent anything from building
+    return "empty-dependency-after-parsing" unless $deps;
     remove_archqual($deps);
     return $deps->output();
 }
