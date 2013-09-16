@@ -2,7 +2,7 @@
 # vim:set et ts=4 sw=4 ft=bash ai:
 
 ARCHIVE="debian-edu"
-SUITES="lenny etch squeeze"
+SUITES="squeeze"
 ARCHES="i386 amd64 powerpc"
 
 . /srv/wanna-build/triggers/common
