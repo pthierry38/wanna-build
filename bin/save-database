@@ -2,7 +2,7 @@
 
 PREFIX=$1
 
-sudo -u postgres /usr/bin/pg_dumpall --cluster 8.4/wanna-build | gzip > /srv/wanna-build/dumps/dump_${PREFIX}_$(date +%Y.%m.%d-%H:%M:%S).gz
+pg_dump service=wanna-build-privileged | gzip > /srv/wanna-build/dumps/dump_${PREFIX}_$(date +%Y.%m.%d-%H:%M:%S).gz
 
 # Expire dumps only on post-trigger saves.
 if [ "$PREFIX" = "post" ]
