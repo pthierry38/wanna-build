@@ -1,0 +1,146 @@
+- helle:
+    - architecture: mipsel
+    - fqdn: helle.ayous.org
+- rem:
+    - architecture: mipsel
+- phrixos:
+    - architecture: mipsel
+    - fqdn: phrixos.ayous.org
+- binet:
+    - architecture: amd64 i386
+- vitry:
+    - architecture: amd64 i386
+- biber:
+    - architecture: amd64 i386
+- brahms:
+    - architecture: amd64 i386
+- barber:
+    - architecture: amd64 i386
+- goetz:
+    - architecture: alpha
+- goedel:
+    - architecture: alpha
+- brahms:
+    - architecture: amd64 i386
+- barber:
+    - architecture: amd64 i386
+- krenek:
+    - architecture: amd64 i386
+- thrall:
+    - architecture: amd64 i386
+- cats:
+    - architecture: arm
+- toffee:
+    - architecture: arm
+- ancina:
+    - architecture: armel armhf
+- alain:
+    - architecture: armel armhf
+- alwyn:
+    - architecture: armel armhf
+- arnold:
+    - architecture: armel armhf
+- antheil:
+    - architecture: armel armhf
+- arne:
+    - architecture: armel armhf
+- arcadelt:
+    - architecture: armel armhf
+- argento:
+    - architecture: armel armhf
+- peri:
+    - architecture: hppa
+- penelosa:
+    - architecture: hppa
+- mozart:
+    - architecture: hurd-i386
+- bach:
+    - architecture: hurd-i386
+- ironforge:
+    - architecture: hurd-i386
+- rossini:
+    - architecture: hurd-i386
+- murphy:
+    - architecture: i386 amd64
+- caballero:
+    - architecture: ia64
+- mundy:
+    - architecture: ia64
+- alkman:
+    - architecture: ia64
+- fano:
+    - architecture: kfreebsd-amd64 kfreebsd-i386
+- fasch:
+    - architecture: kfreebsd-amd64 kfreebsd-i386
+- fayrfax:
+    - architecture: kfreebsd-amd64 kfreebsd-i386
+- finzi:
+    - architecture: kfreebsd-i386 kfreebsd-amd64
+- field:
+    - architecture: kfreebsd-i386 kfreebsd-amd64
+- fils:
+    - architecture: kfreebsd-i386 kfreebsd-amd64
+- ball:
+    - architecture: mips
+- corelli:
+    - architecture: mips
+- lucatelli:
+    - architecture: mips
+- swarm:
+    - architecture: mips
+- mayer:
+    - architecture: mipsel
+- monteverdi:
+    - architecture: mipsel
+- phrixos:
+    - architecture: mipsel
+- rem:
+    - architecture: mipsel
+- helle:
+    - architecture: mipsel
+- eysler:
+    - architecture: mipsel
+- voltaire:
+    - architecture: powerpc
+- preatorius:
+    - architecture: powerpc
+- poulenc:
+    - architecture: powerpc
+- porpora:
+    - architecture: powerpc
+- spontini:
+    - architecture: sparc
+- lebrun:
+    - architecture: sparc
+- schroeder:
+    - architecture: sparc
+- stadler:
+    - architecture: sparc
+- hasse:
+    - architecture: armhf armel
+- hartmann:
+    - architecture: armhf armel
+- henze:
+    - architecture: armhf armel
+- hoiby:
+    - architecture: armhf armel
+- hildegard:
+    - architecture: armhf armel
+- howells:
+    - architecture: armhf armel
+- hummel:
+    - architecture: armhf armel
+- parry:
+    - architecture: powerpc
+- zandonai:
+    - architecture: s390 s390x
+- zemlinksy:
+    - architecture: s390 s390x
+- zappa:
+    - architecture: s390 s390x
+- sompek:
+    - architecture: sparc
+- spike:
+    - architecture: amd64 i386
+- babin:
+    - architecture: amd64 i386
