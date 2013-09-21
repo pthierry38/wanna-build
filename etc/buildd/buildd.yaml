@@ -102,7 +102,7 @@
     - architecture: mipsel
 - voltaire:
     - architecture: powerpc
-- preatorius:
+- praetorius:
     - architecture: powerpc
 - poulenc:
     - architecture: powerpc
