@@ -49,6 +49,7 @@ use Hash::Merge qw ( merge );
 use String::Format;
 use Date::Parse;
 use List::Util qw[max];
+use URI::Escape;
 use Dpkg::Version (); # import nothing
 if ( defined $Dpkg::Version::VERSION ) {
     *vercmp = \&Dpkg::Version::version_compare;
@@ -71,7 +72,7 @@ our ($verbose, $mail_logs, $list_order, $list_state,
     );
 our $Pas = '/srv/buildd.debian.org/etc/packages-arch-specific/Packages-arch-specific';
 our $simulate = 0;
-our $simulate_edos = 0;
+our $simulate_dose = 0;
 our $api = undef; # allow buildds to specify an different api
 our $defaultapi = undef;
 our $recorduser = undef;
@@ -96,8 +97,9 @@ sub _option_deprecated { warn "Option $_[0] is deprecated" }
 my @wannabuildoptions = (
     # this is not supported by all operations (yet)!
     'simulate'      => \$simulate,
-    'simulate-edos' => \$simulate_edos,
-    'simulate-all'  => sub { $simulate = 1; $simulate_edos = 1; },
+    'simulate-edos' => \$simulate_dose,
+    'simulate-dose' => \$simulate_dose,
+    'simulate-all'  => sub { $simulate = 1; $simulate_dose = 1; },
     'api=i'         => sub {
         $api = $_[1];
         die "$api too large" unless $api <= 1;
@@ -451,7 +453,7 @@ undef $distribution if $distribution eq 'any';
                         map { my $k = $_; grep { $k =~ s,$_,$replacemap->{$_}, } keys %{$replacemap}; $_ = $k; } @ARGV;
                         my @ipkgs = &parse_argv( \@ARGV, '.'); # installed packages
                         my @isrcs = &parse_argv( \@ARGV, '.'); # installed sources
-                        my @bpkgs = &parse_argv( \@ARGV, '.'); # packages available for building (edos-debcheck)
+                        my @bpkgs = &parse_argv( \@ARGV, '.'); # packages available for building (dose-builddebcheck)
                         my @psrcs = &parse_argv( \@ARGV, '.'); # consider as installed sources
                         use WB::QD;
                         my $srcs = WB::QD::readsourcebins($arch, $Pas, \@isrcs, \@ipkgs);
@@ -468,10 +470,10 @@ undef $distribution if $distribution eq 'any';
                             }
                         }
                         parse_all_v3($$srcs, {'arch' => $arch, 'suite' => $distribution, 'time' => $curr_date});
-                        # The packages passed to edos-debcheck are normally the binaries available,
+                        # The packages passed to dose-builddebcheck are normally the binaries available,
                         # unless you've also a base suite the builder will take packages from.
                         @bpkgs = @ipkgs unless @bpkgs;
-                        call_edos_depcheck( {'arch' => $arch, 'pkgs' => \@bpkgs, 'srcs' => $$srcs, 'depwait' => 1 });
+                        call_dose_builddebcheck( {'arch' => $arch, 'pkgs' => \@bpkgs, 'srcs' => $$srcs, 'depwait' => 1 });
                         last SWITCH;
 		};
 		/^import/ && do {
@@ -1667,7 +1669,62 @@ sub filterarch {
     return $deps->output();
 }
 
-sub wb_edos_builddebcheck {
+sub explain_dose_dependency {
+    my $dep = shift;
+    my $pkg = uri_unescape($dep->{'package'});
+    my ($desc, $target);
+    if (exists $dep->{'unsat-dependency'}) {
+        $desc = 'depends on missing';
+        $target = $dep->{'unsat-dependency'};
+    } elsif (exists $dep->{'unsat-conflict'}) {
+        $desc = 'conflicts with';
+        $target = $dep->{'unsat-conflict'};
+        if ($target =~ /^src:/) {
+            # better expressed the other way round
+            ($pkg, $target) = ($target, $pkg);
+        }
+    } else {
+        $desc = 'depends on';
+        $target = $dep->{'depends'};
+    }
+    if ($pkg =~ s/^src://) {
+        return "$pkg build-$desc:\n- $target\n";
+    } else {
+        return "$pkg $desc:\n- $target\n";
+    }
+}
+
+sub explain_dose {
+    my $broken = shift;
+    my $explanation = '';
+    for my $reason (@{$broken->{'reasons'}}) {
+        if (exists $reason->{'missing'}) {
+            my $missing = $reason->{'missing'};
+            for my $depchain (@{$missing->{'depchains'}}) {
+                for my $dep (@{$depchain->{'depchain'}}) {
+                    $explanation .= explain_dose_dependency($dep);
+                }
+            }
+            $explanation .= explain_dose_dependency($missing->{'pkg'});
+        } elsif (exists $reason->{'conflict'}) {
+            my $conflict = $reason->{'conflict'};
+            for my $depchain (@{$conflict->{'depchain1'}}) {
+                for my $dep (@{$depchain->{'depchain'}}) {
+                    $explanation .= explain_dose_dependency($dep);
+                }
+            }
+            for my $depchain (@{$conflict->{'depchain2'}}) {
+                for my $dep (@{$depchain->{'depchain'}}) {
+                    $explanation .= explain_dose_dependency($dep);
+                }
+            }
+            $explanation .= explain_dose_dependency($conflict->{'pkg1'});
+        }
+    }
+    return $explanation;
+}
+
+sub wb_dose_builddebcheck {
 # Copyright (C) 2008 Ralf Treinen <treinen@debian.org>
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -1675,9 +1732,8 @@ sub wb_edos_builddebcheck {
 # integrated into wanna-builds code by Andreas Barth 2010
 
     my $args = shift;
-    my $sourceprefix="source---";
     my $architecture=$args->{'arch'};
-    my $edosoptions = "-failures -explain -quiet";
+    my $doseoptions = "--failures --explain --quiet";
     my $packagefiles = $args->{'pkgs'};
     my $sourcesfile = $args->{'src'};
 
@@ -1710,57 +1766,53 @@ sub wb_edos_builddebcheck {
 	    "but the package file contains architecture $packagearch";
         }   
     }
+    $doseoptions = "$doseoptions --deb-native-arch=$architecture";
+    $doseoptions = "$doseoptions ".join(' ', @$packagefiles)." $sourcesfile";
 
-    print "calling: edos-debcheck $edosoptions < $sourcesfile ".join('', map {" -I ".$_ } @$packagefiles)."\n";
-    open(my $result_cmd, '-|',
-        "edos-debcheck $edosoptions < $sourcesfile ".join('', map {" -I ".$_ } @$packagefiles));
+    print "calling: dose-builddebcheck $doseoptions\n";
+    open(my $result_cmd, '-|', "dose-builddebcheck $doseoptions");
 
-    my $explanation="";
     my $result={};
-    my $binpkg="";
 
-    while (<$result_cmd>) {
-# source---pulseaudio (= 0.9.15-4.1~bpo50+1): FAILED
-#   source---pulseaudio (= 0.9.15-4.1~bpo50+1) depends on missing:
-#   - libltdl-dev (>= 2.2.6a-2)
-# source---libcanberra (= 0.22-1~bpo50+1): FAILED
-#   source---libcanberra (= 0.22-1~bpo50+1) depends on missing:
-#   - libltdl-dev
-#   - libltdl7-dev (>= 2.2.6)
+    my $result_string;
+    {
+        local $/ = undef;
+        $result_string = <$result_cmd>;
+    }
+    close $result_cmd;
 
-        if (/^\s+/) {
-    	    s/^(\s*)$sourceprefix(.*)depends on/$1$2build-depends on/o;
-            s/^(\s*)$sourceprefix(.*) and (.*) conflict/$1$2 build-conflicts with $3/o;
-            $explanation .= $_;
-        } else {
-            if (/^$sourceprefix(.*) \(.*\): FAILED/o) {
-                $result->{$binpkg} = $explanation if $binpkg;
-                $explanation = "";
-                $binpkg = $1;
-            } elsif (/^(depwait---.*) \(.*\): FAILED/o) {
-                $result->{$binpkg} = $explanation if $binpkg;
-                $explanation = "";
-                $binpkg = $1;
-            } else { # else something broken is happening
-                #print "ignoring $_\n";
-                1;
+    my $result_yaml = YAML::Tiny->read_string($result_string);
+    for my $broken (@{$result_yaml->[0]{'report'}}) {
+        if (exists $broken->{'package'}) {
+            my $src = uri_unescape($broken->{'package'});
+            if ($src !~ s/^src://) {
+                #print "ignoring $broken->{'package'}\n";
+                next;
             }
+            # At this point we could just dump out the reasons YAML
+            # directly.  However, that would cause the buildd.debian.org web
+            # interface to be unable to aggregate reasons for different
+            # architectures that differ only by the architecture of packages
+            # along dependency chains, so we go to some effort to format the
+            # reasons here in a way that doesn't suffer from that too badly.
+            $result->{$src} = explain_dose($broken);
+        } else {
+            #print "ignoring report entry without package name:\n";
+            #print "%$broken\n";
+            1;
         }
     }
 
-    close $result_cmd;
-    $result->{$binpkg} = $explanation if $binpkg;
     return $result;
-
 }
 
 
-sub call_edos_depcheck {
+sub call_dose_builddebcheck {
     my $args = shift;
     my $srcs = $args->{'srcs'};
     my $key;
    
-    # Do not dispatch edos-debcheck if BD-Uninstallable is deactivated for the target.
+    # Do not dispatch dose-builddebcheck if BD-Uninstallable is deactivated for the target.
     # ("noadw")  Depwait will always be 1 in normal use.
     return if defined ($distributions{$distribution}{noadw}) && not defined $args->{'depwait'};
 
@@ -1776,14 +1828,14 @@ sub call_edos_depcheck {
 		$interesting_packages{$key} = undef; # add key to interesting packages
 	}
         if (defined $pkg and isin($pkg->{'state'}, qw/Dep-Wait/) and defined $args->{'depwait'}) {
-                # Depwaits are checked by creating pseudo binaries for edos-debcheck, so collect them.
+                # Depwaits are checked by creating pseudo sources for dose-builddebcheck, so collect them.
 		$interesting_packages_depwait{$key} = undef;
                 # we always check for BD-Uninstallability in depwait - could be that depwait is satisfied but package is uninstallable
 		$interesting_packages{$key} = undef unless defined ($distributions{$distribution}{noadw});
 	}
     }
     
-    #print "I would look at these sources with edos-depcheck:\n";
+    #print "I would look at these sources with dose-builddebcheck:\n";
     #print join " ", keys %interesting_packages,"\n";
     return unless %interesting_packages || %interesting_packages_depwait;
 
@@ -1792,56 +1844,49 @@ sub call_edos_depcheck {
     my ($SOURCES, $tmpfile) = tempfile( $tmpfile_pattern, UNLINK => 1 );
     for my $key (keys %interesting_packages) {
 	my $pkg = $db->{$key};
-        # we print the source files as binary ones (with "source---"-prefixed),
-        # so we can try if these "binary" packages are installable.
-        # If such a "binary" package is installable, the corresponding source package is buildable.
-	print $SOURCES "Package: source---$key\n";
+	print $SOURCES "Package: $key\n";
 	print $SOURCES "Version: $pkg->{'version'}\n";
         my $t = &filterarch($srcs->{$key}{'dep'} || $srcs->{$key}{'depends'}, $args->{'arch'});
         my $tt = &filterarch($pkg->{'extra_depends'}, $args->{'arch'});
         $t = $t ? ($tt ? "$t, $tt" : $t) : $tt;
-	print $SOURCES "Depends: $t\n" if $t;
+	print $SOURCES "Build-Depends: $t\n" if $t;
         my $u = &filterarch($srcs->{$key}{'conf'} || $srcs->{$key}{'conflicts'}, $args->{'arch'});
         my $uu = &filterarch($pkg->{'extra_conflicts'}, $args->{'arch'});
         $u = $u ? ($uu ? "$u, $uu" : $u) : $uu;
-	print $SOURCES "Conflicts: $u\n" if $u;
+	print $SOURCES "Build-Conflicts: $u\n" if $u;
 	print $SOURCES "Architecture: all\n";
 	print $SOURCES "\n";
     }
     for my $key (keys %interesting_packages_depwait) {
 	my $pkg = $db->{$key};
-        # we print the source files as binary ones (with "depwait---"-prefixed),
-        # so we can try if these "binary" packages are installable.
-        # If such a "binary" package is installable, the corresponding source package goes out of depwait
-	print $SOURCES "Package: depwait---$key\n";
+	print $SOURCES "Package: $key\n";
 	print $SOURCES "Version: $pkg->{'version'}\n";
-	print $SOURCES "Depends: $pkg->{'depends'}\n";
+	print $SOURCES "Build-Depends: $pkg->{'depends'}\n";
 	print $SOURCES "Architecture: all\n";
 	print $SOURCES "\n";
     }
     close $SOURCES;
 
-    return if $simulate_edos;
-    my $edosresults = wb_edos_builddebcheck({'arch' => $args->{'arch'}, 'pkgs' => $args->{'pkgs'}, 'src' => $tmpfile});
-    if (ref($edosresults) eq 'HASH') {
-        foreach my $key (grep { $_ !~ /^depwait---/ } keys %$edosresults) {
+    return if $simulate_dose;
+    my $doseresults = wb_dose_builddebcheck({'arch' => $args->{'arch'}, 'pkgs' => $args->{'pkgs'}, 'src' => $tmpfile});
+    if (ref($doseresults) eq 'HASH') {
+        foreach my $key (keys %$doseresults) {
+		my $found = 0;
 		if (exists $interesting_packages{$key}) {
-		    $interesting_packages{$key} = $edosresults->{$key};
-		} else {
-		    #print "TODO: edos reported a package we do not care about now\n" if $verbose;
+		    $found = 1;
+		    $interesting_packages{$key} = $doseresults->{$key};
 		}
-        }
-        foreach my $key (grep { $_ =~ /^depwait---/ } keys %$edosresults) {
-                $key =~ /^depwait---(.*)/ and $key = $1;
 		if (exists $interesting_packages_depwait{$key}) {
-		    $interesting_packages_depwait{$key} = $edosresults->{"depwait---".$key};
-		} else {
-		    #print "TODO: edos reported a package we do not care about now\n" if $verbose;
+		    $found = 1;
+		    $interesting_packages_depwait{$key} = $doseresults->{$key};
+		}
+		unless ($found) {
+		    #print "TODO: dose reported a package we do not care about now\n" if $verbose;
 		}
         }
     } else {
-        # if $edosresults isn't an hash, then something went wrong and the string is the error message
-        print "ERROR: Could not run wb-edos-builddebcheck. I am continuing, assuming\n" .
+        # if $doseresults isn't an hash, then something went wrong and the string is the error message
+        print "ERROR: Could not run wb-dose-builddebcheck. I am continuing, assuming\n" .
              "all packages have installable build-dependencies."
     }
     
@@ -1850,7 +1895,7 @@ sub call_edos_depcheck {
     for my $key (keys %interesting_packages) {
         next if defined $interesting_packages_depwait{$key};
 	my $pkg = $db->{$key};
-        # (defined $interesting_packages{$key}) => edos found an uninstallability
+        # (defined $interesting_packages{$key}) => dose found an uninstallability
 	my $change = 
 	    (defined $interesting_packages{$key} and $pkg->{'state'} eq 'Needs-Build') ||
 	    (not defined $interesting_packages{$key} and $pkg->{'state'} eq 'BD-Uninstallable');
@@ -1869,8 +1914,8 @@ sub call_edos_depcheck {
 	    }	
 	}
 	if ($change) {
-	    log_ta( $pkg, "--merge-all (edos)" ) unless $simulate;
-	    print "edos-builddebchange changed state of ${key}_$pkg->{'version'} ($args->{'arch'}) to $pkg->{'state'}\n" if $verbose || $simulate;
+	    log_ta( $pkg, "--merge-all (dose)" ) unless $simulate;
+	    print "dose-builddebcheck changed state of ${key}_$pkg->{'version'} ($args->{'arch'}) to $pkg->{'state'}\n" if $verbose || $simulate;
 	}
 	if ($change || $problemchange) {
 	    update_source_info($pkg) unless $simulate;
@@ -1890,9 +1935,9 @@ sub call_edos_depcheck {
         } else {
     	    change_state( \$pkg, 'Needs-Build' );
         }
-	log_ta( $pkg, "edos_depcheck: depwait" ) unless $simulate;
+	log_ta( $pkg, "dose_builddebcheck: depwait" ) unless $simulate;
 	update_source_info($pkg) unless $simulate;
-	print "edos-builddebchange changed state of ${key}_$pkg->{'version'} ($args->{'arch'}) from dep-wait to $pkg->{'state'}\n" if $verbose || $simulate;
+	print "dose-builddebcheck changed state of ${key}_$pkg->{'version'} ($args->{'arch'}) from dep-wait to $pkg->{'state'}\n" if $verbose || $simulate;
     }
 }
 
