@@ -1779,7 +1779,9 @@ sub wb_dose_builddebcheck {
         local $/ = undef;
         $result_string = <$result_cmd>;
     }
-    close $result_cmd;
+    close $result_cmd or
+        die $! ? "error closing pipe from dose-builddebcheck: $!"
+               : "dose-builddebcheck exited with status $?";
 
     my $result_yaml = YAML::Tiny->read_string($result_string);
     for my $broken (@{$result_yaml->[0]{'report'}}) {
