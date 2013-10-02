@@ -1687,7 +1687,7 @@ sub explain_dose_dependency {
         $desc = 'depends on';
         $target = $dep->{'depends'};
     }
-    if ($pkg =~ s/^src://) {
+    if ($pkg =~ s/^src:(?:(?:source|depwait)---)?//) {
         return "$pkg build-$desc:\n- $target\n";
     } else {
         return "$pkg $desc:\n- $target\n";
@@ -1846,7 +1846,9 @@ sub call_dose_builddebcheck {
     my ($SOURCES, $tmpfile) = tempfile( $tmpfile_pattern, UNLINK => 1 );
     for my $key (keys %interesting_packages) {
 	my $pkg = $db->{$key};
-	print $SOURCES "Package: $key\n";
+	# Prefix "source---" to make sure these are distinct from depwaits;
+	# the same source package may be present in both.
+	print $SOURCES "Package: source---$key\n";
 	print $SOURCES "Version: $pkg->{'version'}\n";
         my $t = &filterarch($srcs->{$key}{'dep'} || $srcs->{$key}{'depends'}, $args->{'arch'});
         my $tt = &filterarch($pkg->{'extra_depends'}, $args->{'arch'});
@@ -1861,7 +1863,10 @@ sub call_dose_builddebcheck {
     }
     for my $key (keys %interesting_packages_depwait) {
 	my $pkg = $db->{$key};
-	print $SOURCES "Package: $key\n";
+	# Prefix "depwait---" to make sure these are distinct from
+	# non-depwait checks; the same source package may be present in
+	# both.
+	print $SOURCES "Package: depwait---$key\n";
 	print $SOURCES "Version: $pkg->{'version'}\n";
 	print $SOURCES "Build-Depends: $pkg->{'depends'}\n";
 	print $SOURCES "Architecture: all\n";
@@ -1872,17 +1877,19 @@ sub call_dose_builddebcheck {
     return if $simulate_dose;
     my $doseresults = wb_dose_builddebcheck({'arch' => $args->{'arch'}, 'pkgs' => $args->{'pkgs'}, 'src' => $tmpfile});
     if (ref($doseresults) eq 'HASH') {
-        foreach my $key (keys %$doseresults) {
-		my $found = 0;
+        foreach my $key (grep { $_ =~ /^source---/ } keys %$doseresults) {
+		$key =~ s/^source---//;
 		if (exists $interesting_packages{$key}) {
-		    $found = 1;
-		    $interesting_packages{$key} = $doseresults->{$key};
+		    $interesting_packages{$key} = $doseresults->{"source---".$key};
+		} else {
+		    #print "TODO: dose reported a package we do not care about now\n" if $verbose;
 		}
+        }
+        foreach my $key (grep { $_ =~ /^depwait---/ } keys %$doseresults) {
+		$key =~ s/^depwait---//;
 		if (exists $interesting_packages_depwait{$key}) {
-		    $found = 1;
-		    $interesting_packages_depwait{$key} = $doseresults->{$key};
-		}
-		unless ($found) {
+		    $interesting_packages_depwait{$key} = $doseresults->{"depwait---".$key};
+		} else {
 		    #print "TODO: dose reported a package we do not care about now\n" if $verbose;
 		}
         }
