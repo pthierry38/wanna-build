@@ -98,6 +98,8 @@
     - architecture: mipsel
 - helle:
     - architecture: mipsel
+- argos:
+    - architecture: mipsel
 - eysler:
     - architecture: mipsel
 - voltaire:
@@ -137,6 +139,8 @@
 - zemlinksy:
     - architecture: s390 s390x
 - zappa:
+    - architecture: s390 s390x
+- zani:
     - architecture: s390 s390x
 - sompek:
     - architecture: sparc
