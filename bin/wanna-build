@@ -142,37 +142,42 @@ my @wannabuildoptions = (
         _set_mode(@_);
         $list_state = $_[1];
         die "Unknown state to list: $list_state\n"
-          if not $list_state ~~ [
+          if !isin($list_state,
               qw( needs-build building uploaded built
                   build-attempted failed installed
                   dep-wait not-for-us auto-not-for-us
                   all failed-removed install-wait
-                  reupload-wait bd-uninstallable ) ];
+                  reupload-wait bd-uninstallable ));
     },
     'dist|d=s' => sub {
         my $c;
         ($distribution, $c) = split("/", $_[1]);
         $arch = $c if $c;
-        given ( $_[1] ) {
-            when ( [qw< a all >] ) {
-                $info_all_dists = 1;
-                $distribution   = '';
-            }
-            when ('o') { $distribution = 'oldstable'; }
-            when ('s') { $distribution = 'stable'; }
-            when ('t') { $distribution = 'testing'; }
-            when ('u') { $distribution = 'unstable'; }
-
-            if ($distribution eq 'any-priv') {
-                $privmode = 1;
-                $distribution = 'any';
-            }
-            if ($distribution eq 'any-unpriv') {
-                $privmode = 0;
-                $distribution = 'any';
-            }
-            $privmode = 1 if $distribution =~ /security/;
+        if ($distribution eq 'a' or $distribution eq 'all') {
+            $info_all_dists = 1;
+            $distribution   = '';
         }
+        elsif ($distribution eq 'o') {
+            $distribution = 'oldstable';
+        }
+        elsif ($distribution eq 's') {
+            $distribution = 'stable';
+        }
+        elsif ($distribution eq 't') {
+            $distribution = 'testing';
+        }
+        elsif ($distribution eq 'u') {
+            $distribution = 'unstable';
+        }
+        elsif ($distribution eq 'any-priv') {
+            $privmode = 1;
+            $distribution = 'any';
+        }
+        elsif ($distribution eq 'any-unpriv') {
+            $privmode = 0;
+            $distribution = 'any';
+        }
+        $privmode = 1 if $distribution =~ /security/;
     },
     'order|O=s' => sub {
         $list_order = $_[1];
