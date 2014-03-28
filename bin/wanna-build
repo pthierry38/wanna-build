@@ -409,7 +409,7 @@ $list_order ||= $yamlmap->{"list-order"}{'default'};
 $api //= $yamlmap->{"api"};
 $api //= $defaultapi;
 
-if (isin($op_mode, qw<forget-user merge-v3 import>) && defined @conf::admin_users && !isin( $real_user, @conf::admin_users) && !$simulate ) {
+if (isin($op_mode, qw<forget-user merge-v3 import>) && @conf::admin_users && !isin( $real_user, @conf::admin_users) && !$simulate ) {
     die "This operation is restricted to admin users";
 }
 if (!($commands->{$op_mode}) || !($commands->{$op_mode}->{'noarch'})) {
