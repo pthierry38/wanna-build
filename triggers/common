@@ -10,9 +10,10 @@ PAS_BASE="/srv/buildd.debian.org/web/quinn-diff"
 PAS_FILE="$PAS_BASE/$SUITE/Packages-arch-specific"
 LOCKFILE="${ARCHIVE_BASE}/lock"
 ARCHS_squeeze="amd64 armel i386 ia64 mips mipsel powerpc s390 sparc kfreebsd-amd64 kfreebsd-i386"
+ARCHS_squeeze_lts="amd64 i386"
 ARCHS_wheezy="amd64 armel armhf i386 ia64 mips mipsel powerpc s390 s390x sparc kfreebsd-amd64 kfreebsd-i386"
 ARCHS_jessie="amd64 armel armhf i386 mips mipsel powerpc s390x sparc kfreebsd-amd64 kfreebsd-i386"
-ARCHS_sid="$ARCHS_jessie hurd-i386 ia64"
+ARCHS_sid="$ARCHS_jessie hurd-i386"
 
 # Creates a working environment within the corresponding archive
 # directory and jumps there.
@@ -26,6 +27,7 @@ get_architectures() {
     SUITE="$1"
 
     if [ "$SUITE" = "squeeze" -o "$SUITE" = "oldstable" ]; then echo $ARCHS_squeeze
+    elif [ "$SUITE" = "squeeze-lts" ]; then echo $ARCHS_squeeze_lts
     elif [ "$SUITE" = "wheezy" -o "$SUITE" = "stable" ]; then echo $ARCHS_wheezy
     elif [ "$SUITE" = "jessie" -o "$SUITE" = "testing" ]; then echo $ARCHS_jessie
     elif [ "$SUITE" = "unstable" -o "$SUITE" = "sid" ]; then echo $ARCHS_sid

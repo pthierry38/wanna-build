@@ -5,7 +5,7 @@ ARCHIVE="debian"
 SUITES="squeeze wheezy jessie" 
 # Please note that SUITES_FAST_AUTOBUILD does not pull proposed-updates
 # because there was no need for that yet.
-SUITES_FAST_AUTOBUILD="sid experimental"
+SUITES_FAST_AUTOBUILD="squeeze-lts sid experimental"
 
 . /srv/wanna-build/triggers/common
 
@@ -63,12 +63,17 @@ main_sync() {
         NFPACKAGES="${NFPACKAGES} ${ARCHIVE_BASE}/archive/${SUITE}/non-free/debian-installer/binary-%ARCH%/Packages.gz"
         /srv/wanna-build/bin/filter-nonfree /srv/wanna-build/etc/non-free-include-list "`get_architectures $SUITE`" Sources.${SUITE}.non-free Packages.${SUITE}.%ARCH%.non-free ${NFSOURCES} . ${NFPACKAGES} || true
 
-        if [ "$SUITE" != "experimental" ]
+        if [ "$SUITE" = "sid" ]
         then
-            # The "it's not an overlay" part.
+            # sid is not an overlay.
             trigger_wb_update "${SUITE}" "`get_architectures ${SUITE}`" "$SOURCES" "$PACKAGES"
         else
-            BASE_SUITE=sid
+            if [ "$SUITE" = "squeeze-lts" ]
+            then
+                BASE_SUITE=squeeze
+            else
+                BASE_SUITE=sid
+            fi
             PACKAGES_BASE="${ARCHIVE_MAIN}/archive/${BASE_SUITE}/{main,contrib}/binary-%ARCH%/Packages.gz"
             PACKAGES_BASE="${PACKAGES_BASE} ${ARCHIVE_MAIN}/archive/${BASE_SUITE}/{main,contrib}/debian-installer/binary-%ARCH%/Packages.gz"
             PACKAGES_BASE="${PACKAGES_BASE} ${ARCHIVE_MAIN}/debian-buildd-dists/buildd-${BASE_SUITE}/{main,contrib}/binary-%ARCH%/Packages.gz"
