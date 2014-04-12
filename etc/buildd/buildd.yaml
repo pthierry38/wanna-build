@@ -102,6 +102,8 @@
     - architecture: mipsel
 - eysler:
     - architecture: mipsel
+- eberlin:
+    - architecture: mipsel
 - voltaire:
     - architecture: powerpc
 - praetorius:
