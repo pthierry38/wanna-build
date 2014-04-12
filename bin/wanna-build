@@ -2362,6 +2362,14 @@ sub parse_all_v3 {
             next;
         }
 
+	# update the notes with status unless this is one of the states where it isn't necessary
+        if (!(isin($pkg->{'state'}, qw <Installed Auto-Not-For-Us>)) && ($pkg->{'notes'}) && ($pkg->{'notes'} ne $pkgs->{'status'})) {
+                $pkg->{'notes'} = $pkgs->{'status'};
+                print "$logstr set to ".$pkg->{'state'}."/".($pkg->{'notes'}//"")."\n" if $verbose || $simulate;
+		log_ta( $pkg, "--merge-v3: /".$pkgs->{'status'} ) unless $simulate;
+		update_source_info($pkg) unless $simulate;
+	}
+
         # only uncompiled / out-of-date are left, so check if anything new
         if (!(isin($pkgs->{'status'}, qw (uncompiled out-of-date)))) {
             print "$logstr package in unknown state: $pkgs->{'status'}\n";
