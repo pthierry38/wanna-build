@@ -2396,7 +2396,7 @@ sub parse_all_v3 {
     }
 
     foreach my $name (keys %$db) {
-        next if $srcs->{$name};
+        next if $srcs->{$name} and not isin($srcs->{$name}->{'status'}, qw <arch-all-only>);
         my $pkg = $db->{$name};
         my $logstr = "merge-v3 $vars->{'time'} ".$name."_$pkg->{'version'} ($vars->{'arch'}, $vars->{'suite'}, previous: $pkg->{'state'}):";
         # package disappeared - delete
