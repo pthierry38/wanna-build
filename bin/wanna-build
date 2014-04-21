@@ -44,6 +44,7 @@ use lib '/srv/wanna-build/lib';
 #use lib 'lib';
 use WannaBuild;
 use YAML::Tiny;
+use YAML::XS;
 use Data::Dumper;
 use Hash::Merge qw ( merge );
 use String::Format;
@@ -1788,8 +1789,8 @@ sub wb_dose_builddebcheck {
         die $! ? "error closing pipe from dose-builddebcheck: $!"
                : "dose-builddebcheck exited with status $?";
 
-    my $result_yaml = YAML::Tiny->read_string($result_string);
-    for my $broken (@{$result_yaml->[0]{'report'}}) {
+    my $result_yaml = YAML::XS::Load($result_string);
+    for my $broken (@{$result_yaml->{'report'}}) {
         if (exists $broken->{'package'}) {
             my $src = uri_unescape($broken->{'package'});
             if ($src !~ s/^src://) {
