@@ -547,14 +547,14 @@ exit 0;
 
 BEGIN {
     $actions = {
-        'set-building'  => { 'noversion' => 1, 'nopkgdef' => 1, },
-        'set-built'     => { 'builder' => 1, to => 'Built', action => 'built', 'from' => [qw<Building Build-Attempted>]},
-        'set-attempted' => { 'builder' => 1, to => 'Build-Attempted', action => 'attempted', 'from' => [qw<Building Build-Attempted>]},
-        'set-uploaded'  => { 'builder' => 1, to => 'Uploaded', action => 'uploaded', 'from' => [qw<Building Built Build-Attempted>], binversion => 1, },
-        'set-failed'    => { 'builder' => 1, to => 'Failed', action => 'failed', from => [qw<Building Built Build-Attempted Dep-Wait Failed>], warnfrom => [qw<Needs-Build Uploaded Dep-Wait BD-Uninstallable>], },
-        'set-dep-wait'  => { 'builder' => 1, warnfrom => [qw<Needs-Build Failed BD-Uninstallable>], },
-        'set-update'    => { 'noversion' => 1, },
-        'set-needs-build' => { builder => 1, to => 'BD-Uninstallable', action => 'give-back'},
+        'building'  => { 'noversion' => 1, 'nopkgdef' => 1, },
+        'built'     => { 'builder' => 1, to => 'Built', action => 'built', 'from' => [qw<Building Build-Attempted>]},
+        'attempted' => { 'builder' => 1, to => 'Build-Attempted', action => 'attempted', 'from' => [qw<Building Build-Attempted>]},
+        'uploaded'  => { 'builder' => 1, to => 'Uploaded', action => 'uploaded', 'from' => [qw<Building Built Build-Attempted>], binversion => 1, },
+        'failed'    => { 'builder' => 1, to => 'Failed', action => 'failed', from => [qw<Building Built Build-Attempted Dep-Wait Failed>], warnfrom => [qw<Needs-Build Uploaded Dep-Wait BD-Uninstallable>], },
+        'dep-wait'  => { 'builder' => 1, warnfrom => [qw<Needs-Build Failed BD-Uninstallable>], },
+        'update'    => { 'noversion' => 1, },
+        'needs-build' => { builder => 1, to => 'BD-Uninstallable', action => 'give-back'},
     };
     # documentation of flags for the state machine below
     #
@@ -585,13 +585,13 @@ sub add_packages {
 	}
 
 	my $pkg = get_source_info($name);
-        if (!($actions->{$op_mode}) || !($actions->{$op_mode}->{'nopkgdef'})) {
+        if (!($actions->{$newstate}) || !($actions->{$newstate}->{'nopkgdef'})) {
             if (!defined($pkg)) {
                 print "$name: not registered yet.\n";
                 next;
             }
         }
-        if ($actions->{$op_mode} && $actions->{$op_mode}->{'builder'}) {
+        if ($actions->{$newstate} && $actions->{$newstate}->{'builder'}) {
             if (($pkg->{'builder'} && $user ne $pkg->{'builder'}) &&
 		!($pkg->{'builder'} =~ /^(\w+)-\w+/ && $1 eq $user) &&
 		!$opt_override) {
@@ -599,9 +599,9 @@ sub add_packages {
                 next;
             }
         }
-        if (!($actions->{$op_mode}) || !($actions->{$op_mode}->{'noversion'})) {
+        if (!($actions->{$newstate}) || !($actions->{$newstate}->{'noversion'})) {
             my $nmuver = binNMU_version($pkg->{version}, $pkg->{'binary_nmu_version'});
-            if ((!pkg_version_eq($pkg,$version) || $actions->{$op_mode}->{'binversion'}) && !version_eq( $nmuver, $version )) {
+            if ((!pkg_version_eq($pkg,$version) || $actions->{$newstate}->{'binversion'}) && !version_eq( $nmuver, $version )) {
                 print "$pkg->{package}: version mismatch ($nmuver";
                 print " by $pkg->{'builder'}" if $pkg->{'builder'};
                 print ")\n";
@@ -609,31 +609,31 @@ sub add_packages {
             }
         }
 
-        if ($actions->{$op_mode} && $actions->{$op_mode}->{'from'}) {
-            if (!isin($pkg->{'state'}, @{$actions->{$op_mode}->{'from'}}, @{$actions->{$op_mode}->{'warnfrom'}})) {
-                print "$name: skiping: state is $pkg->{'state'}, not in ".join(", ",@{$actions->{$op_mode}->{'from'}}, @{$actions->{$op_mode}->{'warnfrom'}})."\n";
+        if ($actions->{$newstate} && $actions->{$newstate}->{'from'}) {
+            if (!isin($pkg->{'state'}, @{$actions->{$newstate}->{'from'}}, @{$actions->{$newstate}->{'warnfrom'}})) {
+                print "$name: skiping: state is $pkg->{'state'}, not in ".join(", ",@{$actions->{$newstate}->{'from'}}, @{$actions->{$newstate}->{'warnfrom'}})."\n";
                 next;
             }
         }
-        if ($actions->{$op_mode} && $actions->{$op_mode}->{'warnfrom'}) {
-            if (isin($pkg->{'state'}, @{$actions->{$op_mode}->{'warnfrom'}})) {
+        if ($actions->{$newstate} && $actions->{$newstate}->{'warnfrom'}) {
+            if (isin($pkg->{'state'}, @{$actions->{$newstate}->{'warnfrom'}})) {
                 print "$name: warning: state is $pkg->{'state'}, processing anyways.\n";
             }
         }
 
-        if ($op_mode eq "set-building") {
+        if ($newstate eq "building") {
             add_one_building( $name, $version, $pkg );
         }
-        elsif ($op_mode eq "set-failed") {
+        elsif ($newstate eq "failed") {
 	    print "$pkg->{'package'}: already registered as failed; will append new message\n" if $pkg->{'state'} eq "Failed";
 	    $pkg->{'builder'} = $user;
 	    $pkg->{'failed'} .= "\n" if $pkg->{'failed'};
 	    $pkg->{'failed'} .= $fail_reason;
         }
-        elsif ($op_mode eq "set-not-for-us") {
+        elsif ($newstate eq "not-for-us") {
             add_one_notforus( $pkg );
         }
-        elsif ($op_mode eq "set-needs-build") {
+        elsif ($newstate eq "needs-build") {
 	    my $state = $pkg->{'state'};
 
 	    if ($state eq "BD-Uninstallable") {
@@ -675,30 +675,30 @@ sub add_packages {
             $pkg->{'builder'} = undef;
             $pkg->{'depends'} = undef;
         }
-        elsif ($op_mode eq "set-dep-wait") {
+        elsif ($newstate eq "dep-wait") {
             add_one_depwait( $pkg );
         }
-        elsif ($op_mode eq "set-build-priority") {
+        elsif ($newstate eq "build-priority") {
             set_one_buildpri( 'buildpri', $pkg );
         }
-        elsif ($op_mode eq "set-permanent-build-priority") {
+        elsif ($newstate eq "permanent-build-priority") {
             set_one_buildpri( 'permbuildpri', $pkg );
         }
-        elsif ($op_mode eq "set-binary-nmu") {
+        elsif ($newstate eq "binary-nmu") {
             set_one_binnmu( $name, $version, $pkg );
         }
-        elsif ($op_mode eq "set-update") {
+        elsif ($newstate eq "update") {
             $pkg->{'version'} =~ s/\+b[0-9]+$//;
 
 	    log_ta({'pkg' => $pkg, 'action' => "--update" , 'arch' => $arch, 'dist' => $distribution});
 	    update_source_info($pkg);
         }
 
-        if ($actions->{$op_mode} && $actions->{$op_mode}->{'action'} && $actions->{$op_mode}->{'to'}) {
-	    change_state( \$pkg, $actions->{$op_mode}->{'to'} );
-	    log_ta( $pkg, "--".$actions->{$op_mode}->{'action'} );
+        if ($actions->{$newstate} && $actions->{$newstate}->{'action'} && $actions->{$newstate}->{'to'}) {
+	    change_state( \$pkg, $actions->{$newstate}->{'to'} );
+	    log_ta( $pkg, "--set-".$actions->{$newstate}->{'action'} );
 	    update_source_info($pkg);
-	    print "$name: registered as ".$actions->{$op_mode}->{'action'}."\n" if $verbose;
+	    print "$name: registered as ".$actions->{$newstate}->{'action'}."\n" if $verbose;
         }
     }
 }
