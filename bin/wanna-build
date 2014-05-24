@@ -643,8 +643,7 @@ sub add_packages {
             		change_state( \$pkg, 'Needs-Build' );
             		delete $pkg->{'builder'};
             		delete $pkg->{'depends'};
-            		log_ta({'pkg' => $pkg, 'action' => "--give-back" , 'arch' => $arch, 'dist' => $distribution});
-            		update_source_info($pkg);
+            		update_source_info({'pkg' => $pkg, 'action' => "--give-back" , 'arch' => $arch, 'dist' => $distribution});
             		print "$name: given back\n" if $verbose;
             		next;
             	}
@@ -690,14 +689,12 @@ sub add_packages {
         elsif ($newstate eq "update") {
             $pkg->{'version'} =~ s/\+b[0-9]+$//;
 
-	    log_ta({'pkg' => $pkg, 'action' => "--update" , 'arch' => $arch, 'dist' => $distribution});
-	    update_source_info($pkg);
+	    update_source_info({'pkg' => $pkg, 'action' => "--update" , 'arch' => $arch, 'dist' => $distribution});
         }
 
         if ($actions->{$newstate} && $actions->{$newstate}->{'action'} && $actions->{$newstate}->{'to'}) {
 	    change_state( \$pkg, $actions->{$newstate}->{'to'} );
-	    log_ta( $pkg, "--set-".$actions->{$newstate}->{'action'} );
-	    update_source_info($pkg);
+	    update_source_info( {'pkg' => $pkg, 'action' => "--set-".$actions->{$newstate}->{'action'}, 'arch' => $arch, 'dist' => $distribution } );
 	    print "$name: registered as ".$actions->{$newstate}->{'action'}."\n" if $verbose;
         }
     }
@@ -831,8 +828,7 @@ sub add_one_building {
 		$pkg->{'package'} = $name;
 		$pkg->{'version'} = $version;
 		$pkg->{'builder'} = $user;
-		log_ta({'pkg' => $pkg, 'action' => "--take" , 'arch' => $arch, 'dist' => $distribution});
-		update_source_info($pkg);
+		update_source_info({'pkg' => $pkg, 'action' => "--take" , 'arch' => $arch, 'dist' => $distribution});
 	}
 	else {
             if ($api < 1) {
@@ -848,6 +844,7 @@ sub add_one_notforus {
 	my $pkg = shift;
 	my $state = $pkg->{'state'};
         my $name = $pkg->{'package'};
+	my $action;
 
 	if ($pkg->{'state'} eq 'Not-For-Us') {
 		# reset Not-For-Us state in case it's called twice; this is
@@ -859,8 +856,8 @@ sub add_one_notforus {
 		$pkg->{'failed'} = "Was Not-For-Us previously";
 		delete $pkg->{'builder'};
 		delete $pkg->{'depends'};
-		log_ta({'pkg' => $pkg, 'action' => "--no-build(rev)", 'arch' => $arch, 'dist' => $distribution });
-		print "$name: now not unsuitable anymore\n";
+		$action = "--no-build(rev)";
+		print "$name: now not unsuitable anymore\n" if $verbose;
 
 		send_mail( $conf::notforus_maint,
 				   "$name moved out of Not-For-Us state",
@@ -878,7 +875,7 @@ sub add_one_notforus {
 		delete $pkg->{'depends'};
 		delete $pkg->{'binary_nmu_version'};
 		delete $pkg->{'binary_nmu_changelog'};
-		log_ta({'pkg' => $pkg, 'action' => "--no-build" , 'arch' => $arch, 'dist' => $distribution});
+		$action = "--no-build";
 		print "$name: registered as unsuitable\n" if $verbose;
 
 		send_mail( $conf::notforus_maint,
@@ -890,7 +887,7 @@ sub add_one_notforus {
 				   "the Not-For-Us state is wrong.\n" )
 			if $conf::notforus_maint;
 	}
-	update_source_info($pkg);
+	update_source_info({'pkg' => $pkg, 'action' => $action, 'arch' => $arch, 'dist' => $distribution});
 }
 
 sub set_one_binnmu {
@@ -917,8 +914,7 @@ sub set_one_binnmu {
                         delete $pkg->{'buildpri'};
 			change_state( \$pkg, 'BD-Uninstallable' );
 		}
-		log_ta({'pkg' => $pkg, 'action' => "--binNMU" , 'arch' => $arch, 'dist' => $distribution});
-		update_source_info($pkg);
+		update_source_info({'pkg' => $pkg, 'action' => "--binNMU" , 'arch' => $arch, 'dist' => $distribution});
 		return;
 	} elsif ($binNMUver == 0) {
                 print "${name}_$version: no scheduled binNMU to cancel.\n";
@@ -944,8 +940,7 @@ sub set_one_binnmu {
 	$pkg->{'binary_nmu_changelog'} = $fail_reason;
 	$pkg->{'notes'} = 'out-of-date';
         delete $pkg->{'buildpri'};
-	log_ta({'pkg' => $pkg, 'action' => "--binNMU" , 'arch' => $arch, 'dist' => $distribution});
-	update_source_info($pkg);
+	update_source_info({'pkg' => $pkg, 'action' => "--binNMU" , 'arch' => $arch, 'dist' => $distribution});
 	print "${name}: registered for binNMU $fullver\n" if $verbose;
 }
 
@@ -959,7 +954,7 @@ sub set_one_buildpri {
 	} else {
 		delete $pkg->{$key};
 	}
-	update_source_info($pkg);
+	update_source_info({'pkg' => $pkg, 'arch' => $arch, 'dist' => $distribution});
 	print "$name: set to build priority $build_priority\n" if $verbose;
 }
 
@@ -991,8 +986,7 @@ sub add_one_depwait {
 		$deplist->{$_} = $new_deplist->{$_};
 	}
 	$pkg->{'depends'} = build_deplist($deplist);
-	log_ta({'pkg' => $pkg, 'action' => "--dep-wait" , 'arch' => $arch, 'dist' => $distribution}) unless $simulate;
-	update_source_info($pkg) unless $simulate;
+	update_source_info({'pkg' => $pkg, 'action' => "--dep-wait" , 'arch' => $arch, 'dist' => $distribution});
 	print "$name: registered as waiting for dependencies\n" if $verbose || $simulate;
 }
 
@@ -1446,7 +1440,7 @@ sub read_db {
 		check_entry( \%thispkg );
 		# add to db
 		if (exists($thispkg{'package'})) {
-			update_source_info(\%thispkg);
+			update_source_info({'pkg' => \%thispkg, 'arch' => $arch, 'dist' => $distribution});
 		}
 		elsif(exists($thispkg{'user'})) {
 			# user in import, username in database.
@@ -1561,7 +1555,7 @@ sub log_ta {
                 $real_user, $user;
             return;
         }
-	$dbh->do('INSERT INTO ' . table_name('transactions', $arch) .
+	$dbh->do('INSERT INTO ' . table_name('transactions', $s->{arch}) .
 			' (package, distribution, version, action, ' .
 			' prevstate, state, real_user, set_user, time) ' .
 			' values (?, ?, ?, ?, ?, ?, ?, ?, ?)',
@@ -1934,7 +1928,7 @@ sub call_dose_builddebcheck {
 	    print "dose-builddebcheck changed state of ${key}_$pkg->{'version'} ($args->{'arch'}) to $pkg->{'state'}\n" if $verbose || $simulate;
 	}
 	if ($change || $problemchange) {
-	    update_source_info($pkg) unless $simulate;
+	    update_source_info({'pkg' => $pkg, 'arch' => $arch, 'dist' => $distribution});
 	}
     }
 
@@ -1951,8 +1945,7 @@ sub call_dose_builddebcheck {
         } else {
     	    change_state( \$pkg, 'Needs-Build' );
         }
-	log_ta({'pkg' => $pkg, 'action' => "dose_builddebcheck: depwait" , 'arch' => $arch, 'dist' => $distribution}) unless $simulate;
-	update_source_info($pkg) unless $simulate;
+	update_source_info({'pkg' => $pkg, 'action' => "dose_builddebcheck: depwait" , 'arch' => $arch, 'dist' => $distribution}) unless $simulate;
 	print "dose-builddebcheck changed state of ${key}_$pkg->{'version'} ($args->{'arch'}) from dep-wait to $pkg->{'state'}\n" if $verbose || $simulate;
     }
 }
@@ -2148,7 +2141,12 @@ sub show_distribution_aliases {
 }
 
 sub update_source_info {
-	my $pkg = shift;
+        my $s = shift;
+        my $pkg = $s->{'pkg'};
+        my $dist = $s->{'distribution'} || $distribution;
+	my $arch = $s->{'arch'};
+
+	log_ta($s) if $s->{'action'};
         $pkg->{'extra_depends'} = $extra_depends if defined $extra_depends;
         undef $pkg->{'extra_depends'} unless $pkg->{'extra_depends'};
         $pkg->{'extra_conflicts'} = $extra_conflicts if defined $extra_conflicts;
@@ -2345,8 +2343,7 @@ sub parse_all_v3 {
             }
             if ($change) {
                 print "$logstr set to $tstate/".($pkg->{'notes'}//"")."\n" if $verbose || $simulate;
-                log_ta({'pkg' => $pkg, 'action' => "--merge-v3: $tstate" , 'arch' => $arch, 'dist' => $distribution}) unless $simulate;
-                update_source_info($pkg) unless $simulate;
+                update_source_info({'pkg' => $pkg, 'action' => "--merge-v3: $tstate" , 'arch' => $arch, 'dist' => $distribution});
             }
             next;
         }
@@ -2355,8 +2352,7 @@ sub parse_all_v3 {
         if (!(isin($pkg->{'state'}, qw <Installed Auto-Not-For-Us>)) && ($pkg->{'notes'}) && ($pkg->{'notes'} ne $pkgs->{'status'})) {
                 $pkg->{'notes'} = $pkgs->{'status'};
                 print "$logstr set to ".$pkg->{'state'}."/".($pkg->{'notes'}//"")."\n" if $verbose || $simulate;
-		log_ta({'pkg' => $pkg, 'action' => "--merge-v3: /".$pkgs->{'status'}, 'arch' => $arch, 'dist' => $distribution}) unless $simulate;
-		update_source_info($pkg) unless $simulate;
+		update_source_info({'pkg' => $pkg, 'action' => "--merge-v3: /".$pkgs->{'status'}, 'arch' => $arch, 'dist' => $distribution});
 	}
 
         # only uncompiled / out-of-date are left, so check if anything new
@@ -2379,8 +2375,7 @@ sub parse_all_v3 {
         delete $pkg->{'binary_nmu_version'} unless $pkgs->{'binnmu'};
         delete $pkg->{'binary_nmu_changelog'} unless $pkgs->{'binnmu'};
         delete $pkg->{'buildpri'};
-        log_ta({'pkg' => $pkg, 'action' => "--merge-v3: needs-build" , 'arch' => $arch, 'dist' => $distribution}) unless $simulate;
-        update_source_info($pkg) unless $simulate;
+        update_source_info({'pkg' => $pkg, 'action' => "--merge-v3: needs-build" , 'arch' => $arch, 'dist' => $distribution});
         print "$logstr set to needs-builds\n" if $simulate || $verbose;
     }
 
