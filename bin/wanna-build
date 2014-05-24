@@ -1572,6 +1572,7 @@ sub log_ta {
 
 
 sub send_mail {
+	return if $simulate;
 	my $to = shift;
 	my $subject = shift;
 	my $text = shift;
