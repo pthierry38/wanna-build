@@ -483,7 +483,7 @@ undef $distribution if $distribution eq 'any';
                         last SWITCH;
 		};
 		/^import/ && do {
-			$dbh->do("DELETE from ".table_name()." WHERE distribution = ?", undef, $distribution)
+			$dbh->do("DELETE from ".packages_table_name()." WHERE distribution = ?", undef, $distribution)
 				or die $dbh->errstr;
 			forget_users();
 			read_db( $import_from );
@@ -1405,7 +1405,7 @@ sub forget_packages {
 			$data .= sprintf "  %-20s: %s\n", $key, $val;
 		}
 		send_mail( $conf::db_maint,
-				   "$name deleted from DB " . table_name() . " " . $distribution,
+				   "$name deleted from DB " . packages_table_name() . " " . $distribution,
 				   "The package '$name' has been deleted from the database ".
 				   "by $user.\n\n".
 				   "Data registered about the deleted package:\n".
@@ -2037,7 +2037,7 @@ sub pkg_version_eq {
 	return version_compare( $pkg->{'version'}, "=", $version );
 }
 
-sub table_name {
+sub packages_table_name {
 	return '"' . $arch . $schema_suffix . '".packages';
 }
 
@@ -2060,7 +2060,7 @@ sub get_readonly_source_info {
             . ", (SELECT max(build_time) FROM ".pkg_history_table_name()." WHERE pkg_history.package = packages.package AND pkg_history.distribution = packages.distribution AND result = 'successful') AS successtime"
             . ", (SELECT max(build_time) FROM ".pkg_history_table_name()." WHERE pkg_history.package = packages.package AND pkg_history.distribution = packages.distribution ) AS anytime"
             . ", extra_depends, extra_conflicts, build_arch_all"
-            . " FROM " .  table_name()
+            . " FROM " .  packages_table_name()
             . ' WHERE package = ? AND distribution = ?';
 	my $pkg = $dbh->selectrow_hashref( $q,
 		undef, $name, $distribution);
@@ -2072,7 +2072,7 @@ sub get_source_info {
         return get_readonly_source_info($name) if $simulate;
 	lock_table();
 	my $pkg = $dbh->selectrow_hashref('SELECT *, extract(days from date_trunc(\'days\', now() - state_change)) as state_days, floor(extract(epoch from now()) - extract(epoch from state_change)) as state_time FROM ' . 
-		table_name() . ' WHERE package = ? AND distribution = ?',
+		packages_table_name() . ' WHERE package = ? AND distribution = ?',
 		undef, $name, $distribution);
 	return $pkg;
 }
@@ -2084,7 +2084,7 @@ sub get_all_source_info {
 #            . ", (SELECT max(build_time) FROM ".pkg_history_table_name()." WHERE pkg_history.package = packages.package AND pkg_history.distribution = packages.distribution AND result = 'successful') AS successtime"
 #            . ", (SELECT max(build_time) FROM ".pkg_history_table_name()." WHERE pkg_history.package = packages.package AND pkg_history.distribution = packages.distribution ) AS anytime"
             . ", successtime.build_time as successtime, anytime.build_time as anytime, extra_depends, extra_conflicts"
-            . " FROM " .  table_name()
+            . " FROM " .  packages_table_name()
                 . " left join ( "
                   . "select distinct on (package, distribution) build_time, package, distribution from ".pkg_history_table_name()." where result = 'successful' order by package, distribution, timestamp "
                   . " ) as successtime using (package, distribution) "
@@ -2174,7 +2174,7 @@ sub update_source_info {
 		add_source_info($pkg);
 	}
 
-	$dbh->do('UPDATE ' . table_name() . ' SET ' .
+	$dbh->do('UPDATE ' . packages_table_name() . ' SET ' .
 			'version = ?, ' .
 			'state = ?, ' .
 			'section = ?, ' .
@@ -2223,7 +2223,7 @@ sub update_source_info {
 sub add_source_info {
         return if $simulate;
 	my $pkg = shift;
-	$dbh->do('INSERT INTO ' . table_name() .
+	$dbh->do('INSERT INTO ' . packages_table_name() .
 			' (package, distribution) values (?, ?)',
 		undef, $pkg->{'package'}, $distribution) or die $dbh->errstr;
 }
@@ -2231,7 +2231,7 @@ sub add_source_info {
 sub del_source_info {
         return if $simulate;
 	my $name = shift;
-	$dbh->do('DELETE FROM ' . table_name() .
+	$dbh->do('DELETE FROM ' . packages_table_name() .
 			' WHERE package = ? AND distribution = ?',
 		undef, $name, $distribution) or die $dbh->errstr;
 }
