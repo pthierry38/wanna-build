@@ -2160,7 +2160,7 @@ sub update_source_info {
 	{
 		$dbh->do('INSERT INTO ' . table_name('packages', $s->{arch}) .
 			' (package, distribution) values (?, ?)',
-			undef, $pkg->{'package'}, $s->{$distribution}) or die $dbh->errstr;
+			undef, $pkg->{'package'}, $s->{'dist'}) or die $dbh->errstr;
 	}
 
 	$dbh->do('UPDATE ' . table_name('packages', $s->{arch}) . ' SET ' .
@@ -2206,7 +2206,7 @@ sub update_source_info {
                 $pkg->{'extra_conflicts'},
 		$pkg->{'bd_problem'},
 		$pkg->{'package'},
-		$distribution) or die $dbh->errstr;
+		$s->{'dist'}) or die $dbh->errstr;
 }
 
 sub del_source_info {
