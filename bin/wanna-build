@@ -1405,8 +1405,7 @@ sub forget_packages {
 				   "Data registered about the deleted package:\n".
 				   "$data\n" ) if $conf::db_maint;
 		change_state( \$pkg, 'deleted' );
-		log_ta({'pkg' => $pkg, 'action' => "--forget" , 'arch' => $arch, 'dist' => $distribution});
-		del_source_info($name);
+		del_source_info({'pkg' => $pkg, 'action' => "--forget" , 'arch' => $arch, 'dist' => $distribution});
 		print "$name: deleted from database\n" if $verbose;
 	}
 }
@@ -1539,7 +1538,7 @@ sub log_ta {
         my $s = shift;
         my $pkg = $s->{'pkg'};
         my $action = $s->{'action'};
-        my $dist = $s->{'distribution'} || $distribution;
+        my $dist = $s->{'dist'} || $distribution;
 	my $str;
 	my $prevstate;
 
@@ -1549,9 +1548,10 @@ sub log_ta {
 		   "by $real_user as $user";
 	
         if ($simulate) {
-            printf "update transactions: %s %s %s %s %s %s %s %s %s\n",
+            printf "update transactions: %s %s %s %s %s %s %s %s %s %s\n",
 		$pkg->{'package'}, $dist, $s->{'arch'},
 		$pkg->{'version'}, $action, $prevstate, $pkg->{'state'},
+		table_name('transactions', $s->{arch}),
                 $real_user, $user;
             return;
         }
@@ -2143,7 +2143,7 @@ sub show_distribution_aliases {
 sub update_source_info {
         my $s = shift;
         my $pkg = $s->{'pkg'};
-        my $dist = $s->{'distribution'} || $distribution;
+        my $dist = $s->{'dist'} || $distribution;
 	my $arch = $s->{'arch'};
 
 	log_ta($s) if $s->{'action'};
@@ -2157,10 +2157,12 @@ sub update_source_info {
 	my $pkg2 = get_source_info($pkg->{'package'});
 	if (! defined $pkg2)
 	{
-		add_source_info($pkg);
+		$dbh->do('INSERT INTO ' . table_name('packages', $s->{arch}) .
+			' (package, distribution) values (?, ?)',
+			undef, $pkg->{'package'}, $s->{$distribution}) or die $dbh->errstr;
 	}
 
-	$dbh->do('UPDATE ' . table_name('packages', $arch) . ' SET ' .
+	$dbh->do('UPDATE ' . table_name('packages', $s->{arch}) . ' SET ' .
 			'version = ?, ' .
 			'state = ?, ' .
 			'section = ?, ' .
@@ -2206,20 +2208,13 @@ sub update_source_info {
 		$distribution) or die $dbh->errstr;
 }
 
-sub add_source_info {
-        return if $simulate;
-	my $pkg = shift;
-	$dbh->do('INSERT INTO ' . table_name('packages', $arch) .
-			' (package, distribution) values (?, ?)',
-		undef, $pkg->{'package'}, $distribution) or die $dbh->errstr;
-}
-
 sub del_source_info {
+        my $s = shift;
+	log_ta($s) if $s->{'action'};
         return if $simulate;
-	my $name = shift;
-	$dbh->do('DELETE FROM ' . table_name('packages', $arch) .
+	$dbh->do('DELETE FROM ' . table_name('packages', $s->{'arch'}) .
 			' WHERE package = ? AND distribution = ?',
-		undef, $name, $distribution) or die $dbh->errstr;
+		undef, $s->{'pkg'}, $s->{'dist'}) or die $dbh->errstr;
 }
 
 sub get_user_info {
@@ -2385,9 +2380,8 @@ sub parse_all_v3 {
         my $logstr = "merge-v3 $vars->{'time'} ".$name."_$pkg->{'version'} ($vars->{'arch'}, $vars->{'suite'}, previous: $pkg->{'state'}):";
         # package disappeared - delete
         change_state( \$pkg, 'deleted' );
-        log_ta({'pkg' => $pkg, 'action' => "--merge-v3: deleted" , 'arch' => $arch, 'dist' => $distribution}) unless $simulate;
+        del_source_info({'pkg' => $pkg, 'action' => "--merge-v3: deleted" , 'arch' => $arch, 'dist' => $distribution});
 	print "$logstr deleted from database\n" if $verbose || $simulate;
-        del_source_info($name) unless $simulate;
         delete $db->{$name};
     }
 }
