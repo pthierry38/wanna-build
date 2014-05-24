@@ -2215,7 +2215,7 @@ sub del_source_info {
         return if $simulate;
 	$dbh->do('DELETE FROM ' . table_name('packages', $s->{'arch'}) .
 			' WHERE package = ? AND distribution = ?',
-		undef, $s->{'pkg'}, $s->{'dist'}) or die $dbh->errstr;
+		undef, $s->{'pkg'}->{'package'}, $s->{'dist'}) or die $dbh->errstr;
 }
 
 sub get_user_info {
