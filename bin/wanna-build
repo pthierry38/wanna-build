@@ -584,7 +584,7 @@ sub add_packages {
 	    next;
 	}
 
-	my $pkg = get_source_info($name);
+	my $pkg = get_source_info({'name' => $name, 'dist' => $distribution, 'arch' => $arch});
         if (!($actions->{$newstate}) || !($actions->{$newstate}->{'nopkgdef'})) {
             if (!defined($pkg)) {
                 print "$name: not registered yet.\n";
@@ -1346,7 +1346,7 @@ sub info_packages {
 		foreach $dist (@dists) {
 			my $pname = "$name" . ($info_all_dists ? "($dist)" : "");
 			
-			$pkg = get_readonly_source_info($name);
+			$pkg = get_readonly_source_info({'name' => $name, 'dist' => $distribution, 'arch' => $arch});
 			if (!defined( $pkg )) {
 				print "$pname: not registered\n";
 				next;
@@ -1385,7 +1385,7 @@ sub forget_packages {
 	
 	foreach $name (@_) {
 		$name =~ s/_.*$//; # strip version
-		$pkg = get_source_info($name);
+		$pkg = get_source_info({'name' => $name, 'dist' => $distribution, 'arch' => $arch});
 		if (!defined( $pkg )) {
 			print "$name: not registered\n";
 			next;
@@ -2036,26 +2036,26 @@ sub table_name {
 }
 
 sub get_readonly_source_info {
-	my $name = shift;
+	my $s = shift;
 	# SELECT FLOOR(EXTRACT('epoch' FROM age(localtimestamp, '2010-01-22  23:45')) / 86400) -- change to that?
         my $q = "SELECT rel, priority, state_change, permbuildpri, section, buildpri, failed, state, binary_nmu_changelog, bd_problem, version, package, distribution, installed_version, notes, builder, old_failed, previous_state, binary_nmu_version, depends, extract(days from date_trunc('days', now() - state_change)) as state_days, floor(extract(epoch from now()) - extract(epoch from state_change)) as state_time"
-            . ", (SELECT max(build_time) FROM ".table_name('pkg_history', $arch)." WHERE pkg_history.package = packages.package AND pkg_history.distribution = packages.distribution AND result = 'successful') AS successtime"
-            . ", (SELECT max(build_time) FROM ".table_name('pkg_history', $arch)." WHERE pkg_history.package = packages.package AND pkg_history.distribution = packages.distribution ) AS anytime"
+            . ", (SELECT max(build_time) FROM ".table_name('pkg_history', $s->{'arch'})." WHERE pkg_history.package = packages.package AND pkg_history.distribution = packages.distribution AND result = 'successful') AS successtime"
+            . ", (SELECT max(build_time) FROM ".table_name('pkg_history', $s->{'arch'})." WHERE pkg_history.package = packages.package AND pkg_history.distribution = packages.distribution ) AS anytime"
             . ", extra_depends, extra_conflicts, build_arch_all"
-            . " FROM " .  table_name('packages', $arch)
+            . " FROM " .  table_name('packages', $s->{'arch'})
             . ' WHERE package = ? AND distribution = ?';
 	my $pkg = $dbh->selectrow_hashref( $q,
-		undef, $name, $distribution);
+		undef, $s->{'name'}, $s->{'dist'});
 	return $pkg;
 }
 
 sub get_source_info {
-	my $name = shift;
-        return get_readonly_source_info($name) if $simulate;
+	my $s = shift;
+        return get_readonly_source_info($s) if $simulate;
 	lock_table();
 	my $pkg = $dbh->selectrow_hashref('SELECT *, extract(days from date_trunc(\'days\', now() - state_change)) as state_days, floor(extract(epoch from now()) - extract(epoch from state_change)) as state_time FROM ' . 
-		table_name('packages', $arch) . ' WHERE package = ? AND distribution = ?',
-		undef, $name, $distribution);
+		table_name('packages', $s->{'arch'}) . ' WHERE package = ? AND distribution = ?',
+		undef, $s->{'name'}, $s->{'dist'});
 	return $pkg;
 }
 
@@ -2155,7 +2155,7 @@ sub update_source_info {
         print Dumper $pkg if $verbose and $simulate;
         return if $simulate;
 
-	my $pkg2 = get_source_info($pkg->{'package'});
+	my $pkg2 = get_source_info({'name' => $pkg->{'package'}, 'arch' => $s->{'arch'}, 'dist' => $s->{'dist'}});
 	if (! defined $pkg2)
 	{
 		$dbh->do('INSERT INTO ' . table_name('packages', $s->{arch}) .
