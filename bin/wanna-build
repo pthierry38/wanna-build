@@ -432,7 +432,7 @@ undef $distribution if $distribution eq 'any';
 
 	SWITCH: foreach ($op_mode) {
 		/^set-(.+)/ && do {
-			add_packages( $1, @ARGV );
+			add_packages( {'newstate' => $1, 'arch' => $arch, 'dist' => $distribution }, @ARGV );
 			last SWITCH;
 		};
 		/^list/ && do {
@@ -570,7 +570,8 @@ BEGIN {
 }
 
 sub add_packages {
-    my $newstate = shift;
+    my $s = shift;
+    my $newstate = $s->{'newstate'};
     my( $package, $name, $version, $ok, $reason );
 
     foreach $package (@_) {
@@ -584,7 +585,7 @@ sub add_packages {
 	    next;
 	}
 
-	my $pkg = get_source_info({'name' => $name, 'dist' => $distribution, 'arch' => $arch});
+	my $pkg = get_source_info({'name' => $name, 'dist' => $s->{'dist'}, 'arch' => $s->{'arch'}});
         if (!($actions->{$newstate}) || !($actions->{$newstate}->{'nopkgdef'})) {
             if (!defined($pkg)) {
                 print "$name: not registered yet.\n";
@@ -643,7 +644,7 @@ sub add_packages {
             		change_state( \$pkg, 'Needs-Build' );
             		delete $pkg->{'builder'};
             		delete $pkg->{'depends'};
-            		update_source_info({'pkg' => $pkg, 'action' => "--give-back" , 'arch' => $arch, 'dist' => $distribution});
+            		update_source_info({'pkg' => $pkg, 'action' => "--give-back" , 'arch' => $s->{'arch'}, 'dist' => $s->{'dist'}});
             		print "$name: given back\n" if $verbose;
             		next;
             	}
@@ -689,7 +690,7 @@ sub add_packages {
         elsif ($newstate eq "update") {
             $pkg->{'version'} =~ s/\+b[0-9]+$//;
 
-	    update_source_info({'pkg' => $pkg, 'action' => "--update" , 'arch' => $arch, 'dist' => $distribution});
+	    update_source_info({'pkg' => $pkg, 'action' => "--update" , 'arch' => $s->{'arch'}, 'dist' => $s->{'dist'}});
         }
 
         if ($actions->{$newstate} && $actions->{$newstate}->{'action'} && $actions->{$newstate}->{'to'}) {
