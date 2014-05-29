@@ -1380,24 +1380,21 @@ sub info_packages {
 }
 
 sub forget_packages {
-        no warnings;
-	my( $name, $pkg, $key, $data );
-	
-	foreach $name (@_) {
+	foreach my $name (@_) {
 		$name =~ s/_.*$//; # strip version
-		$pkg = get_source_info({'name' => $name, 'dist' => $distribution, 'arch' => $arch});
+		my $pkg = get_source_info({'name' => $name, 'dist' => $distribution, 'arch' => $arch});
 		if (!defined( $pkg )) {
 			print "$name: not registered\n";
 			next;
 		}
 
-		$data = "";
-		foreach $key (sort keys %$pkg) {
-			my $val = $pkg->{$key};
-			chomp( $val );
+		my $data = 
+		    join( "\n", map { 
+			my $val = $pkg->{$_} || "";
+			chomp $val;
 			$val =~ s/\n/\n /g;
-			$data .= sprintf "  %-20s: %s\n", $key, $val;
-		}
+			sprintf "  %-20s: %s", $_, $val
+		    } keys %$pkg );
 		send_mail( $conf::db_maint,
 				   "$name deleted from DB " . table_name('packages', $arch) . " " . $distribution,
 				   "The package '$name' has been deleted from the database ".
