@@ -623,7 +623,7 @@ sub add_packages {
         }
 
         if ($newstate eq "building") {
-            add_one_building( $name, $version, $pkg );
+            add_one_building( {'name' => $name, 'version' => $version, 'pkg' => $pkg, 'arch' => $s->{'arch'}, 'dist' => $s->{'dist'}} );
         }
         elsif ($newstate eq "failed") {
 	    print "$pkg->{'package'}: already registered as failed; will append new message\n" if $pkg->{'state'} eq "Failed";
@@ -695,19 +695,18 @@ sub add_packages {
 
         if ($actions->{$newstate} && $actions->{$newstate}->{'action'} && $actions->{$newstate}->{'to'}) {
 	    change_state( \$pkg, $actions->{$newstate}->{'to'} );
-	    update_source_info( {'pkg' => $pkg, 'action' => "--set-".$actions->{$newstate}->{'action'}, 'arch' => $arch, 'dist' => $distribution } );
+	    update_source_info( {'pkg' => $pkg, 'action' => "--set-".$actions->{$newstate}->{'action'}, 'arch' => $s->{'arch'}, 'dist' => $s->{'dist'}} );
 	    print "$name: registered as ".$actions->{$newstate}->{'action'}."\n" if $verbose;
         }
     }
 }
 
 sub add_one_building {
-	my $name = shift;
-	my $version = shift;
+	my $s = shift;
+	my $pkg = $s->{'pkg'};
 	my( $ok, $reason );
 
 	$ok = 1;
-	my $pkg = shift;
 	if (defined($pkg)) {
             my $pkgnack = {
                 'Not-For-Us' => 'not suitable for this architecture',
@@ -719,46 +718,46 @@ sub add_one_building {
 			$reason = $pkgnack->{$pkg->{'state'}};
 		}
 		elsif ($pkg->{'state'} eq "Uploaded" &&
-			   (version_lesseq($version, $pkg->{'version'}))) {
+			   (version_lesseq($s->{'version'}, $pkg->{'version'}))) {
 			$ok = 0;
 			$reason = "already uploaded by $pkg->{'builder'}";
 			$reason .= " (in newer version $pkg->{'version'})"
-				if !version_eq($pkg, $version);
+				if !version_eq($pkg, $s->{'version'});
 		}
 		elsif ($pkg->{'state'} eq "Installed" &&
-			   version_less($version,$pkg->{'version'})) {
+			   version_less($s->{'version'},$pkg->{'version'})) {
 			if ($opt_override) {
-				print "$name: Warning: newer version $pkg->{'version'} ".
+				print "$s->{'name'}: Warning: newer version $pkg->{'version'} ".
 					  "already installed, but overridden.\n";
 			}
 			else {
 				$ok = 0;
 				$reason = "newer version $pkg->{'version'} already in ".
 						  "archive; doesn't need rebuilding";
-				print "$name: Note: If the following is due to an epoch ",
+				print "$s->{'name'}: Note: If the following is due to an epoch ",
 					  " change, use --override\n";
 			}
 		}
 		elsif ($pkg->{'state'} eq "Installed" &&
-			   pkg_version_eq($pkg,$version)) {
+			   pkg_version_eq($pkg,$s->{'version'})) {
 			$ok = 0;
 			$reason = "is up-to-date in the archive; doesn't need rebuilding";
 		}
 		elsif ($pkg->{'state'} eq "Needs-Build" &&
-			   version_less($version,$pkg->{'version'})) {
+			   version_less($s->{'version'},$pkg->{'version'})) {
 			if ($opt_override) {
-				print "$name: Warning: newer version $pkg->{'version'} ".
+				print "$s->{'name'}: Warning: newer version $pkg->{'version'} ".
 					  "needs building, but overridden.";
 			}
 			else {
 				$ok = 0;
 				$reason = "newer version $pkg->{'version'} needs building, ".
-						  "not $version";
+						  "not $s->{'version'}";
 			}
 		}
 		elsif (isin($pkg->{'state'},qw(Building Built Build-Attempted))) {
-			if (version_less($pkg->{'version'},$version)) {
-				print "$name: Warning: Older version $pkg->{'version'} ",
+			if (version_less($pkg->{'version'},$s->{'version'})) {
+				print "$s->{'name'}: Warning: Older version $pkg->{'version'} ",
 				      "is being built by $pkg->{'builder'}\n";
 			}
 			else {
@@ -768,20 +767,20 @@ sub add_one_building {
 						  "but overriding this as you request:\n";
 				}
 				elsif ($pkg->{'builder'} eq $user) {
-					print "$name: Note: already taken by you.\n";
-					print "$name: ok\n" if $verbose;
+					print "$s->{'name'}: Note: already taken by you.\n";
+					print "$s->{'name'}: ok\n" if $verbose;
 					return;
 				}
 				else {
 					$ok = 0;
 					$reason = "already taken by $pkg->{'builder'}";
 					$reason .= " (in newer version $pkg->{'version'})"
-						if !version_eq($pkg->{'version'}, $version);
+						if !version_eq($pkg->{'version'}, $s->{'version'});
 				}
 			}
 		}
 		elsif ($pkg->{'state'} =~ /^Failed/ &&
-			   pkg_version_eq($pkg, $version)) {
+			   pkg_version_eq($pkg, $s->{'version'})) {
 			if ($opt_override) {
 				print "The following package previously failed ",
 					  "(by $pkg->{'builder'})\n",
@@ -789,7 +788,7 @@ sub add_one_building {
 			}
 			else {
 				$ok = 0;
-				$reason = "build of $version failed previously:\n    ";
+				$reason = "build of $s->{'version'} failed previously:\n    ";
 				$reason .= join( "\n    ", split( "\n", $pkg->{'failed'} ));
 				$reason .= "\nalso the package doesn't need builing"
 					if $pkg->{'state'} eq 'Failed-Removed';
@@ -800,42 +799,42 @@ sub add_one_building {
             if ($api < 1) {
 		my $ok = 'ok';
 		if ($pkg->{'binary_nmu_version'}) {
-			print "$name: Warning: needs binary NMU $pkg->{'binary_nmu_version'}\n" .
+			print "$s->{'name'}: Warning: needs binary NMU $pkg->{'binary_nmu_version'}\n" .
 			      "$pkg->{'binary_nmu_changelog'}\n";
 			$ok = 'aok';
 		} else {
-			print "$name: Warning: Previous version failed!\n"
+			print "$s->{'name'}: Warning: Previous version failed!\n"
 				if $pkg->{'previous_state'} =~ /^Failed/ ||
 				   $pkg->{'state'} =~ /^Failed/;
 		}
-		print "$name: $ok\n" if $verbose;
+		print "$s->{'name'}: $ok\n" if $verbose;
             } else {
-                print  "- $name:\n";
+                print  "- $s->{'name'}:\n";
                 print  "    - status: ok\n";
-                printf "    - pkg-ver: %s_%s\n", $name, $version;
-                printf "    - suite: %s\n", $distribution;
-                printf "    - arch: %s\n", $arch;
+                printf "    - pkg-ver: %s_%s\n", $s->{'name'}, $s->{'version'};
+                printf "    - suite: %s\n", $s->{'dist'};
+                printf "    - arch: %s\n", $s->{'arch'};
                 print  "    - binNMU: $pkg->{'binary_nmu_version'}\n" if $pkg->{'binary_nmu_version'};
                 print  "    - extra-changelog: $pkg->{'binary_nmu_changelog'}\n" if $pkg->{'binary_nmu_changelog'} && $pkg->{'binary_nmu_version'};
                 print  "    - extra-depends: $pkg->{'extra_depends'}\n" if $pkg->{'extra_depends'};
                 print  "    - extra-conflicts: $pkg->{'extra_conflicts'}\n" if $pkg->{'extra_conflicts'};
-                print  "    - archive: $distributions{$distribution}->{'archive'}\n" if $distributions{$distribution}->{'archive'};
-                print  "    - build_dep_resolver: $distributions{$distribution}->{'build_dep_resolver'}\n" if $distributions{$distribution}->{'build_dep_resolver'};
+                print  "    - archive: $distributions{$s->{'dist'}}->{'archive'}\n" if $distributions{$s->{'dist'}}->{'archive'};
+                print  "    - build_dep_resolver: $distributions{$s->{'dist'}}->{'build_dep_resolver'}\n" if $distributions{$s->{'dist'}}->{'build_dep_resolver'};
                 print  "    - arch_all: $pkg->{'build_arch_all'}\n" if $pkg->{'build_arch_all'};
-                print  "    - suppress_successful_logs: $distributions{$distribution}->{'suppress_successful_logs'}\n" if $distributions{$distribution}->{'suppress_successful_logs'};
-                print  "    - mail_logs: $distributions{$distribution}->{'mail_logs'}\n" if $distributions{$distribution}->{'mail_logs'};
+                print  "    - suppress_successful_logs: $distributions{$s->{'dist'}}->{'suppress_successful_logs'}\n" if $distributions{$s->{'dist'}}->{'suppress_successful_logs'};
+                print  "    - mail_logs: $distributions{$s->{'dist'}}->{'mail_logs'}\n" if $distributions{$s->{'dist'}}->{'mail_logs'};
             }
 		change_state( \$pkg, 'Building' );
-		$pkg->{'package'} = $name;
-		$pkg->{'version'} = $version;
+		$pkg->{'package'} = $s->{'name'};
+		$pkg->{'version'} = $s->{'version'};
 		$pkg->{'builder'} = $user;
 		update_source_info({'pkg' => $pkg, 'action' => "--take" , 'arch' => $arch, 'dist' => $distribution});
 	}
 	else {
             if ($api < 1) {
-		print "$name: NOT OK!\n  $reason\n";
+		print "$s->{'name'}: NOT OK!\n  $reason\n";
             } else {
-		print "- $name:\n    - status: not ok\n    - reason: \"$reason\"\n";
+		print "- $s->{'name'}:\n    - status: not ok\n    - reason: \"$reason\"\n";
             }
 	}
 }
