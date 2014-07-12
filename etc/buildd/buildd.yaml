@@ -90,8 +90,6 @@
     - architecture: mips
 - mayer:
     - architecture: mipsel
-- monteverdi:
-    - architecture: mipsel
 - phrixos:
     - architecture: mipsel
 - rem:
