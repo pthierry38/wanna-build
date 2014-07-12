@@ -104,6 +104,8 @@
     - architecture: mipsel
 - eberlin:
     - architecture: mipsel
+- mipsel-manda-01:
+    - architecture: mipsel
 - voltaire:
     - architecture: powerpc
 - praetorius:
