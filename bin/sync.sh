@@ -59,7 +59,7 @@ debian-security)
 	chmod 0700 "$TARGET"
 	USER=cimarosa
 	BUILDD_QUEUE_OPTIONS="--exclude=*.bz2 $RSYNC_OPTIONS"
-	rsync $MIRROR_OPTIONS $USER@security-master.debian.org::debian-security/dists/ "$TARGET/archive"
+	rsync --password-file "$PASSWORD_BASE/$1.rsync-password" $MIRROR_OPTIONS $USER@security-master.debian.org::debian-security/dists/ "$TARGET/archive"
 	rsync --password-file "$PASSWORD_BASE/$1-buildd.rsync-password" $BUILDD_QUEUE_OPTIONS $USER@security-master.debian.org::debian-security-buildd-dists/ "$TARGET/debian-security-buildd-dists/"
 	;;
 backports)
