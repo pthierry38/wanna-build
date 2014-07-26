@@ -39,7 +39,7 @@ get_architectures() {
 
 get_pas_file() {
     local SUITE="$1"
-    echo "$PAS_BASE/$SUITE/Packages-arch-specific"
+    echo "$PAS_BASE/${SUITE%%-*}/Packages-arch-specific"
 }
 
 cleanup() {
