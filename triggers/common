@@ -7,7 +7,6 @@ PATH="/bin:/usr/bin:/srv/wanna-build/bin:/srv/buildd.debian.org/bin:/srv/wanna-b
 ARCHIVE_MAIN="/srv/wanna-build/tmp/archive/debian"
 ARCHIVE_BASE="/srv/wanna-build/tmp/archive/${ARCHIVE}"
 PAS_BASE="/srv/buildd.debian.org/web/quinn-diff"
-PAS_FILE="$PAS_BASE/$SUITE/Packages-arch-specific"
 LOCKFILE="${ARCHIVE_BASE}/lock"
 ARCHS_squeeze="amd64 armel i386 ia64 mips mipsel powerpc s390 sparc kfreebsd-amd64 kfreebsd-i386"
 ARCHS_squeeze_lts="amd64 i386"
@@ -36,6 +35,11 @@ get_architectures() {
         echo "Unknown suite encountered, aborting." >&2
         exit 1
     fi
+}
+
+get_pas_file() {
+    local SUITE="$1"
+    echo "$PAS_BASE/$SUITE/Packages-arch-specific"
 }
 
 cleanup() {
@@ -79,7 +83,8 @@ trigger_wb_update() {
     done
     [ -f Packages.${SUITE}.i386.non-free ] && PNF="Packages.${SUITE}.%ARCH%.non-free" || PNF=""
     [ -f Sources.${SUITE}.non-free ] && SNF="Sources.${SUITE}.non-free" || SNF=""
-    parallel -l 5 -i wanna-build -v --Pas ${PAS_FILE} --merge-v3 -A "{}" --dist=$WB_SUITE Packages.${SUITE}.%ARCH% $PNF . Sources.${SUITE} $SNF . Packages.${SUITE}.%ARCH% Packages.${SUITE}.%ARCH%.build-essential -- ${ARCHS} || true
+    echo parallel -l 5 -i wanna-build -v --Pas $(get_pas_file $SUITE) --merge-v3 -A "{}" --dist=$WB_SUITE Packages.${SUITE}.%ARCH% $PNF . Sources.${SUITE} $SNF . Packages.${SUITE}.%ARCH% Packages.${SUITE}.%ARCH%.build-essential -- ${ARCHS}
+    parallel -l 5 -i wanna-build -v --Pas $(get_pas_file $SUITE) --merge-v3 -A "{}" --dist=$WB_SUITE Packages.${SUITE}.%ARCH% $PNF . Sources.${SUITE} $SNF . Packages.${SUITE}.%ARCH% Packages.${SUITE}.%ARCH%.build-essential -- ${ARCHS} || true
 
     echo "`date`: ${ARCHIVE}/${SUITE} done"
 }
@@ -109,9 +114,9 @@ trigger_wb_update_for_overlay() {
     done
     [ -f Packages.${SUITE}.i386.non-free ] && PNF="Packages.${SUITE}.%ARCH%.non-free" || PNF=""
     [ -f Sources.${SUITE}.non-free ] && SNF="Sources.${SUITE}.non-free" || SNF=""
-    echo parallel -l 5 -i wanna-build -v --Pas ${PAS_FILE} --merge-v3 -A "{}" --dist=$WB_SUITE Packages.${SUITE}.%ARCH% $PNF . Sources.${SUITE} $SNF . \
-        Packages.${SUITE}.%ARCH%-all . Sources.${SUITE}-all $SNF -- ${ARCHS} 
-    parallel -l 5 -i wanna-build -v --Pas ${PAS_FILE} --merge-v3 -A "{}" --dist=$WB_SUITE Packages.${SUITE}.%ARCH% $PNF . Sources.${SUITE} $SNF . \
+    echo parallel -l 5 -i wanna-build -v --Pas $(get_pas_file $SUITE) --merge-v3 -A "{}" --dist=$WB_SUITE Packages.${SUITE}.%ARCH% $PNF . Sources.${SUITE} $SNF . \
+        Packages.${SUITE}.%ARCH%-all . Sources.${SUITE}-all $SNF -- ${ARCHS}
+    parallel -l 5 -i wanna-build -v --Pas $(get_pas_file $SUITE) --merge-v3 -A "{}" --dist=$WB_SUITE Packages.${SUITE}.%ARCH% $PNF . Sources.${SUITE} $SNF . \
         Packages.${SUITE}.%ARCH%-all . Sources.${SUITE}-all $SNF -- ${ARCHS} || true
 
     echo "`date`: ${ARCHIVE}/${SUITE} done"
@@ -146,7 +151,9 @@ trigger_wb_update_with_secondary() {
     done
     [ -f Packages.${SUITE}.i386.non-free ] && PNF="Packages.${SUITE}.%ARCH%.non-free" || PNF=""
     [ -f Sources.${SUITE}.non-free ] && SNF="Sources.${SUITE}.non-free" || SNF=""
-    parallel -l 5 -i wanna-build -v --Pas ${PAS_FILE} --merge-v3 -A "{}" --dist=$WB_SUITE Packages.${SUITE}.%ARCH% $PNF . Sources.${SUITE} $SNF . \
+    echo parallel -l 5 -i wanna-build -v --Pas $(get_pas_file $SUITE) --merge-v3 -A "{}" --dist=$WB_SUITE Packages.${SUITE}.%ARCH% $PNF . Sources.${SUITE} $SNF . \
+        Packages.${SUITE}.%ARCH%-all -- ${ARCHS}
+    parallel -l 5 -i wanna-build -v --Pas $(get_pas_file $SUITE) --merge-v3 -A "{}" --dist=$WB_SUITE Packages.${SUITE}.%ARCH% $PNF . Sources.${SUITE} $SNF . \
         Packages.${SUITE}.%ARCH%-all -- ${ARCHS} || true
 
     echo "`date`: ${ARCHIVE}/${SUITE} done"
