@@ -13,7 +13,7 @@ ARCHS_squeeze="amd64 armel i386 ia64 mips mipsel powerpc s390 sparc kfreebsd-amd
 ARCHS_squeeze_lts="amd64 i386"
 ARCHS_wheezy="amd64 armel armhf i386 ia64 mips mipsel powerpc s390 s390x sparc kfreebsd-amd64 kfreebsd-i386"
 ARCHS_jessie="amd64 armel armhf i386 mips mipsel powerpc s390x kfreebsd-amd64 kfreebsd-i386"
-ARCHS_sid="$ARCHS_jessie sparc hurd-i386"
+ARCHS_sid="$ARCHS_jessie arm64 sparc hurd-i386"
 
 # Creates a working environment within the corresponding archive
 # directory and jumps there.

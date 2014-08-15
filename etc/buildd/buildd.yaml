@@ -48,6 +48,10 @@
     - architecture: armel armhf
 - argento:
     - architecture: armel armhf
+- arm-arm-01:
+    - architecture: arm64
+- arm-arm-02:
+    - architecture: arm64
 - peri:
     - architecture: hppa
 - penelosa:
