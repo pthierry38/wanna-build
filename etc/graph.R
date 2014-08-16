@@ -1,4 +1,4 @@
-arch <- c("amd64", "arm64", "armel", "armhf", "hurd-i386", "i386", "ia64",
+arch <- c("amd64", "arm64", "armel", "armhf", "hurd-i386", "i386",
 	"kfreebsd-amd64", "kfreebsd-i386", "mips", "mipsel", "powerpc",
 	"s390x", "sparc")
 palette(c("black", "turquoise", "red", "OrangeRed", "green3", "cyan", 
@@ -19,7 +19,6 @@ readdata <- function (file,start) {
 	t[33]/t[34]*100, #armhf
 	t[7]/t[8]*100, #hurd-i386
 	t[9]/t[10]*100, #i386
-	t[11]/t[12]*100, #ia64
 	t[29]/t[30]*100, #kfreebsd-amd64
 	t[31]/t[32]*100, #kfreebsd-i386
 	t[15]/t[16]*100, #mips
@@ -31,19 +30,19 @@ readdata <- function (file,start) {
 	)),c(2001,start),frequency=365.25)
 }
 
-plotwb <- function (file,title,p,linept=85,height=7.5,width=10,pch=1:18) {
+plotwb <- function (file,title,p,linept=85,height=7.5,width=10,pch=1:17) {
 	bitmap(file=file,type="png16m",width=width,height=height,res=64)
 	layout(matrix(c(1,1,2,2),2,2),widths=c(0.85,0.15))
 	par(mar=c(5,4,4,2)+0.1) 
 	par(lab=c(10,10,7))
-	plot(p,type="o",plot.type="single",col=1:18,pch=pch,xlab="date",
+	plot(p,type="o",plot.type="single",col=1:17,pch=pch,xlab="date",
 		ylab="percentage of packages",main=title,cex=2)
 	abline(h=90,lty=2,col=3)
 	abline(h=linept,lty=2,col=3)
 	axis(4)
 	plot.new()
 	par(plt=c(0,1,0,1))        
-	legend(-1.2,1, arch, col=1:18, pch=pch, lwd=2, bg='gray90', cex=1.5)  
+	legend(-1.2,1, arch, col=1:17, pch=pch, lwd=2, bg='gray90', cex=1.5)  
 }
 v <- readdata("/srv/wanna-build/etc/graph-data",164)
 plotwb("/srv/buildd.debian.org/web/stats/graph.png","What percent is built for each architecture",v,85,7.5,10,".")
