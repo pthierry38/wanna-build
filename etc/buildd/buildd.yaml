@@ -156,3 +156,6 @@
     - architecture: amd64 i386
 - babin:
     - architecture: amd64 i386
+- ppc64el1:
+    - architecture: ppc64el1
+    - fqdn: ppc64el1.debian.net
