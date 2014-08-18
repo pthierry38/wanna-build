@@ -12,7 +12,8 @@ readdata <- function (file,start) {
 	"hit","i386","it","ia64","i6t","m68k","mt","mips","mit","mipsel","mipt",
 	"powerpc","pt","s390","st","amd64","amdt","sparc","spt","armel","aret",
 	"kfreebsd-amd64", "kfreebsd-amd64-t", "kfreebsd-i386", "kfreebsd-i386-t",
-	"armhf", "armhf-t", "s390x", "s390x-t", "arm64", "arm64-t"))
+	"armhf", "armhf-t", "s390x", "s390x-t", "arm64", "arm64-t",
+	"ppc64el", "ppc64el-t"))
 	ts(as.matrix(data.frame(
 	t[23]/t[24]*100, #amd64
 	t[37]/t[38]*100, #arm64
@@ -25,24 +26,25 @@ readdata <- function (file,start) {
 	t[15]/t[16]*100, #mips
 	t[17]/t[18]*100, #mipsel
 	t[19]/t[20]*100, #powerpc
+	t[39]/t[40]*100, #ppc64
 	t[35]/t[36]*100, #s390x
 	t[25]/t[26]*100 #sparc
 	)),c(2001,start),frequency=365.25)
 }
 
-plotwb <- function (file,title,p,linept=85,height=7.5,width=10,pch=1:17) {
+plotwb <- function (file,title,p,linept=85,height=7.5,width=10,pch=1:18) {
 	bitmap(file=file,type="png16m",width=width,height=height,res=64)
 	layout(matrix(c(1,1,2,2),2,2),widths=c(0.85,0.15))
 	par(mar=c(5,4,4,2)+0.1) 
 	par(lab=c(10,10,7))
-	plot(p,type="o",plot.type="single",col=1:17,pch=pch,xlab="date",
+	plot(p,type="o",plot.type="single",col=1:18,pch=pch,xlab="date",
 		ylab="percentage of packages",main=title,cex=2)
 	abline(h=90,lty=2,col=3)
 	abline(h=linept,lty=2,col=3)
 	axis(4)
 	plot.new()
 	par(plt=c(0,1,0,1))        
-	legend(-1.2,1, arch, col=1:17, pch=pch, lwd=2, bg='gray90', cex=1.5)  
+	legend(-1.2,1, arch, col=1:18, pch=pch, lwd=2, bg='gray90', cex=1.5)  
 }
 v <- readdata("/srv/wanna-build/etc/graph-data",164)
 plotwb("/srv/buildd.debian.org/web/stats/graph.png","What percent is built for each architecture",v,85,7.5,10,".")
