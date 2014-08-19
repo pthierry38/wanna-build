@@ -1,6 +1,6 @@
 arch <- c("amd64", "arm64", "armel", "armhf", "hurd-i386", "i386",
 	"kfreebsd-amd64", "kfreebsd-i386", "mips", "mipsel", "powerpc",
-	"s390x", "sparc")
+	"ppc64le", "s390x", "sparc")
 palette(c("black", "turquoise", "red", "OrangeRed", "green3", "cyan", 
 	"blue", "yellow", "magenta",
 	"violetred2","thistle4", "steelblue2", "springgreen4",
