@@ -1,6 +1,6 @@
 arch <- c("amd64", "arm64", "armel", "armhf", "hurd-i386", "i386",
 	"kfreebsd-amd64", "kfreebsd-i386", "mips", "mipsel", "powerpc",
-	"ppc64le", "s390x", "sparc")
+	"ppc64el", "s390x", "sparc")
 palette(c("black", "turquoise", "red", "OrangeRed", "green3", "cyan", 
 	"blue", "yellow", "magenta",
 	"violetred2","thistle4", "steelblue2", "springgreen4",
@@ -26,7 +26,7 @@ readdata <- function (file,start) {
 	t[15]/t[16]*100, #mips
 	t[17]/t[18]*100, #mipsel
 	t[19]/t[20]*100, #powerpc
-	t[39]/t[40]*100, #ppc64
+	t[39]/t[40]*100, #ppc64el
 	t[35]/t[36]*100, #s390x
 	t[25]/t[26]*100 #sparc
 	)),c(2001,start),frequency=365.25)
