@@ -159,3 +159,6 @@
 - ppc64el1:
     - architecture: ppc64el
     - fqdn: ppc64el1.debian.net
+- ppc64el2:
+    - architecture: ppc64el
+    - fqdn: ppc64el2.debian.net
