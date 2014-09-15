@@ -64,6 +64,8 @@
     - architecture: hurd-i386
 - rossini:
     - architecture: hurd-i386
+- mahler:
+    - architecture: hurd-i386
 - murphy:
     - architecture: i386 amd64
 - caballero:
