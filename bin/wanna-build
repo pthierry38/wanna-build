@@ -1755,10 +1755,10 @@ sub wb_dose_builddebcheck {
 # integrated into wanna-builds code by Andreas Barth 2010
 
     my $args = shift;
-    my $architecture=$args->{'arch'};
+    my $architecture=$args->{arch};
     my $doseoptions = "--failures --explain --quiet";
-    my $packagefiles = $args->{'pkgs'};
-    my $sourcesfile = $args->{'src'};
+    my $packagefiles = $args->{pkgs};
+    my $sourcesfile = $args->{src};
 
     my $packagearch="";
     foreach my $packagefile (@$packagefiles) {
@@ -1784,13 +1784,13 @@ sub wb_dose_builddebcheck {
 	    $architecture = $packagearch;
         }
     } else {
-        if ( $packagearch ne "" & $architecture ne $packagearch) {
+        if ( $packagearch ne "" && $architecture ne $packagearch) {
 	    return "Architecture option is $architecture ".
 	    "but the package file contains architecture $packagearch";
-        }   
+        }
     }
-    $doseoptions = "$doseoptions --deb-native-arch=$architecture";
-    $doseoptions = "$doseoptions ".join(' ', @$packagefiles)." $sourcesfile";
+    $doseoptions .= " --deb-native-arch=$architecture";
+    $doseoptions .= " @$packagefiles $sourcesfile";
 
     print "calling: dose-builddebcheck $doseoptions\n";
     open(my $result_cmd, '-|', "dose-builddebcheck $doseoptions");
@@ -1898,7 +1898,9 @@ sub call_dose_builddebcheck {
     close $SOURCES;
 
     return if $simulate_dose;
-    my $doseresults = wb_dose_builddebcheck({'arch' => $args->{'arch'}, 'pkgs' => $args->{'pkgs'}, 'src' => $tmpfile});
+    my $doseresults = wb_dose_builddebcheck({arch => $args->{arch},
+                                             pkgs => $args->{pkgs},
+                                             src  => $tmpfile});
     if (ref($doseresults) eq 'HASH') {
         foreach my $key (grep { $_ =~ /^source---/ } keys %$doseresults) {
 		$key =~ s/^source---//;
