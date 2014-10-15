@@ -51,6 +51,7 @@ use String::Format;
 use Date::Parse;
 use List::Util qw[max];
 use URI::Escape;
+use IPC::Run qw(run);
 use Dpkg::Version (); # import nothing
 if ( defined $Dpkg::Version::VERSION ) {
     *vercmp = \&Dpkg::Version::version_compare;
@@ -1756,7 +1757,7 @@ sub wb_dose_builddebcheck {
 
     my $args = shift;
     my $architecture=$args->{arch};
-    my $doseoptions = "--failures --explain --quiet";
+    my @doseoptions = qw(--failures --explain --quiet);
     my $packagefiles = $args->{pkgs};
     my $sourcesfile = $args->{src};
 
@@ -1789,24 +1790,19 @@ sub wb_dose_builddebcheck {
 	    "but the package file contains architecture $packagearch";
         }
     }
-    $doseoptions .= " --deb-native-arch=$architecture";
-    $doseoptions .= " @$packagefiles $sourcesfile";
+    push @doseoptions, "--deb-native-arch=$architecture";
+    push @doseoptions, (@$packagefiles, $sourcesfile);
 
-    print "calling: dose-builddebcheck $doseoptions\n";
-    open(my $result_cmd, '-|', "dose-builddebcheck $doseoptions");
+    print "calling: dose-builddebcheck @doseoptions\n";
+    my ($in,$out,$err) = ('','','');
+    run ['dose-builddebcheck', @doseoptions], \$in, \$out, \$err;
+    unless($out)
+    {
+        die "dose-builddebcheck returned nothing. This is wrong. STDERR:\n$err";
+    }
 
     my $result={};
-
-    my $result_string;
-    {
-        local $/ = undef;
-        $result_string = <$result_cmd>;
-    }
-    close $result_cmd or
-        die $! ? "error closing pipe from dose-builddebcheck: $!"
-               : "dose-builddebcheck exited with status $?";
-
-    my $result_yaml = YAML::XS::Load($result_string);
+    my $result_yaml = YAML::XS::Load($out);
     for my $broken (@{$result_yaml->{'report'}}) {
         if (exists $broken->{'package'}) {
             my $src = uri_unescape($broken->{'package'});
