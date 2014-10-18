@@ -166,3 +166,7 @@
     - fqdn: ppc64el2.debian.net
 - x86-csail-01:
     - architecture: amd64 i386
+- arm-linaro-01:
+    - architecture: arm64
+- arm-linaro-03:
+    - architecture: arm64
