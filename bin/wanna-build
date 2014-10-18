@@ -1796,9 +1796,19 @@ sub wb_dose_builddebcheck {
     print "calling: dose-builddebcheck @doseoptions\n";
     my ($in,$out,$err) = ('','','');
     run ['dose-builddebcheck', @doseoptions], \$in, \$out, \$err;
-    unless($out)
+
+    # I now interpret the exit code. dose-builddebcheck manpage:
+    #
+    # Exit codes 0-63 indicate a normal termination of the program, codes 64-127
+    # indicate abnormal termination of the program (such as parse errors, I/O
+    # errors).
+
+    # I'm not handling exit codes <0 correctly here. Those will show up as large
+    # values instead, so they'll look like errors. Good enough
+    my $exitcode = $? >> 8;
+    if($exitcode < 0 || $exitcode > 63)
     {
-        die "dose-builddebcheck returned nothing. This is wrong. STDERR:\n$err";
+        die "dose-builddebcheck failed! STDOUT:\n$out\n\nSTDERR:\n$err";
     }
 
     my $result={};
