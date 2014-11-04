@@ -94,6 +94,8 @@
     - architecture: mips
 - swarm:
     - architecture: mips
+- mips-aql-01:
+    - architecture: mips
 - mips-aql-02:
     - architecture: mips
 - mayer:
