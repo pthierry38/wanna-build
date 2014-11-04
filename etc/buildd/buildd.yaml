@@ -74,6 +74,8 @@
     - architecture: ia64
 - alkman:
     - architecture: ia64
+- ia64-arm-01:
+    - architecture: ia64
 - fano:
     - architecture: kfreebsd-amd64 kfreebsd-i386
 - fasch:
