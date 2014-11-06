@@ -64,13 +64,11 @@
     - architecture: hurd-i386
 - rossini:
     - architecture: hurd-i386
+- mahler:
+    - architecture: hurd-i386
 - murphy:
     - architecture: i386 amd64
-- caballero:
-    - architecture: ia64
-- mundy:
-    - architecture: ia64
-- alkman:
+- ia64-arm-01:
     - architecture: ia64
 - fano:
     - architecture: kfreebsd-amd64 kfreebsd-i386
@@ -91,6 +89,10 @@
 - lucatelli:
     - architecture: mips
 - swarm:
+    - architecture: mips
+- mips-aql-01:
+    - architecture: mips
+- mips-aql-02:
     - architecture: mips
 - mayer:
     - architecture: mipsel
@@ -162,3 +164,9 @@
 - ppc64el2:
     - architecture: ppc64el
     - fqdn: ppc64el2.debian.net
+- x86-csail-01:
+    - architecture: amd64 i386
+- arm-linaro-01:
+    - architecture: arm64
+- arm-linaro-03:
+    - architecture: arm64
