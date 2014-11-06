@@ -119,14 +119,14 @@ sub readsourcebins {
             $srcs->{$k}->{'status'} = 'uncompiled';
         }
         delete $srcs->{$k}->{'compiled'};
-        $srcs->{$k}->{'status'} = 'installed' if $srcs->{$k}->{'arch'} && $srcs->{$k}->{'arch'} eq 'all';
+        $srcs->{$k}->{'status'} = 'installed' if $srcs->{$k}->{'arch'} && $srcs->{$k}->{'arch'} eq 'all' and $arch ne 'all';
         
         if (!$srcs->{$k}->{'for-us'} && $srcs->{$k}->{'status'} ne 'installed') {
             $srcs->{$k}->{'status'} = 'arch-not-in-arch-list';
         }
         delete $srcs->{$k}->{'for-us'};
 
-        if ($srcs->{$k}->{'arch'} eq 'all') {
+        if ($srcs->{$k}->{'arch'} eq 'all' and $arch ne 'all') {
             $srcs->{$k}->{'status'} = 'arch-all-only';
             delete $srcs->{$k}->{'arch'};
             next;
@@ -140,7 +140,7 @@ sub readsourcebins {
         for my $bin (@{$srcs->{$k}->{'binary'}}) {
             $srcs->{$k}->{'pas'} = 1 if pasignore($pas->{$bin}, $arch);
             next if pasignore($pas->{$bin}, $arch);
-            next if $binary->{$bin} and $binary->{$bin}->{'arch'} eq 'all';
+            next if $binary->{$bin} and $binary->{$bin}->{'arch'} eq 'all' and $arch ne 'all';
             next SRCS;
         }
         if ($srcs->{$k}->{'pas'}) {
