@@ -103,7 +103,7 @@ my @wannabuildoptions = (
     'simulate-all'  => sub { $simulate = 1; $simulate_dose = 1; },
     'api=i'         => sub {
         $api = $_[1];
-        die "$api too large" unless $api <= 1;
+        die "$api too large" unless $api <= 2;
     },
     'verbose|v'       => sub { $verbose++; },
     'override|o'      => \$opt_override,
@@ -575,11 +575,25 @@ sub add_packages {
     my( $package, $name, $version, $ok, $reason );
 
     foreach $package (@_) {
-        $package =~ s,^.*/,,; # strip path
-        $package =~ s/\.(dsc|diff\.gz|tar\.gz|deb)$//; # strip extension
-        $package =~ s/_[a-zA-Z\d-]+\.changes$//; # strip extension
+        if ($api >= 2) {
+	    my @p = split("/", $package);
+	    # [[arch/]suite/]package_version
+	    $package = $p[-1];
+	    my $suite = $p[-2] if scalar @p > 1;
+	    my $arch = $p[-3] if scalar @p > 2;
+	    # ignore suite, arch for the moment unless arch=all
+	    if (defined $arch and $arch eq 'all') {
+		$s->{'hostingarch'} = $s->{'arch'};
+		$s->{'arch'} = $arch;
+	    }
+	    print Dumper $package, $suite, $arch;
+	} else {
+            $package =~ s,^.*/,,; # strip path
+	    $package =~ s/\.(dsc|diff\.gz|tar\.gz|deb)$//; # strip extension
+	    $package =~ s/_[a-zA-Z\d-]+\.changes$//; # strip extension
+	}
         if ($package =~ /^([\w\d.+-]+)_([\w\d:.+~-]+)/) {
-            ($name,$version) = ($1,$2);
+	    ($name,$version) = ($1,$2);
         } else {
 	    warn "$package: can't extract package name and version (bad format)\n";
 	    next;
@@ -623,7 +637,7 @@ sub add_packages {
         }
 
         if ($newstate eq "building") {
-            add_one_building( {'name' => $name, 'version' => $version, 'pkg' => $pkg, 'arch' => $s->{'arch'}, 'dist' => $s->{'dist'}} );
+            add_one_building( {'name' => $name, 'version' => $version, 'pkg' => $pkg, 'arch' => $s->{'arch'}, 'dist' => $s->{'dist'}, 'hostingarch' => $s->{'hostingarch'}} );
         }
         elsif ($newstate eq "failed") {
 	    print "$pkg->{'package'}: already registered as failed; will append new message\n" if $pkg->{'state'} eq "Failed";
@@ -813,14 +827,15 @@ sub add_one_building {
                 print  "    - status: ok\n";
                 printf "    - pkg-ver: %s_%s\n", $s->{'name'}, $s->{'version'};
                 printf "    - suite: %s\n", $s->{'dist'};
-                printf "    - arch: %s\n", $s->{'arch'};
+                printf "    - arch: %s\n", ($s->{'hostingarch'} || $s->{'arch'});
                 print  "    - binNMU: $pkg->{'binary_nmu_version'}\n" if $pkg->{'binary_nmu_version'};
                 print  "    - extra-changelog: $pkg->{'binary_nmu_changelog'}\n" if $pkg->{'binary_nmu_changelog'} && $pkg->{'binary_nmu_version'};
                 print  "    - extra-depends: $pkg->{'extra_depends'}\n" if $pkg->{'extra_depends'};
                 print  "    - extra-conflicts: $pkg->{'extra_conflicts'}\n" if $pkg->{'extra_conflicts'};
                 print  "    - archive: $distributions{$s->{'dist'}}->{'archive'}\n" if $distributions{$s->{'dist'}}->{'archive'};
                 print  "    - build_dep_resolver: $distributions{$s->{'dist'}}->{'build_dep_resolver'}\n" if $distributions{$s->{'dist'}}->{'build_dep_resolver'};
-                print  "    - arch_all: $pkg->{'build_arch_all'}\n" if $pkg->{'build_arch_all'};
+                print  "    - arch_all: 1\n" if $pkg->{'build_arch_all'} or $s->{'arch'} eq 'all';
+                print  "    - arch_all_only: 1\n" if $s->{'arch'} eq 'all';
                 print  "    - suppress_successful_logs: $distributions{$s->{'dist'}}->{'suppress_successful_logs'}\n" if $distributions{$s->{'dist'}}->{'suppress_successful_logs'};
                 print  "    - mail_logs: $distributions{$s->{'dist'}}->{'mail_logs'}\n" if $distributions{$s->{'dist'}}->{'mail_logs'};
             }
@@ -1276,6 +1291,8 @@ sub list_packages {
         $printformat ||= $yamlmap->{"format"}{"default"}{"default"};
         undef $printformat if ($ownprintformat && $ownprintformat eq 'none');
 
+	$printformat ||="%a/%d/%p_%v [%X]" if $api >= 2 and $s->{'state'} eq 'needs-build';
+
 	foreach my $pkg (sort sort_list_func @list) {
                 no warnings;
                 if ($printformat) {
@@ -1545,7 +1562,7 @@ sub log_ta {
 	my $str;
 	my $prevstate;
 
-	$prevstate = $pkg->{'previous_state'};
+	$prevstate = $pkg->{'previous_state'} || "(none)";
 	$str = "$action($dist): $pkg->{'package'}_$pkg->{'version'} ".
 		   "changed from $prevstate to $pkg->{'state'} ".
 		   "by $real_user as $user";
