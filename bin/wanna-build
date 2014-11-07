@@ -963,8 +963,8 @@ sub set_one_binnmu {
 }
 
 sub set_one_buildpri {
+	my $key = shift;
 	my $s = shift;
-	my $key = $s->{'key'};
 	my $pkg = $s->{'pkg'};
         my $name = $pkg->{'package'};
 
