@@ -426,6 +426,7 @@ if (!($commands->{$op_mode}) || !($commands->{$op_mode}->{'noarch'})) {
     die "architecture ($arch) does not exist" if !keys %$rows;
 }
 
+my $orig_distribution = $distribution;
 $distribution ||='sid';
 undef $distribution if $distribution eq 'any';
 
@@ -494,7 +495,7 @@ undef $distribution if $distribution eq 'any';
 			last SWITCH;
 		};
 		/^distribution-architectures/ && do {
-			show_distribution_architectures({'suite' => $distribution});
+			show_distribution_architectures({'suite' => $orig_distribution});
 			last SWITCH;
 		};
 		/^distribution-aliases/ && do {
