@@ -426,7 +426,6 @@ if (!($commands->{$op_mode}) || !($commands->{$op_mode}->{'noarch'})) {
     die "architecture ($arch) does not exist" if !keys %$rows;
 }
 
-my $suite = $distribution;
 $distribution ||='sid';
 undef $distribution if $distribution eq 'any';
 
@@ -436,19 +435,19 @@ undef $distribution if $distribution eq 'any';
 			last SWITCH;
 		};
 		/^list/ && do {
-			list_packages( $list_state );
+			list_packages( {'state' => $list_state, 'arch' => $arch, 'dist' => $distribution } );
 			last SWITCH;
 		};
 		/^info/ && do {
-			info_packages( @ARGV );
+			info_packages( {'arch' => $arch, 'dist' => $distribution }, @ARGV );
 			last SWITCH;
 		};
 		/^forget-user/ && do {
-			forget_users( @ARGV );
+			forget_users({'arch' => $arch, 'dist' => $distribution }) unless $simulate;
 			last SWITCH;
 		};
 		/^forget/ && do {
-			forget_packages( @ARGV );
+			forget_packages( {'arch' => $arch, 'dist' => $distribution }, @ARGV );
 			last SWITCH;
 		};
 		/^merge-v3/ && do {
@@ -483,9 +482,10 @@ undef $distribution if $distribution eq 'any';
                         last SWITCH;
 		};
 		/^import/ && do {
+			last SWITCH if $simulate;
 			$dbh->do("DELETE from ".table_name('packages', $arch)." WHERE distribution = ?", undef, $distribution)
 				or die $dbh->errstr;
-			forget_users();
+			forget_users({'arch' => $arch, 'dist' => $distribution });
 			read_db( $import_from );
 			last SWITCH;
 		};
@@ -494,7 +494,7 @@ undef $distribution if $distribution eq 'any';
 			last SWITCH;
 		};
 		/^distribution-architectures/ && do {
-			show_distribution_architectures({'suite' => $suite});
+			show_distribution_architectures({'suite' => $distribution});
 			last SWITCH;
 		};
 		/^distribution-aliases/ && do {
@@ -632,7 +632,7 @@ sub add_packages {
 	    $pkg->{'failed'} .= $fail_reason;
         }
         elsif ($newstate eq "not-for-us") {
-            add_one_notforus( $pkg );
+            add_one_notforus( {'pkg' => $pkg, 'arch' => $s->{'arch'}, 'dist' => $s->{'dist'}} );
         }
         elsif ($newstate eq "needs-build") {
 	    my $state = $pkg->{'state'};
@@ -679,13 +679,13 @@ sub add_packages {
             add_one_depwait( $pkg );
         }
         elsif ($newstate eq "build-priority") {
-            set_one_buildpri( 'buildpri', $pkg );
+            set_one_buildpri( 'buildpri', {'pkg' => $pkg, 'arch' => $s->{'arch'}, 'dist' => $s->{'dist'}} );
         }
         elsif ($newstate eq "permanent-build-priority") {
-            set_one_buildpri( 'permbuildpri', $pkg );
+            set_one_buildpri( 'permbuildpri', {'pkg' => $pkg, 'arch' => $s->{'arch'}, 'dist' => $s->{'dist'}} );
         }
         elsif ($newstate eq "binary-nmu") {
-            set_one_binnmu( $name, $version, $pkg );
+            set_one_binnmu( {'name' => $name, 'version' => $version, 'pkg' => $pkg, 'arch' => $s->{'arch'}, 'dist' => $s->{'dist'}} );
         }
         elsif ($newstate eq "update") {
             $pkg->{'version'} =~ s/\+b[0-9]+$//;
@@ -828,7 +828,7 @@ sub add_one_building {
 		$pkg->{'package'} = $s->{'name'};
 		$pkg->{'version'} = $s->{'version'};
 		$pkg->{'builder'} = $user;
-		update_source_info({'pkg' => $pkg, 'action' => "--take" , 'arch' => $arch, 'dist' => $distribution});
+		update_source_info({'pkg' => $pkg, 'action' => "--take" , 'arch' => $s->{'arch'}, 'dist' => $s->{'dist'}});
 	}
 	else {
             if ($api < 1) {
@@ -841,7 +841,8 @@ sub add_one_building {
 
 
 sub add_one_notforus {
-	my $pkg = shift;
+	my $s = shift;
+	my $pkg = $s->{'pkg'};
 	my $state = $pkg->{'state'};
         my $name = $pkg->{'package'};
 	my $action;
@@ -887,13 +888,14 @@ sub add_one_notforus {
 				   "the Not-For-Us state is wrong.\n" )
 			if $conf::notforus_maint;
 	}
-	update_source_info({'pkg' => $pkg, 'action' => $action, 'arch' => $arch, 'dist' => $distribution});
+	update_source_info({'pkg' => $pkg, 'action' => $action, 'arch' => $s->{'arch'}, 'dist' => $s->{'dist'}});
 }
 
 sub set_one_binnmu {
-	my $name = shift;
-	my $version = shift;
-	my $pkg = shift;
+	my $s = shift;
+	my $name = $s->{'name'};
+	my $version = $s->{'version'};
+	my $pkg = $s->{'pkg'};
 	my $state = $pkg->{'state'};
 
 	if (defined $pkg->{'binary_nmu_version'}) {
@@ -914,7 +916,7 @@ sub set_one_binnmu {
                         delete $pkg->{'buildpri'};
 			change_state( \$pkg, 'BD-Uninstallable' );
 		}
-		update_source_info({'pkg' => $pkg, 'action' => "--binNMU" , 'arch' => $arch, 'dist' => $distribution});
+		update_source_info({'pkg' => $pkg, 'action' => "--binNMU" , 'arch' => $s->{'arch'}, 'dist' => $s->{'dist'}});
 		return;
 	} elsif ($binNMUver == 0) {
                 print "${name}_$version: no scheduled binNMU to cancel.\n";
@@ -940,13 +942,14 @@ sub set_one_binnmu {
 	$pkg->{'binary_nmu_changelog'} = $fail_reason;
 	$pkg->{'notes'} = 'out-of-date';
         delete $pkg->{'buildpri'};
-	update_source_info({'pkg' => $pkg, 'action' => "--binNMU" , 'arch' => $arch, 'dist' => $distribution});
+	update_source_info({'pkg' => $pkg, 'action' => "--binNMU" , 'arch' => $s->{'arch'}, 'dist' => $s->{'dist'}});
 	print "${name}: registered for binNMU $fullver\n" if $verbose;
 }
 
 sub set_one_buildpri {
-	my $key = shift;
-	my $pkg = shift;
+	my $s = shift;
+	my $key = $s->{'key'};
+	my $pkg = $s->{'pkg'};
         my $name = $pkg->{'package'};
 
 	if ( $build_priority ) {
@@ -954,7 +957,7 @@ sub set_one_buildpri {
 	} else {
 		delete $pkg->{$key};
 	}
-	update_source_info({'pkg' => $pkg, 'arch' => $arch, 'dist' => $distribution});
+	update_source_info({'pkg' => $pkg, 'arch' => $s->{'arch'}, 'dist' => $s->{'dist'}});
 	print "$name: set to build priority $build_priority\n" if $verbose;
 }
 
@@ -1244,13 +1247,13 @@ Text could contain further %. To start with !, use %!
 }
 
 sub list_packages {
-	my $state = shift;
+	my $s = shift;
 	my @list;
 	my $cnt = 0;
 	my %scnt;
 	my $ctime = time;
 
- 	my $db = get_all_source_info(state => $state, user => $user, list_min_age => $list_min_age, list_max_age => $list_max_age, multisuite => 1);
+ 	my $db = get_all_source_info(state => $s->{'state'}, user => $user, list_min_age => $list_min_age, list_max_age => $list_max_age, multisuite => 1);
 	foreach my $key (keys %$db) {
 		next if $key =~ /^_/;
 		push @list, calculate_prio($db->{$key});
@@ -1261,7 +1264,7 @@ sub list_packages {
         # extra depends / conflicts only from api 1 on
         @list = grep { !$_->{'extra_depends'} and !$_->{'extra_conflicts'} } @list if $api < 1 ;
         # filter out packages for needs-build in noautobuild state - same could exist for weaknoautobuild if buildds would tell us what they do
-        if (($state eq 'needs-build') && ($yamlmap->{"restrict"}) && ($yamlmap->{"restrict"}{"noautobuild"})) {
+        if (($s->{'state'} eq 'needs-build') && ($yamlmap->{"restrict"}) && ($yamlmap->{"restrict"}{"noautobuild"})) {
             foreach my $key (map {keys %$_} @{$yamlmap->{"restrict"}{"noautobuild"}}) {
                 @list = grep { $_->{'package'} ne $key } @list;
             }
@@ -1269,7 +1272,7 @@ sub list_packages {
 
         # first adjust ownprintformat, then set printformat accordingly
         $printformat ||= $yamlmap->{"format"}{$ownprintformat} if $ownprintformat;
-        $printformat ||= $yamlmap->{"format"}{"default"}{$state};
+        $printformat ||= $yamlmap->{"format"}{"default"}{$s->{'state'}};
         $printformat ||= $yamlmap->{"format"}{"default"}{"default"};
         undef $printformat if ($ownprintformat && $ownprintformat eq 'none');
 
@@ -1283,7 +1286,7 @@ sub list_packages {
                 }
 		print print_format("%c/%p_%v", $pkg, {});
 		print print_format(": %S", $pkg, {})
-			if $state eq "all";
+			if $s->{'state'} eq "all";
 		print print_format("%{ by }u%u", $pkg, {})
 			if $pkg->{'state'} ne "Needs-Build";
 		print print_format(" [%X]\n", $pkg, {});
@@ -1307,9 +1310,9 @@ sub list_packages {
 		      join("\n    ",split("\n",$pkg->{'old_failed'})), "\n"
 			if $verbose && $pkg->{'old_failed'};
 		++$cnt;
-		$scnt{$pkg->{'state'}}++ if $state eq "all";
+		$scnt{$pkg->{'state'}}++ if $s->{'state'} eq "all";
 	}
-	if ($state eq "all" && !$printformat) {
+	if ($s->{'state'} eq "all" && !$printformat) {
 		foreach (sort keys %scnt) {
 			print "Total $scnt{$_} package(s) in state $_.\n";
 		}
@@ -1319,10 +1322,11 @@ sub list_packages {
 }
 
 sub info_packages {
+	my $s = shift;
 	my( $name, $pkg, $key, $dist );
 	my @firstkeys = qw(package version builder state section priority
 					   installed_version previous_state state_change);
-	my @dists = $info_all_dists ? keys %distributions : ($distribution);
+	my @dists = $info_all_dists ? keys %distributions : ($s->{'dist'});
 	my %beautykeys = ( 'package' => 'Package', 'version' => 'Version', 'builder' => 'Builder',
 		'state' => 'State', 'section' => 'Section', 'priority' => 'Priority',
 		'installed_version' => 'Installed-Version', 'previous_state' => 'Previous-State',
@@ -1346,7 +1350,7 @@ sub info_packages {
 		foreach $dist (@dists) {
 			my $pname = "$name" . ($info_all_dists ? "($dist)" : "");
 			
-			$pkg = get_readonly_source_info({'name' => $name, 'dist' => $distribution, 'arch' => $arch});
+			$pkg = get_readonly_source_info({'name' => $name, 'dist' => $s->{'dist'}, 'arch' => $s->{'arch'}});
 			if (!defined( $pkg )) {
 				print "$pname: not registered\n";
 				next;
@@ -1380,9 +1384,10 @@ sub info_packages {
 }
 
 sub forget_packages {
+	my $s = shift;
 	foreach my $name (@_) {
 		$name =~ s/_.*$//; # strip version
-		my $pkg = get_source_info({'name' => $name, 'dist' => $distribution, 'arch' => $arch});
+		my $pkg = get_source_info({'name' => $name, 'dist' => $s->{'dist'}, 'arch' => $s->{'arch'}});
 		if (!defined( $pkg )) {
 			print "$name: not registered\n";
 			next;
@@ -1396,20 +1401,21 @@ sub forget_packages {
 			sprintf "  %-20s: %s", $_, $val
 		    } keys %$pkg );
 		send_mail( $conf::db_maint,
-				   "$name deleted from DB " . table_name('packages', $arch) . " " . $distribution,
+				   "$name deleted from DB " . table_name('packages', $s->{'arch'}) . " " . $s->{'dist'},
 				   "The package '$name' has been deleted from the database ".
 				   "by $user.\n\n".
 				   "Data registered about the deleted package:\n".
 				   "$data\n" ) if $conf::db_maint;
 		change_state( \$pkg, 'deleted' );
-		del_source_info({'pkg' => $pkg, 'action' => "--forget" , 'arch' => $arch, 'dist' => $distribution});
+		del_source_info({'pkg' => $pkg, 'action' => "--forget" , 'arch' => $s->{'arch'}, 'dist' => $s->{'dist'}});
 		print "$name: deleted from database\n" if $verbose;
 	}
 }
 
 sub forget_users {
-	$dbh->do("DELETE from " . table_name('users', $arch) . 
-		" WHERE distribution = ?", undef, $distribution) or die $dbh->errstr;
+	my $s = shift;
+	$dbh->do("DELETE from " . table_name('users', $s->{'arch'}) . 
+		" WHERE distribution = ?", undef, $s->{'dist'}) or die $dbh->errstr;
 }
 
 sub read_db {
