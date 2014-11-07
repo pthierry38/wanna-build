@@ -13,6 +13,7 @@ ARCHS_squeeze_lts="amd64 i386"
 ARCHS_wheezy="amd64 armel armhf i386 ia64 mips mipsel powerpc s390 s390x sparc kfreebsd-amd64 kfreebsd-i386"
 ARCHS_jessie="amd64 armel armhf i386 mips mipsel powerpc s390x kfreebsd-amd64 kfreebsd-i386 arm64 ppc64el"
 ARCHS_sid="$ARCHS_jessie sparc hurd-i386"
+ARCHS_exp="$ARCHS_sid all"
 
 # Creates a working environment within the corresponding archive
 # directory and jumps there.
@@ -30,7 +31,7 @@ get_architectures() {
     elif [ "$SUITE" = "wheezy" -o "$SUITE" = "stable" ]; then echo $ARCHS_wheezy
     elif [ "$SUITE" = "jessie" -o "$SUITE" = "testing" ]; then echo $ARCHS_jessie
     elif [ "$SUITE" = "unstable" -o "$SUITE" = "sid" ]; then echo $ARCHS_sid
-    elif [ "$SUITE" = "experimental" ]; then echo $ARCHS_sid
+    elif [ "$SUITE" = "experimental" ]; then echo $ARCHS_exp
     else
         echo "Unknown suite encountered, aborting." >&2
         exit 1
