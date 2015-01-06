@@ -49,6 +49,12 @@ main_sync() {
             PACKAGES_BP="${ARCHIVE_BASE}/archive/${SUITE}-backports/{main,contrib}/binary-%ARCH%/Packages.gz"
             trigger_wb_update_with_secondary "${SUITE}-backports" "`get_architectures $SUITE`" "$PACKAGES_BASE" "$SOURCES_BP" "$PACKAGES_BP" "${SUITE}-backports"
         fi
+
+        if [ -f "${ARCHIVE_BASE}/archive/${SUITE}-backports-sloppy/main/source/Sources.gz" ]; then
+            SOURCES_BP="${ARCHIVE_BASE}/archive/${SUITE}-backports-sloppy/{main,contrib}/source/Sources.gz"
+            PACKAGES_BP="${ARCHIVE_BASE}/archive/${SUITE}-backports-sloppy/{main,contrib}/binary-%ARCH%/Packages.gz"
+            trigger_wb_update_with_secondary "${SUITE}-backports-sloppy" "`get_architectures $SUITE`" "$PACKAGES_BASE" "$SOURCES_BP" "$PACKAGES_BP" "${SUITE}-backports-sloppy"
+        fi
     done
 
     for SUITE in $SUITES_FAST_AUTOBUILD
