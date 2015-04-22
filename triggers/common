@@ -24,7 +24,7 @@ ensure_workdir() {
 
 # Puts the list of architectures for a given suite onto stdout.
 get_architectures() {
-    SUITE="$1"
+    local SUITE="$1"
 
     if [ "$SUITE" = "squeeze" -o "$SUITE" = "oldstable" ]; then echo $ARCHS_squeeze
     elif [ "$SUITE" = "squeeze-lts" ]; then echo $ARCHS_squeeze_lts
@@ -56,15 +56,15 @@ ensure_lock() {
 }
 
 trigger_wb_update() {
-    SUITE="$1"
-    ARCHS="$2"
-    SOURCES="$3"
-    PACKAGES="$4"
-    WB_SUITE="$5"
+    local SUITE="$1"
+    local ARCHS="$2"
+    local SOURCES="$3"
+    local PACKAGES="$4"
+    local WB_SUITE="$5"
 
     if [ -z "$WB_SUITE" ]
     then
-        WB_SUITE="${SUITE}"
+        local WB_SUITE="${SUITE}"
     fi
 
     echo "`date`: Processing ${ARCHIVE}/${SUITE} ..."
@@ -91,18 +91,18 @@ trigger_wb_update() {
 }
 
 trigger_wb_update_for_overlay() {
-    SUITE="$1"
-    ARCHS="$2"
-    SOURCES_BASE="$3"
-    PACKAGES_BASE="$4"
-    SOURCES="$5"
-    PACKAGES="$6"
-    WB_SUITE="$7"
-    WHITELIST_FILE="$8"
+    local SUITE="$1"
+    local ARCHS="$2"
+    local SOURCES_BASE="$3"
+    local PACKAGES_BASE="$4"
+    local SOURCES="$5"
+    local PACKAGES="$6"
+    local WB_SUITE="$7"
+    local WHITELIST_FILE="$8"
 
     if [ -z "$WB_SUITE" ]
     then
-        WB_SUITE="${SUITE}"
+        local WB_SUITE="${SUITE}"
     fi
 
     echo "`date`: Processing ${ARCHIVE}/${SUITE} ..."
@@ -129,17 +129,17 @@ trigger_wb_update_for_overlay() {
 # Examples are *-{volatile,backports,edu} and experimental
 # This is not for something like stable and proposed-updates
 trigger_wb_update_with_secondary() {
-    SUITE="$1"
-    ARCHS="$2"
-    PACKAGES_BASE="$3"
-    SOURCES="$4"
-    PACKAGES="$5"
-    WB_SUITE="$6"
-    WHITELIST_FILE="$7"
+    local SUITE="$1"
+    local ARCHS="$2"
+    local PACKAGES_BASE="$3"
+    local SOURCES="$4"
+    local PACKAGES="$5"
+    local WB_SUITE="$6"
+    local WHITELIST_FILE="$7"
 
     if [ -z "$WB_SUITE" ]
     then
-        WB_SUITE="${SUITE}"
+        local WB_SUITE="${SUITE}"
     fi
 
     echo "`date`: Processing ${ARCHIVE}/${SUITE} ..."
@@ -179,8 +179,8 @@ ucat() {
 }
 
 filter_out_nonfree() {
-    INPUT="$1"
-    OUTPUT="$2"
+    local INPUT="$1"
+    local OUTPUT="$2"
 
     gunzip -c "$INPUT" | grep-dctrl -v -r -F Section 'non-free/.*' | gzip -c > "$OUTPUT"
 }
