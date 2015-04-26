@@ -154,8 +154,6 @@
     - architecture: powerpc
 - zandonai:
     - architecture: s390 s390x
-- zemlinksy:
-    - architecture: s390 s390x
 - zani:
     - architecture: s390 s390x
 - sompek:
