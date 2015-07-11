@@ -12,7 +12,7 @@ ARCHS_squeeze="amd64 armel i386 ia64 mips mipsel powerpc s390 sparc kfreebsd-amd
 ARCHS_squeeze_lts="amd64 i386"
 ARCHS_wheezy="amd64 armel armhf i386 ia64 mips mipsel powerpc s390 s390x sparc kfreebsd-amd64 kfreebsd-i386"
 ARCHS_jessie="amd64 arm64 armel armhf i386 mips mipsel powerpc ppc64el s390x"
-ARCHS_jessie-kfreebsd="kfreebsd-amd64 kfreebsd-i386"
+ARCHS_jessie_kfreebsd="kfreebsd-amd64 kfreebsd-i386"
 ARCHS_stretch="amd64 arm64 armel armhf i386 mips mipsel powerpc ppc64el s390x"
 ARCHS_sid="$ARCHS_stretch kfreebsd-amd64 kfreebsd-i386 sparc hurd-i386"
 ARCHS_exp="$ARCHS_sid all"
@@ -32,7 +32,7 @@ get_architectures() {
     elif [ "$SUITE" = "squeeze-lts" ]; then echo $ARCHS_squeeze_lts
     elif [ "$SUITE" = "wheezy" -o "$SUITE" = "oldstable" ]; then echo $ARCHS_wheezy
     elif [ "$SUITE" = "jessie" -o "$SUITE" = "stable" ]; then echo $ARCHS_jessie
-    elif [ "$SUITE" = "jessie-kfreebsd" -o "$SUITE" = stable-kfreebsd" ]; then echo $ARCHS_jessie-kfreebsd
+    elif [ "$SUITE" = "jessie-kfreebsd" -o "$SUITE" = stable-kfreebsd" ]; then echo $ARCHS_jessie_kfreebsd
     elif [ "$SUITE" = "stretch" -o "$SUITE" = "testing" ]; then echo $ARCHS_stretch
     elif [ "$SUITE" = "unstable" -o "$SUITE" = "sid" ]; then echo $ARCHS_sid
     elif [ "$SUITE" = "experimental" ]; then echo $ARCHS_exp
