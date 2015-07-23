@@ -96,6 +96,10 @@
     - architecture: mips
 - mips-aql-02:
     - architecture: mips
+- mips-aql-04:
+    - architecture: mips
+- mips-aql-05:
+    - architecture: mips
 - mayer:
     - architecture: mipsel
 - phrixos:
