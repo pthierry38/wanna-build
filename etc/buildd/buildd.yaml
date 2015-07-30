@@ -172,6 +172,8 @@
 - ppc64el2:
     - architecture: ppc64el
     - fqdn: ppc64el2.debian.net
+- ppc64el-osuosl-01:
+    - architecture: ppc64el
 - ppc64el-unicamp-01:
     - architecture: ppc64el
 - x86-csail-01:
