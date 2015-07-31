@@ -14,7 +14,7 @@ ARCHS_wheezy="amd64 armel armhf i386 ia64 mips mipsel powerpc s390 s390x sparc k
 ARCHS_jessie="amd64 arm64 armel armhf i386 mips mipsel powerpc ppc64el s390x"
 ARCHS_jessie_kfreebsd="kfreebsd-amd64 kfreebsd-i386"
 ARCHS_stretch="amd64 arm64 armel armhf i386 mips mipsel powerpc ppc64el s390x"
-ARCHS_sid="$ARCHS_stretch kfreebsd-amd64 kfreebsd-i386 sparc hurd-i386"
+ARCHS_sid="$ARCHS_stretch kfreebsd-amd64 kfreebsd-i386 hurd-i386"
 ARCHS_exp="$ARCHS_sid all"
 
 # Creates a working environment within the corresponding archive
