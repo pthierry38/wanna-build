@@ -154,8 +154,6 @@
     - architecture: armhf armel
 - hummel:
     - architecture: armhf armel
-- parry:
-    - architecture: powerpc
 - zandonai:
     - architecture: s390 s390x
 - zani:
