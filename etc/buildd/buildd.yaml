@@ -184,3 +184,5 @@
     - architecture: arm64
 - arm-linaro-03:
     - architecture: arm64
+- x86-bm-01:
+    - architecture: all
