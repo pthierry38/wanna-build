@@ -119,7 +119,7 @@ trigger_wb_update_for_overlay() {
     [ -f Packages.${SUITE}.i386.non-free ] && PNF="Packages.${SUITE}.%ARCH%.non-free" || PNF=""
     [ -f Sources.${SUITE}.non-free ] && SNF="Sources.${SUITE}.non-free" || SNF=""
 
-    ARCHS_any=$(echo $ARCHS | sed -e 's/all//g'}
+    ARCHS_any=$(echo $ARCHS | sed -e 's/all//g')
     echo parallel -l 5 -i wanna-build -v --Pas $(get_pas_file $SUITE) --merge-v3 -A "{}" --dist=$WB_SUITE Packages.${SUITE}.%ARCH% $PNF . Sources.${SUITE} $SNF . \
         Packages.${SUITE}.%ARCH%-all . Sources.${SUITE}-all $SNF -- ${ARCHS_any}
     parallel -l 5 -i wanna-build -v --Pas $(get_pas_file $SUITE) --merge-v3 -A "{}" --dist=$WB_SUITE Packages.${SUITE}.%ARCH% $PNF . Sources.${SUITE} $SNF . \
