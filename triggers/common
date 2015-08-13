@@ -102,7 +102,6 @@ trigger_wb_update_for_overlay() {
     local SOURCES="$5"
     local PACKAGES="$6"
     local WB_SUITE="$7"
-    local WHITELIST_FILE="$8"
 
     if [ -z "$WB_SUITE" ]
     then
@@ -147,7 +146,6 @@ trigger_wb_update_with_secondary() {
     local SOURCES="$4"
     local PACKAGES="$5"
     local WB_SUITE="$6"
-    local WHITELIST_FILE="$7"
 
     if [ -z "$WB_SUITE" ]
     then
