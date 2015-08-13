@@ -584,10 +584,6 @@ sub add_packages {
 	    my $suite = $p[-2] if scalar @p > 1;
 	    my $arch = $p[-3] if scalar @p > 2;
 	    # ignore suite, arch for the moment unless arch=all
-	    if (defined $arch and $arch eq 'all') {
-		$s->{'hostingarch'} = $s->{'arch'};
-		$s->{'arch'} = $arch;
-	    }
 	    print Dumper $package, $suite, $arch;
 	} else {
             $package =~ s,^.*/,,; # strip path
@@ -639,7 +635,7 @@ sub add_packages {
         }
 
         if ($newstate eq "building") {
-            add_one_building( {'name' => $name, 'version' => $version, 'pkg' => $pkg, 'arch' => $s->{'arch'}, 'dist' => $s->{'dist'}, 'hostingarch' => $s->{'hostingarch'}} );
+            add_one_building( {'name' => $name, 'version' => $version, 'pkg' => $pkg, 'arch' => $s->{'arch'}, 'dist' => $s->{'dist'}} );
         }
         elsif ($newstate eq "failed") {
 	    print "$pkg->{'package'}: already registered as failed; will append new message\n" if $pkg->{'state'} eq "Failed";
@@ -829,15 +825,13 @@ sub add_one_building {
                 print  "    - status: ok\n";
                 printf "    - pkg-ver: %s_%s\n", $s->{'name'}, $s->{'version'};
                 printf "    - suite: %s\n", $s->{'dist'};
-                printf "    - arch: %s\n", ($s->{'hostingarch'} || $s->{'arch'});
+                printf "    - arch: %s\n", $s->{'arch'};
                 print  "    - binNMU: $pkg->{'binary_nmu_version'}\n" if $pkg->{'binary_nmu_version'};
                 print  "    - extra-changelog: $pkg->{'binary_nmu_changelog'}\n" if $pkg->{'binary_nmu_changelog'} && $pkg->{'binary_nmu_version'};
                 print  "    - extra-depends: $pkg->{'extra_depends'}\n" if $pkg->{'extra_depends'};
                 print  "    - extra-conflicts: $pkg->{'extra_conflicts'}\n" if $pkg->{'extra_conflicts'};
                 print  "    - archive: $distributions{$s->{'dist'}}->{'archive'}\n" if $distributions{$s->{'dist'}}->{'archive'};
                 print  "    - build_dep_resolver: $distributions{$s->{'dist'}}->{'build_dep_resolver'}\n" if $distributions{$s->{'dist'}}->{'build_dep_resolver'};
-                print  "    - arch_all: 1\n" if $pkg->{'build_arch_all'} or $s->{'arch'} eq 'all';
-                print  "    - arch_all_only: 1\n" if $s->{'arch'} eq 'all';
                 print  "    - suppress_successful_logs: $distributions{$s->{'dist'}}->{'suppress_successful_logs'}\n" if $distributions{$s->{'dist'}}->{'suppress_successful_logs'};
                 print  "    - mail_logs: $distributions{$s->{'dist'}}->{'mail_logs'}\n" if $distributions{$s->{'dist'}}->{'mail_logs'};
             }
@@ -1361,7 +1355,6 @@ sub info_packages {
                 'anytime' => 'Build-time',
                 'extra_depends' => 'Extra-Dependencies',
                 'extra_conflicts' => 'Extra-Conflicts',
-                'build_arch_all' => 'Build-Arch-All',
 			 );
 	
 	foreach $name (@_) {
@@ -2070,7 +2063,7 @@ sub get_readonly_source_info {
         my $q = "SELECT rel, priority, state_change, permbuildpri, section, buildpri, failed, state, binary_nmu_changelog, bd_problem, version, package, distribution, installed_version, notes, builder, old_failed, previous_state, binary_nmu_version, depends, extract(days from date_trunc('days', now() - state_change)) as state_days, floor(extract(epoch from now()) - extract(epoch from state_change)) as state_time"
             . ", (SELECT max(build_time) FROM ".table_name('pkg_history', $s->{'arch'})." WHERE pkg_history.package = packages.package AND pkg_history.distribution = packages.distribution AND result = 'successful') AS successtime"
             . ", (SELECT max(build_time) FROM ".table_name('pkg_history', $s->{'arch'})." WHERE pkg_history.package = packages.package AND pkg_history.distribution = packages.distribution ) AS anytime"
-            . ", extra_depends, extra_conflicts, build_arch_all"
+            . ", extra_depends, extra_conflicts"
             . " FROM " .  table_name('packages', $s->{'arch'})
             . ' WHERE package = ? AND distribution = ?';
 	my $pkg = $dbh->selectrow_hashref( $q,
