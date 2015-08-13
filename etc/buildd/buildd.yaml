@@ -160,6 +160,8 @@
     - architecture: s390 s390x
 - zani:
     - architecture: s390 s390x
+- zemlinsky:
+    - architecture: s390 s390x
 - sompek:
     - architecture: sparc
 - spike:
