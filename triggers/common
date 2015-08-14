@@ -14,8 +14,8 @@ ARCHS_wheezy="amd64 armel armhf i386 ia64 mips mipsel powerpc s390 s390x sparc k
 ARCHS_jessie="amd64 arm64 armel armhf i386 mips mipsel powerpc ppc64el s390x"
 ARCHS_jessie_kfreebsd="kfreebsd-amd64 kfreebsd-i386"
 ARCHS_stretch="amd64 arm64 armel armhf i386 mips mipsel powerpc ppc64el s390x"
-ARCHS_sid="$ARCHS_stretch kfreebsd-amd64 kfreebsd-i386 hurd-i386"
-ARCHS_exp="$ARCHS_sid all"
+ARCHS_sid="$ARCHS_stretch all kfreebsd-amd64 kfreebsd-i386 hurd-i386"
+ARCHS_exp="$ARCHS_sid"
 
 # Creates a working environment within the corresponding archive
 # directory and jumps there.
@@ -88,8 +88,13 @@ trigger_wb_update() {
     done
     [ -f Packages.${SUITE}.i386.non-free ] && PNF="Packages.${SUITE}.%ARCH%.non-free" || PNF=""
     [ -f Sources.${SUITE}.non-free ] && SNF="Sources.${SUITE}.non-free" || SNF=""
-    echo parallel -l 5 -i wanna-build -v --Pas $(get_pas_file $SUITE) --merge-v3 -A "{}" --dist=$WB_SUITE Packages.${SUITE}.%ARCH% $PNF . Sources.${SUITE} $SNF . Packages.${SUITE}.%ARCH% Packages.${SUITE}.%ARCH%.build-essential -- ${ARCHS}
-    parallel -l 5 -i wanna-build -v --Pas $(get_pas_file $SUITE) --merge-v3 -A "{}" --dist=$WB_SUITE Packages.${SUITE}.%ARCH% $PNF . Sources.${SUITE} $SNF . Packages.${SUITE}.%ARCH% Packages.${SUITE}.%ARCH%.build-essential -- ${ARCHS} || true
+    ARCHS_any=$(echo ${ARCHS} | sed -e 's/all//g')
+    echo parallel -l 5 -i wanna-build -v --Pas $(get_pas_file $SUITE) --merge-v3 -A "{}" --dist=$WB_SUITE Packages.${SUITE}.%ARCH% $PNF . Sources.${SUITE} $SNF . Packages.${SUITE}.%ARCH% Packages.${SUITE}.%ARCH%.build-essential -- ${ARCHS_any}
+    parallel -l 5 -i wanna-build -v --Pas $(get_pas_file $SUITE) --merge-v3 -A "{}" --dist=$WB_SUITE Packages.${SUITE}.%ARCH% $PNF . Sources.${SUITE} $SNF . Packages.${SUITE}.%ARCH% Packages.${SUITE}.%ARCH%.build-essential -- ${ARCHS_any} || true
+    if echo ${ARCHS} | grep -q 'all' ; then
+        echo wanna-build -v --Pas $(get_pas_file $SUITE) --merge-v3 -A all --dist=$WB_SUITE Packages.${SUITE}.all $PNF . Sources.${SUITE} $SNF . Packages.${SUITE}.amd64 Packages.${SUITE}.amd64.build-essential
+        wanna-build -v --Pas $(get_pas_file $SUITE) --merge-v3 -A all --dist=$WB_SUITE Packages.${SUITE}.all $PNF . Sources.${SUITE} $SNF . Packages.${SUITE}.amd64 Packages.${SUITE}.amd64.build-essential || true
+    fi
 
     echo "`date`: ${ARCHIVE}/${SUITE} done"
 }
