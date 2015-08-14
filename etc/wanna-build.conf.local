@@ -8,9 +8,6 @@
 # directory for the databases, lock files and log files
 $basedir = "/srv/wanna-build/db";
 
-# ignore all epochs? (needed if quinn-diff prints no epochs)
-#$ignore_epochs = 0;
-
 # mail address of database maintainer (informed about a few things)
 $db_maint = "wb-team\@buildd.debian.org";
 
@@ -38,18 +35,6 @@ $buildd_domain = "buildd.debian.org";
 # source for Packages files (for do-merge-packages)
 # can be an ftp or http URL, or a local path
 $pkgs_source = "/org/ftp.debian.org/ftp";
-
-# source for quinn-diff output (for do-merge-quinn)
-# can be an ftp or http URL, or a local path
-#$quinn_source = "http://ftp.uni-erlangen.de/pub/Linux/LOCAL/Debian-support/quinn-diff";
-$quinn_source = "/org/buildd.debian.org/web/quinn-diff/output";
-
-# Is there quinn-diff output for more than one section (main)? This changes
-# what structure under $quinn_source is assumed:
-#   $quinn_source_has_section == 0 : ARCH/source-dependencies-DIST.gz
-#   $quinn_source_has_section == 1 : ARCH/SECTION/DIST
-# ftp.uni-erlangen.de is multi-section, buildd.debian.org not (yet)
-$quinn_source_multi_section = 0;
 
 @admin_users = qw(wbadm);
 
