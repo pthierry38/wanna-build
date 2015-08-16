@@ -1898,9 +1898,9 @@ sub call_dose_builddebcheck {
 
     return if $simulate_dose;
 
-    # FIXME: ugly hack !!!
-    # We build arch:all package on an amd64 buildd
-    my $hostarch = $args->{arch} eq 'all' ? 'amd64' : $args->{arch};
+    # We build arch:all packages on a specific architecture
+    my $hostarch = $args->{arch};
+    $hostarch = $conf::all_buildd_arch if ($hostarch eq 'all' && $conf::all_buildd_arch);
     my $doseresults = wb_dose_builddebcheck({arch => $hostarch,
                                              pkgs => $args->{pkgs},
                                              src  => $tmpfile});

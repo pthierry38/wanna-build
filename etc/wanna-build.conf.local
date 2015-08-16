@@ -24,6 +24,9 @@ $stat_mail = "wb-team\@buildd.debian.org";
 # mail domain under which the buildds can be reached
 $buildd_domain = "buildd.debian.org";
 
+# buildd architecture to build arch:all packages
+$all_buildd_arch = "amd64";
+
 @admin_users = qw(wbadm);
 
 # don't remove this, Perl needs it:
