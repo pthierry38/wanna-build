@@ -237,7 +237,7 @@ my $commands = {
 
 my $printargv = join('#', @ARGV);
 my $hostdefaults = {};
-if ($ARGV[0] eq '--ssh-wrapper') {
+if ($ARGV[0] && $ARGV[0] eq '--ssh-wrapper') {
     die ("no SSH_ORIGINAL_COMMAND") unless exists $ENV{'SSH_ORIGINAL_COMMAND'};
     GetOptions(@sshwrapperoptions) or usage();
     $#ARGV == 0 or die("need exactly one host name");
