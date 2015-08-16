@@ -32,10 +32,6 @@ $buildd_domain = "buildd.debian.org";
 # @sections = qw(main contrib non-free non-US non-US/main non-US/contrib non-US/non-free);
 @sections = qw(main contrib non-US/main non-US/contrib);
 
-# source for Packages files (for do-merge-packages)
-# can be an ftp or http URL, or a local path
-$pkgs_source = "/org/ftp.debian.org/ftp";
-
 @admin_users = qw(wbadm);
 
 # don't remove this, Perl needs it:
