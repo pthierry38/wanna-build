@@ -8,6 +8,12 @@
 # directory for the databases, lock files and log files
 $basedir = "/srv/wanna-build/db";
 
+# PostgreSQL service for wanna-build
+$pg_service = "wanna-build";
+
+# PostgreSQL privileged service for wanna-build
+$pg_priv_service = "wanna-build-privileged";
+
 # mail address of database maintainer (informed about a few things)
 $db_maint = "wb-team\@buildd.debian.org";
 
