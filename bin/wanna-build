@@ -509,7 +509,7 @@ undef $distribution if $distribution eq 'any';
                             print "- error: no entry; not using ssh-wrapper?\n";
                             last SWITCH;
                         }
-                        $hostdefaults->{'maintainer_name'} //= sprintf 'Debian Build Daemon (%s) <buildd-%s@buildd.debian.org>', $hostdefaults->{'host'}, $hostdefaults->{'host'};
+                        $hostdefaults->{'maintainer_name'} //= sprintf 'Debian Build Daemon (%s) <buildd-%s@%s>', $hostdefaults->{'host'}, $hostdefaults->{'host'}, $conf::buildd_domain;
                         $hostdefaults->{'fqdn'} //= $hostdefaults->{'host'}.".debian.org";
                         $hostdefaults->{'mailfrom'} //= sprintf 'buildd on %s <buildd@%s>', $hostdefaults->{'host'}, $hostdefaults->{'fqdn'};
                         my $map = { 'db-user' => 'wanna_build_db_user',  'maintainer_name' => 'maintainer_name', 'mailfrom' => 'mailfrom', };
