@@ -24,9 +24,6 @@ $stat_mail = "wb-team\@buildd.debian.org";
 # mail domain under which the buildds can be reached
 $buildd_domain = "buildd.debian.org";
 
-# file to publish statistics over WWW (optional)
-#$web_stats = "/var/www/buildd/stats.txt";
-
 # sections to import and maintain in the database
 # the full list would be:
 # @sections = qw(main contrib non-free non-US non-US/main non-US/contrib non-US/non-free);
