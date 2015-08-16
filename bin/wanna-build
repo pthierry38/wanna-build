@@ -27,7 +27,7 @@ die "wanna-build disabled" if -f "/srv/wanna-build/NO-WANNA-BUILD";
 
 package conf;
 
-use vars qw< $mailprog $buildd_domain >;
+use vars qw< $mailprog $buildd_domain $pg_service $pg_priv_service >;
 # defaults
 $mailprog ||= "/usr/sbin/sendmail";
 require "/srv/wanna-build/etc/wanna-build.conf";
@@ -298,13 +298,13 @@ my $schema_suffix = '';
 if ((
     ($commands->{$op_mode} && $commands->{$op_mode}->{'nopriv'})
     && !$recorduser && !$privmode) || $simulate) {
-	$dbh = DBI->connect("DBI:Pg:service=$pg_service") ||
+	$dbh = DBI->connect("DBI:Pg:service=$conf::pg_service") ||
 		die "FATAL: Cannot open database: $DBI::errstr\n";
 	$schema_suffix = '_public';
 }
 else
 {
-	$dbh = DBI->connect("DBI:Pg:service=$pg_priv_service") ||
+	$dbh = DBI->connect("DBI:Pg:service=$conf::pg_priv_service") ||
 		die "FATAL: Cannot open database: $DBI::errstr\n";
 }
 
