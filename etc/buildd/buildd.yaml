@@ -1,3 +1,7 @@
+#
+# buildds for the main archive
+#
+
 - binet:
     - architecture: amd64 i386
 - vitry:
@@ -150,3 +154,99 @@
     - architecture: all
 - x86-csail-02:
     - architecture: all
+
+
+#
+# buildds for the debian-ports archive
+#
+
+- debian-alpha1:
+    - architecture: alpha
+- debian-alpha2:
+    - architecture: alpha
+- imago:
+    - architecture: alpha
+- electro:
+    - architecture: alpha
+- hpviz:
+    - architecture: hppa
+- akire:
+    - architecture: m68k
+- ara5:
+    - architecture: m68k
+- arrakis:
+    - architecture: m68k
+- crest:
+    - architecture: m68k
+- elgar:
+    - architecture: m68k
+- garkin:
+    - architecture: m68k
+- kirby:
+    - architecture: m68k
+- kullervo:
+    - architecture: m68k
+- pacman:
+    - architecture: m68k
+- spice:
+    - architecture: m68k
+- pikachu:
+    - architecture: m68k
+- vivaldi:
+    - architecture: m68k
+- wario:
+
+- spe1:
+    - architecture: powerpcspe
+- spe2:
+    - architecture: powerpcspe
+- spe3:
+    - architecture: powerpcspe
+
+- amaterasu:
+    - architecture: ppc64
+- izanagi:
+    - architecture: ppc64
+- izanami:
+    - architecture: ppc64
+- susanoo:
+    - architecture: ppc64
+- tsukuyomi:
+    - architecture: ppc64
+
+- akagi:
+    - architecture: sh4
+- amagi:
+    - architecture: sh4
+- haruna:
+    - architecture: sh4
+- hiei:
+    - architecture: sh4
+- huso:
+    - architecture: sh4
+- hyuga:
+    - architecture: sh4
+- ise:
+    - architecture: sh4
+- kongou:
+    - architecture: sh4
+- musahi:
+    - architecture: sh4
+- mutsu:
+    - architecture: sh4
+- tirpitz:
+    - architecture: sh4
+- nagato:
+    - architecture: sh4
+- yamashiro:
+    - architecture: sh4
+- yamato:
+    - architecture: sh4
+- sompek:
+    - architecture: sparc64
+- raverin:
+    - architecture: sparc64
+- frobozz:
+    - architecture: x32
+- vs76:
+    - architecture: x32
