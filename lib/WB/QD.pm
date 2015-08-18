@@ -48,8 +48,8 @@ sub readsourcebins {
 
             next unless $p->{'name'} and $p->{'version'};
             foreach my $tarch (split(/\s+/, $p->{'arch'})) {
-                if ($tarch eq 'all') {
-                    $p->{'for-us'} = 1 if $arch =~ $tarch;
+                if ($arch eq 'all') {
+                    $p->{'for-us'} = 1 if $tarch eq 'all';
                 } else {
                     $p->{'for-us'} = 1 if debarch_is($arch, $tarch);
                 }
