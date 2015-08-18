@@ -52,13 +52,14 @@ use Date::Parse;
 use List::Util qw[max];
 use URI::Escape;
 use IPC::Run qw(run);
-use Dpkg::Deps qw(deps_parse deps_iterate); # need at least 1.17.14
 use Dpkg::Version (); # import nothing
 if ( defined $Dpkg::Version::VERSION ) {
     *vercmp = \&Dpkg::Version::version_compare;
 } else {
     *vercmp = \&Dpkg::Version::vercmp;
 }
+
+use Dpkg::Deps; # TODO: same
 
 our ($verbose, $mail_logs, $list_order, $list_state,
     $curr_date, $op_mode, $user, $real_user, $distribution,
@@ -1752,7 +1753,6 @@ sub wb_dose_builddebcheck {
     my @doseoptions = qw(--failures --explain --quiet);
     my $packagefiles = $args->{pkgs};
     my $sourcesfile = $args->{src};
-    my @arch_foreign = @{$args->{arch_foreign}};
 
     my $packagearch="";
     foreach my $packagefile (@$packagefiles) {
@@ -1784,8 +1784,6 @@ sub wb_dose_builddebcheck {
         }
     }
     push @doseoptions, "--deb-native-arch=$architecture";
-    push @doseoptions, "--deb-foreign-archs=" . join(',', @arch_foreign)
-      if @arch_foreign;
     push @doseoptions, (@$packagefiles, $sourcesfile);
 
     print "calling: dose-builddebcheck @doseoptions\n";
@@ -1865,10 +1863,6 @@ sub call_dose_builddebcheck {
     #print join " ", keys %interesting_packages,"\n";
     return unless %interesting_packages || %interesting_packages_depwait;
 
-    # any explicitly-called-out architectures in the build-deps. We treat these
-    # as foreign arches
-    my %qualified_arches;
-
     my $tmpfile_pattern = "/tmp/wanna-build-interesting-sources-$distribution.$$-XXXXX";
     use File::Temp qw/ tempfile /;
     my ($SOURCES, $tmpfile) = tempfile( $tmpfile_pattern, UNLINK => 1 );
@@ -1888,18 +1882,6 @@ sub call_dose_builddebcheck {
 	print $SOURCES "Build-Conflicts: $u\n" if $u;
 	print $SOURCES "Architecture: all\n";
 	print $SOURCES "\n";
-
-	# I have build-deps and build-conflicts. I scan these for
-	# explicitly-requested architectures
-	my $deps_callback = sub
-	{
-		my $dep = shift;
-		$qualified_arches{$dep->{archqual}} = 1
-		  if $dep->{archqual};
-		1;
-	};
-	deps_iterate(deps_parse($t), $deps_callback );
-	deps_iterate(deps_parse($u), $deps_callback );
     }
     for my $key (keys %interesting_packages_depwait) {
 	my $pkg = $db->{$key};
@@ -1920,9 +1902,8 @@ sub call_dose_builddebcheck {
     my $hostarch = $args->{arch};
     $hostarch = $conf::all_buildd_arch if ($hostarch eq 'all' && $conf::all_buildd_arch);
     my $doseresults = wb_dose_builddebcheck({arch => $hostarch,
-                                             pkgs => $args->{'pkgs'},
-                                             src  => $tmpfile,
-                                             arch_foreign => [keys %qualified_arches]});
+                                             pkgs => $args->{pkgs},
+                                             src  => $tmpfile});
     if (ref($doseresults) eq 'HASH') {
         foreach my $key (grep { $_ =~ /^source---/ } keys %$doseresults) {
 		$key =~ s/^source---//;
