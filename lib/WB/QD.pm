@@ -47,10 +47,10 @@ sub readsourcebins {
             /^Build-Conflicts:\s*(.*)$/mi and $p->{'conflicts'} = $1;
 
             next unless $p->{'name'} and $p->{'version'};
-            if ($arch eq 'all') {
-                $p->{'for-us'} = 1 if $arch =~ $p->{'arch'};
-            } else{
-                foreach my $tarch (split(/\s+/, $p->{'arch'})) {
+            foreach my $tarch (split(/\s+/, $p->{'arch'})) {
+                if ($tarch eq 'all') {
+                    $p->{'for-us'} = 1 if $arch =~ $tarch;
+                } else {
                     $p->{'for-us'} = 1 if debarch_is($arch, $tarch);
                 }
             }
