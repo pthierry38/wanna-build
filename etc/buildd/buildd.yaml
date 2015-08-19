@@ -168,8 +168,10 @@
     - architecture: alpha
 - electro:
     - architecture: alpha
+
 - hpviz:
     - architecture: hppa
+
 - akire:
     - architecture: m68k
 - ara5:
@@ -195,6 +197,7 @@
 - vivaldi:
     - architecture: m68k
 - wario:
+    - architecture: m68k
 
 - spe1:
     - architecture: powerpcspe
@@ -242,10 +245,12 @@
     - architecture: sh4
 - yamato:
     - architecture: sh4
+
 - sompek:
     - architecture: sparc64
 - raverin:
     - architecture: sparc64
+
 - frobozz:
     - architecture: x32
 - vs76:
