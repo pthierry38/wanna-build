@@ -16,7 +16,7 @@ if (( $last + $interval < $now )); then
         echo "stats start: `date`"
 	/srv/wanna-build/bin/wb-graph >> /srv/wanna-build/etc/graph-data
 	/srv/wanna-build/bin/wb-graph -p >> /srv/wanna-build/etc/graph2-data
-	/srv/buildd.debian.org/bin/makegraph
+	R --slave --vanilla < /srv/wanna-build/etc/graph.R
 	for a in $ALL_ARCHES; do
 	    echo Last Updated: `date -u` > /srv/buildd.debian.org/web/stats/$a.txt
 	    for d in $STATS_DISTS; do
