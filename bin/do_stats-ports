@@ -1,0 +1,25 @@
+#!/bin/bash
+
+STATS_DISTS="sid";
+ALL_ARCHES="alpha hppa m68k powerpcspe ppc64 sh4 sparc64 x32"
+
+#
+# Only update stats if it's been at least 20h since the last time.
+#
+interval=72000
+last=`stat --format="%Y" /srv/wanna-build/etc/graph-ports-data`
+now=`date +%s`
+if (( $last + $interval < $now )); then
+        echo "stats start: `date`"
+	/srv/wanna-build/bin/wb-ports-graph >> /srv/wanna-build/etc/graph-ports-data
+	/srv/wanna-build/bin/wb-ports-graph -p >> /srv/wanna-build/etc/graph2-ports-data
+	R --slave --vanilla < /srv/wanna-build/etc/graph-ports.R
+	for a in $ALL_ARCHES; do
+	    echo Last Updated: `date -u` > /srv/buildd.debian.org/web/stats/$a.txt
+	    for d in $STATS_DISTS; do
+		/srv/wanna-build/bin/wanna-build-statistics --database=$a/build-db --dist=$d >> /srv/buildd.debian.org/web/stats/$a.txt
+	    done
+	done
+        echo "stats ended: `date`"
+fi
+

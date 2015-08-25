@@ -28,3 +28,5 @@ PATH=/bin:/usr/bin:/usr/local/bin:/srv/wanna-build/bin:/srv/buildd.debian.org/bi
 #0 5 * * *	(cd ~wbadm/wanna-build/schema && ./update-schema.sh)
 
 0 0 * * *	/srv/buildd.debian.org/bin/get-official-buildds
+
+5 3 * * *	srv/wanna-build/bin/do_stats-ports > /dev/null 2>&1

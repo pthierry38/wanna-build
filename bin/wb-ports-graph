@@ -1,0 +1,87 @@
+#!/usr/bin/perl
+#
+
+use strict;
+use vars qw($dist);
+my $previously_built;
+
+$dist = "sid";
+
+while( @ARGV && $ARGV[0] =~ /^-/ ) {
+	$_ = shift @ARGV;
+	if (/^-d/ || /^--dist/) {
+		if (/^-d(.)/ || /^--dist=(.)/) {
+			$dist = $1.$';
+		}
+		elsif (!@ARGV) {
+			die "$_ option missing argument\n";
+		}
+		else {
+			$dist = shift @ARGV;
+		}
+	}
+	elsif (/^--$/) {
+		last;
+	}
+	elsif (/^-p$/ || /^--previously-built$/) {
+		$previously_built = 1;
+	}
+	else {
+		die "Unknown option: $_\n";
+	}
+}
+
+my $date=`date -u "+%m/%d/%Y %T"`;
+chop($date);
+print "$date";
+
+my @archs = qw(alpha hppa m68k powerpcspe ppc64 sh4 sparc64 x32);
+my $arch;
+
+foreach $arch (@archs) {
+
+my($lastmsg, %n_state, $total, %n_builder, $pu_total);
+$pu_total = 0;
+$n_state{"Installed"} = 0; 
+open( my $pipe, '-|', "wanna-build -A $arch --dist=$dist --list=all" )
+	or die "Cannot spawn wanna-build: $!\n";
+while( <$pipe> ) {
+	if (/^Database for $dist doesn't exist$/) {
+		last;
+	}
+	elsif (/^Total (\d+) package\(s\) in state (\S+)\.$/) {
+		$n_state{$2} = $1;
+		$pu_total += $1 if ( $2 eq "Installed" );
+	}
+	elsif (/^Total (\d+) package\(s\)$/) {
+		$total = $1;
+	}
+	elsif (/: Installed (?:by [\w-]+ )?\[[\w-]*:/) {
+		next;
+	}
+	elsif (/: [\w-]+ (?:by [\w-]+ )?\[\w+:(out-of-date|partial)/) {
+		$pu_total++;
+	}
+	$lastmsg = $_;
+}
+close( $pipe );
+if ($?) {
+	print ", 0, 0";
+} else {
+#	$total -= $n_state{"Not-For-Us"};
+	$total -= $n_state{"Auto-Not-For-Us"};
+	if ( $previously_built ) {
+		print ", ".$n_state{"Installed"}.", ".$pu_total;
+	} else {
+		print ", ".$n_state{"Installed"}.", ".$total;
+	}
+}
+}
+print "\n";
+
+exit 0;
+
+sub isin {
+	my $val = shift;
+	return grep( $_ eq $val, @_ );
+}
