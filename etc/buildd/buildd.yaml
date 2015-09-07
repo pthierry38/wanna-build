@@ -98,6 +98,8 @@
     - architecture: mips64el
 - lm6100:
     - architecture: mips64el
+- thor:
+    - architecture: mips64el
 - voltaire:
     - architecture: powerpc
 - praetorius:
