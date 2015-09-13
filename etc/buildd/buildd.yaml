@@ -190,6 +190,8 @@
     - architecture: m68k
 - garkin:
     - architecture: m68k
+- mama:
+    - architecture: m68k
 - kirby:
     - architecture: m68k
 - kullervo:
