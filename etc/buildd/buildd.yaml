@@ -254,6 +254,8 @@
 - yamato:
     - architecture: sh4
 
+- andi:
+    - architecture: sparc64
 - sompek:
     - architecture: sparc64
 - raverin:
