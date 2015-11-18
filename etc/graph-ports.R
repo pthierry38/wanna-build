@@ -8,7 +8,7 @@ readdata <- function (file,start) {
 	t[1]/t[2]*100, #alpha
 	t[3]/t[4]*100, #hppa
 	t[5]/t[6]*100, #m68k
-	t[17]/t[18]*100 #x32
+	t[17]/t[18]*100, #mips64el
 	t[7]/t[8]*100, #powerpcspe
 	t[9]/t[10]*100, #ppc64
 	t[11]/t[12]*100, #sh4
