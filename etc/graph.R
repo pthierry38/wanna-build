@@ -9,11 +9,11 @@ palette(c("black", "turquoise", "red", "OrangeRed", "green3", "cyan",
 readdata <- function (file,start) {
 	t <- read.table(file,row.names=1,header=FALSE,
 	sep=",",col.names=c("date","alpha","at","arm","art","hppa","ht","hurd-i386",
-	"hit","i386","it","ia64","i6t","m68k","mt","mips","mit","mipsel","mipt","mips64el","mips64elt",
-	"powerpc","pt","s390","st","amd64","amdt","armel","aret",
+	"hit","i386","it","ia64","i6t","m68k","mt","mips","mit","mipsel","mipt",
+	"powerpc","pt","s390","st","amd64","amdt","sparc","spt","armel","aret",
 	"kfreebsd-amd64", "kfreebsd-amd64-t", "kfreebsd-i386", "kfreebsd-i386-t",
 	"armhf", "armhf-t", "s390x", "s390x-t", "arm64", "arm64-t",
-	"ppc64el", "ppc64el-t", "all", "allt"))
+	"ppc64el", "ppc64el-t", "all", "allt","mips64el","mips64elt"))
 	ts(as.matrix(data.frame(
 	t[23]/t[24]*100, #amd64
 	t[37]/t[38]*100, #arm64
