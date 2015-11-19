@@ -25,11 +25,11 @@ readdata <- function (file,start) {
 	t[31]/t[32]*100, #kfreebsd-i386
 	t[15]/t[16]*100, #mips
 	t[17]/t[18]*100, #mipsel
-	t[42]/t[43]*100, #mips64el
+	t[43]/t[44]*100, #mips64el
 	t[19]/t[20]*100, #powerpc
 	t[39]/t[40]*100, #ppc64el
 	t[35]/t[36]*100, #s390x
-	t[40]/t[41]*100 #all
+	t[41]/t[42]*100 #all
 	)),c(2001,start),frequency=365.25)
 }
 
