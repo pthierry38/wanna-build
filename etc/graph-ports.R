@@ -1,4 +1,4 @@
-arch <- c("alpha", "hppa", "m68k", "mips64el", "powerpcspe", "ppc64", "sh4", "sparc64", "x32")
+arch <- c("alpha", "hppa", "m68k", "powerpcspe", "ppc64", "sh4", "sparc64", "x32")
 palette(c("yellow", "violet", "blue", "red", "green", "black", "orange", "turquoise", "violetred2"))
 
 readdata <- function (file,start) {
