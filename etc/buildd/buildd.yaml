@@ -204,6 +204,14 @@
     - architecture: m68k
 - vivaldi:
     - architecture: m68k
+- vs90:
+    - architecture: m68k
+- vs91:
+    - architecture: m68k
+- vs92:
+    - architecture: m68k
+- vs93:
+    - architecture: m68k
 - wario:
     - architecture: m68k
 
