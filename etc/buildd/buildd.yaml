@@ -215,13 +215,6 @@
 - wario:
     - architecture: m68k
 
-- spe1:
-    - architecture: powerpcspe
-- spe2:
-    - architecture: powerpcspe
-- spe3:
-    - architecture: powerpcspe
-
 - amaterasu:
     - architecture: ppc64
 - izanagi:
