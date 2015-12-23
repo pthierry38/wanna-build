@@ -252,6 +252,10 @@
     - architecture: sh4
 - nagato:
     - architecture: sh4
+- vs94:
+    - architecture: sh4
+- vs95:
+    - architecture: sh4
 - yamashiro:
     - architecture: sh4
 - yamato:
