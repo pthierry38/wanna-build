@@ -263,6 +263,8 @@
 
 - andi:
     - architecture: sparc64
+- landau:
+    - architecture: sparc64
 - sompek:
     - architecture: sparc64
 - raverin:
