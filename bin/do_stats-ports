@@ -1,7 +1,7 @@
 #!/bin/bash
 
 STATS_DISTS="sid";
-ALL_ARCHES="alpha hppa m68k ppc64 sh4 sparc64 x32"
+ALL_ARCHES="alpha hppa m68k powerpcspe ppc64 sh4 sparc64 x32"
 
 #
 # Only update stats if it's been at least 20h since the last time.
