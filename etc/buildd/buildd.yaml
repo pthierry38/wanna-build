@@ -112,6 +112,8 @@
     - architecture: powerpc
 - powerpc-unicamp-01:
     - architecture: powerpc
+- atlantis:
+    - architecture: powerpcspe
 - spontini:
     - architecture: sparc
 - lebrun:
