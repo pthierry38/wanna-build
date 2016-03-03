@@ -2,10 +2,10 @@
 # vim:set et ts=4 sw=4 ft=sh ai:
 
 ARCHIVE="debian"
-SUITES="squeeze wheezy jessie jessie-kfreebsd stretch"
+SUITES="wheezy jessie jessie-kfreebsd stretch"
 # Please note that SUITES_FAST_AUTOBUILD does not pull proposed-updates
 # because there was no need for that yet.
-SUITES_FAST_AUTOBUILD="squeeze-lts sid experimental"
+SUITES_FAST_AUTOBUILD="sid experimental"
 
 . /srv/wanna-build/triggers/common
 
@@ -74,12 +74,7 @@ main_sync() {
             # sid is not an overlay.
             trigger_wb_update "${SUITE}" "`get_architectures ${SUITE}`" "$SOURCES" "$PACKAGES"
         else
-            if [ "$SUITE" = "squeeze-lts" ]
-            then
-                BASE_SUITE=squeeze
-            else
-                BASE_SUITE=sid
-            fi
+            BASE_SUITE=sid
             PACKAGES_BASE="${ARCHIVE_MAIN}/archive/${BASE_SUITE}/{main,contrib}/binary-%ARCH%/Packages.gz"
             PACKAGES_BASE="${PACKAGES_BASE} ${ARCHIVE_MAIN}/archive/${BASE_SUITE}/{main,contrib}/debian-installer/binary-%ARCH%/Packages.gz"
             PACKAGES_BASE="${PACKAGES_BASE} ${ARCHIVE_MAIN}/debian-buildd-dists/buildd-${BASE_SUITE}/{main,contrib}/binary-%ARCH%/Packages.gz"

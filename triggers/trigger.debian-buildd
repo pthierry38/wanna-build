@@ -50,21 +50,6 @@ main() {
     PACKAGES_BASE="${PACKAGES_BASE} ${ARCHIVE_BASE}/debian-buildd-dists/buildd-${base_suite}/main/debian-installer/binary-%ARCH%/Packages.gz"
     trigger_wb_update_with_secondary "$suite" "`get_architectures $suite`" "$PACKAGES_BASE" "$SOURCES" "$PACKAGES"
 
-    # Handle squeeze-lts as an overlay suite.
-    suite=squeeze-lts
-    base_suite=squeeze
-    SOURCES="${ARCHIVE_BASE}/archive/${suite}/{main,contrib}/source/Sources.gz"
-    SOURCES="${SOURCES} ${ARCHIVE_BASE}/debian-buildd-dists/buildd-${suite}/{main,contrib}/source/Sources.gz"
-    PACKAGES="${ARCHIVE_BASE}/archive/${suite}/{main,contrib}/binary-%ARCH%/Packages.gz"
-    PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/debian-buildd-dists/buildd-${suite}/{main,contrib}/binary-%ARCH%/Packages.gz"
-    PACKAGES="${PACKAGES} ${ARCHIVE_BASE}/debian-buildd-dists/buildd-${suite}/main/debian-installer/binary-%ARCH%/Packages.gz"
-
-    PACKAGES_BASE="${ARCHIVE_MAIN}/archive/${base_suite}/{main,contrib}/binary-%ARCH%/Packages.gz"
-    PACKAGES_BASE="${PACKAGES_BASE} ${ARCHIVE_MAIN}/archive/${base_suite}/main/debian-installer/binary-%ARCH%/Packages.gz"
-    PACKAGES_BASE="${PACKAGES_BASE} ${ARCHIVE_BASE}/debian-buildd-dists/buildd-${base_suite}/{main,contrib}/binary-%ARCH%/Packages.gz"
-    PACKAGES_BASE="${PACKAGES_BASE} ${ARCHIVE_BASE}/debian-buildd-dists/buildd-${base_suite}/main/debian-installer/binary-%ARCH%/Packages.gz"
-    trigger_wb_update_with_secondary "$suite" "`get_architectures $suite`" "$PACKAGES_BASE" "$SOURCES" "$PACKAGES"
-
     cleanup
 }
 
