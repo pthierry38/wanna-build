@@ -62,9 +62,6 @@ debian-security)
 	rsync --password-file "$PASSWORD_BASE/$1.rsync-password" $MIRROR_OPTIONS $USER@security-master.debian.org::debian-security/dists/ "$TARGET/archive"
 	rsync --password-file "$PASSWORD_BASE/$1-buildd.rsync-password" $BUILDD_QUEUE_OPTIONS $USER@security-master.debian.org::debian-security-buildd-dists/ "$TARGET/debian-security-buildd-dists/"
 	;;
-debian-edu)
-	rsync $MIRROR_OPTIONS --exclude=woody/ ftp.skolelinux.no::skolelinux-dist/dists/ "$TARGET/archive"
-	;;
 *)
 	echo "Sync target $1 not supported, aborting."
 	exit 1
