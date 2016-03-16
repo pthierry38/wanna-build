@@ -190,6 +190,9 @@ ucat() {
             *.bz2)
                 bzcat $FILE
                 ;;
+            *.xz)
+                xzcat $FILE
+                ;;
             *)
                 cat $FILE
                 ;;
