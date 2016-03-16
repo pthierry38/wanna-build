@@ -200,11 +200,3 @@ ucat() {
       fi
     done
 }
-
-filter_out_nonfree() {
-    local INPUT="$1"
-    local OUTPUT="$2"
-
-    gunzip -c "$INPUT" | grep-dctrl -v -r -F Section 'non-free/.*' | gzip -c > "$OUTPUT"
-}
-
