@@ -38,6 +38,16 @@ get_architectures() {
     fi
 }
 
+# Get the compression format used in a given suite
+get_index_extension() {
+    local SUITE="$1"
+    if [ "$SUITE" = "unstable" -o "$SUITE" = "sid" ]; then echo ".xz"
+    elif [ "$SUITE" = "experimental" ]; then echo ".xz"
+    else
+        echo ".gz"
+    fi
+}
+
 get_pas_file() {
     local SUITE="$1"
     echo "$PAS_BASE/${SUITE%%-*}/Packages-arch-specific"
