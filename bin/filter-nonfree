@@ -1,7 +1,7 @@
 #! /usr/bin/python
 
 
-import sys, os.path, gzip, subprocess
+import sys, os.path, subprocess
 #from debian_bundle import deb822
 import apt_pkg
 
@@ -10,7 +10,12 @@ def check_source(ok, srcs, fw):
     ret=[]
     for f in srcs:
         #f = open(f, 'r')
-        f = subprocess.Popen("zcat %s" % (f), shell=True, stdout=subprocess.PIPE).stdout
+        if f.endswith('gz'):
+            f = subprocess.Popen("zcat %s" % (f), shell=True, stdout=subprocess.PIPE).stdout
+        elif f.endswith('xz'):
+            f = subprocess.Popen("xzcat %s" % (f), shell=True, stdout=subprocess.PIPE).stdout
+        else
+            f = open(f, 'r')
         pkg = apt_pkg.TagFile(f)
         while pkg.step():
             if not pkg.section.get('Package'): continue
@@ -26,7 +31,12 @@ def check_source(ok, srcs, fw):
 
 def check_binary(ok, bins, fw):
     for f in bins:
-        f = subprocess.Popen("zcat %s" % (f), shell=True, stdout=subprocess.PIPE).stdout
+        if f.endswith('gz'):
+            f = subprocess.Popen("zcat %s" % (f), shell=True, stdout=subprocess.PIPE).stdout
+        elif f.endswith('xz'):
+            f = subprocess.Popen("xzcat %s" % (f), shell=True, stdout=subprocess.PIPE).stdout
+        else
+            f = open(f, 'r')
         pkg = apt_pkg.TagFile(f)
         while pkg.step():
             if pkg.section.get('Source', pkg.section.get('Package')).split(" ")[0] not in ok: continue
