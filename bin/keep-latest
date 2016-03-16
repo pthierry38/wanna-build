@@ -36,7 +36,7 @@ for my $file (@ARGV) {
 	if ($file =~ /.gz$/) {
 		open($fh, '-|', 'gzip', '-d', '-c', $file) 
 			or die("Can't open pipe from gzip: $!");
-	elsif ($file =~ /.xz$/) {
+	} elsif ($file =~ /.xz$/) {
 		open($fh, '-|', 'xz', '-d', '--stdout', $file)
 			or die("Can't open pipe from xz: $!");
 	} else {
