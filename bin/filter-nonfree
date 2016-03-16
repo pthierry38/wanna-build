@@ -14,7 +14,7 @@ def check_source(ok, srcs, fw):
             f = subprocess.Popen("zcat %s" % (f), shell=True, stdout=subprocess.PIPE).stdout
         elif f.endswith('xz'):
             f = subprocess.Popen("xzcat %s" % (f), shell=True, stdout=subprocess.PIPE).stdout
-        else
+        else:
             f = open(f, 'r')
         pkg = apt_pkg.TagFile(f)
         while pkg.step():
@@ -35,7 +35,7 @@ def check_binary(ok, bins, fw):
             f = subprocess.Popen("zcat %s" % (f), shell=True, stdout=subprocess.PIPE).stdout
         elif f.endswith('xz'):
             f = subprocess.Popen("xzcat %s" % (f), shell=True, stdout=subprocess.PIPE).stdout
-        else
+        else:
             f = open(f, 'r')
         pkg = apt_pkg.TagFile(f)
         while pkg.step():
