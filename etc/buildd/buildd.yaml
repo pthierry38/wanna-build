@@ -78,6 +78,8 @@
     - architecture: mips
 - mips-aql-05:
     - architecture: mips
+- mips-aql-06:
+    - architecture: mips
 - mayer:
     - architecture: mipsel
 - argos:
