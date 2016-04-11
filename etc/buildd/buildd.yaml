@@ -227,6 +227,8 @@
     - architecture: ppc64
 - izanami:
     - architecture: ppc64
+- ookuninushi:
+    - architecture: ppc64
 - susanoo:
     - architecture: ppc64
 - tsukuyomi:
