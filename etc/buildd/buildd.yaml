@@ -76,6 +76,8 @@
     - architecture: powerpc
 - atlantis:
     - architecture: powerpcspe
+- discovery:
+    - architecture: powerpcspe
 - spontini:
     - architecture: sparc
 - lebrun:
