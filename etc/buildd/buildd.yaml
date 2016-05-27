@@ -128,18 +128,12 @@
 # buildds for the debian-ports archive
 #
 
-- debian-alpha1:
-    - architecture: alpha
-- debian-alpha2:
-    - architecture: alpha
 - imago:
     - architecture: alpha
 - electro:
     - architecture: alpha
 
 - hpviz:
-    - architecture: hppa
-- mx3210:
     - architecture: hppa
 
 - akire:
@@ -212,9 +206,9 @@
     - architecture: sh4
 - mutsu:
     - architecture: sh4
-- tirpitz:
-    - architecture: sh4
 - nagato:
+    - architecture: sh4
+- tirpitz:
     - architecture: sh4
 - vs94:
     - architecture: sh4
