@@ -24,8 +24,6 @@
     - architecture: hurd-i386
 - mahler:
     - architecture: hurd-i386
-- ia64-arm-01:
-    - architecture: ia64
 - fano:
     - architecture: kfreebsd-amd64 kfreebsd-i386
 - fayrfax:
@@ -78,14 +76,6 @@
     - architecture: powerpcspe
 - discovery:
     - architecture: powerpcspe
-- spontini:
-    - architecture: sparc
-- lebrun:
-    - architecture: sparc
-- schroeder:
-    - architecture: sparc
-- stadler:
-    - architecture: sparc
 - hasse:
     - architecture: armhf armel
 - hartmann:
@@ -97,13 +87,11 @@
 - hildegard:
     - architecture: armhf armel
 - zandonai:
-    - architecture: s390 s390x
+    - architecture: s390x
 - zani:
-    - architecture: s390 s390x
+    - architecture: s390x
 - zemlinsky:
-    - architecture: s390 s390x
-- sompek:
-    - architecture: sparc
+    - architecture: s390x
 - babin:
     - architecture: amd64 i386
 - ppc64el-osuosl-01:
@@ -222,8 +210,6 @@
 - andi:
     - architecture: sparc64
 - landau:
-    - architecture: sparc64
-- sompek:
     - architecture: sparc64
 - raverin:
     - architecture: sparc64
