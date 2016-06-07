@@ -123,6 +123,8 @@
 
 - hpviz:
     - architecture: hppa
+- mx3210:
+    - architecture: hppa
 
 - akire:
     - architecture: m68k
