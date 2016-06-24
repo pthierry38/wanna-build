@@ -46,6 +46,8 @@
     - architecture: mips
 - mips-aql-06:
     - architecture: mips
+- mips-sil-01:
+    - architecture: mips
 - eberlin:
     - architecture: mipsel mips64el
 - mipsel-manda-01:
@@ -57,6 +59,8 @@
 - mipsel-aql-02:
     - architecture : mipsel mips64el
 - mipsel-aql-03:
+    - architecture : mipsel mips64el
+- mipsel-sil-01:
     - architecture : mipsel mips64el
 - clash:
     - architecture: mips64el
