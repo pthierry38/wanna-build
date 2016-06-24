@@ -14,6 +14,8 @@
     - architecture: arm64
 - arm-arm-03:
     - architecture: arm64
+- arm-arm-04:
+    - architecture: arm64
 - mozart:
     - architecture: hurd-i386
 - bach:
