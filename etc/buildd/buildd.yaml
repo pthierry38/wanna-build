@@ -46,6 +46,8 @@
     - architecture: mips
 - mips-aql-06:
     - architecture: mips
+- mips-manda-01:
+    - architecture: mips
 - mips-sil-01:
     - architecture: mips
 - eberlin:
