@@ -54,6 +54,8 @@
     - architecture: mipsel mips64el
 - mipsel-manda-02:
     - architecture: mipsel mips64el
+- mipsel-manda-03:
+    - architecture: mipsel mips64el
 - mipsel-aql-01:
     - architecture : mipsel mips64el
 - mipsel-aql-02:
