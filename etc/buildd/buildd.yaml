@@ -66,8 +66,6 @@
     - architecture : mipsel mips64el
 - mipsel-sil-01:
     - architecture : mipsel mips64el
-- clash:
-    - architecture: mips64el
 - praetorius:
     - architecture: powerpc
 - poulenc:
