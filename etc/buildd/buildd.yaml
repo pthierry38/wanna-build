@@ -182,8 +182,9 @@
 
 - akagi:
     - architecture: sh4
-- amagi:
-    - architecture: sh4
+# Has issues, buildd maintainer has been contacted
+#- amagi:
+#    - architecture: sh4
 - haruna:
     - architecture: sh4
 - hiei:
