@@ -1689,6 +1689,12 @@ sub filterarch {
 sub explain_dose_dependency {
     my $dep = shift;
     my $pkg = uri_unescape($dep->{'package'});
+    # This is needed when using the jessie-backports version of
+    # dose-builddebcheck. We should probably drop that when Stretch
+    # is released.
+    if (exists $dep->{'type'}) {
+        $pkg = $dep->{'type'} . ":" . $pkg;
+    }
     my ($desc, $target);
     if (exists $dep->{'unsat-dependency'}) {
         $desc = 'depends on missing';
@@ -1809,6 +1815,12 @@ sub wb_dose_builddebcheck {
     for my $broken (@{$result_yaml->{'report'}}) {
         if (exists $broken->{'package'}) {
             my $src = uri_unescape($broken->{'package'});
+            # This is needed when using the jessie-backports version of
+            # dose-builddebcheck. We should probably drop that when Stretch
+            # is released.
+            if (exists $broken->{'type'}) {
+                $src = $broken->{'type'} . ":" . $src;
+            }
             if ($src !~ s/^src://) {
                 #print "ignoring $broken->{'package'}\n";
                 next;
