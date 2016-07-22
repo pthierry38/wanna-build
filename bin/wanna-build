@@ -1756,7 +1756,7 @@ sub wb_dose_builddebcheck {
 
     my $args = shift;
     my $architecture=$args->{arch};
-    my @doseoptions = qw(--failures --explain --quiet);
+    my @doseoptions = qw(--failures --explain --quiet --deb-emulate-sbuild);
     my $packagefiles = $args->{pkgs};
     my $sourcesfile = $args->{src};
 
