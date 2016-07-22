@@ -30,4 +30,4 @@ list-order:
     needs-build: CWTn
     building: bn
 restrict:
-    component: main contrib
+    component: main contrib non-free
