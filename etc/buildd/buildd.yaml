@@ -96,8 +96,6 @@
     - architecture: s390x
 - zemlinsky:
     - architecture: s390x
-- babin:
-    - architecture: amd64 i386
 - ppc64el-osuosl-01:
     - architecture: ppc64el
 - ppc64el-unicamp-01:
