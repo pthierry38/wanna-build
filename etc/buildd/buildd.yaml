@@ -9,13 +9,13 @@
 - antheil:
     - architecture: armel armhf
 - arm-arm-01:
-    - architecture: arm64
+    - architecture: arm64 armhf
 - arm-arm-02:
-    - architecture: arm64
+    - architecture: arm64 armhf
 - arm-arm-03:
-    - architecture: arm64
+    - architecture: arm64 armhf
 - arm-arm-04:
-    - architecture: arm64
+    - architecture: arm64 armhf
 - mozart:
     - architecture: hurd-i386
 - bach:
@@ -107,9 +107,9 @@
 - x86-ubc-01:
     - architecture: amd64 i386
 - arm-linaro-01:
-    - architecture: arm64
+    - architecture: arm64 armhf
 - arm-linaro-03:
-    - architecture: arm64
+    - architecture: arm64 armhf
 - x86-bm-01:
     - architecture: all
 - x86-csail-02:
