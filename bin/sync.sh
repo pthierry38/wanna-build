@@ -47,7 +47,7 @@ fi
 # Handle the syncing.
 case $1 in
 debian)
-	USER=cimarosa
+	USER=buildd.debian.org
 	BUILDD_QUEUE_OPTIONS="--exclude=*.bz2 $RSYNC_OPTIONS"
 	rsync --password-file "$PASSWORD_FILE" $MIRROR_OPTIONS $USER@ftp-master.debian.org::debian/dists/ "$TARGET/archive"
 	rsync --password-file "$PASSWORD_BASE/$1-buildd.rsync-password" $BUILDD_QUEUE_OPTIONS $USER@ftp-master.debian.org::debian-buildd-dists/ "$TARGET/debian-buildd-dists/"
@@ -57,7 +57,7 @@ debian)
 	;;
 debian-security)
 	chmod 0700 "$TARGET"
-	USER=cimarosa
+	USER=buildd.debian.org
 	BUILDD_QUEUE_OPTIONS="--exclude=*.bz2 $RSYNC_OPTIONS"
 	rsync --password-file "$PASSWORD_BASE/$1.rsync-password" $MIRROR_OPTIONS $USER@security-master.debian.org::debian-security/dists/ "$TARGET/archive"
 	rsync --password-file "$PASSWORD_BASE/$1-buildd.rsync-password" $BUILDD_QUEUE_OPTIONS $USER@security-master.debian.org::debian-security-buildd-dists/ "$TARGET/debian-security-buildd-dists/"
