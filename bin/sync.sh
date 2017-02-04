@@ -23,6 +23,10 @@ RSYNC_OPTIONS="--delete --delete-excluded -av"
 MIRROR_EXCLUDES="--exclude=**/*.changes --exclude=**/installer-* --exclude=**/Packages.diff --exclude=**/Sources.diff --exclude=ChangeLog --exclude=**/Contents-* --exclude=**/Translation-* --exclude=**/*.bz2 --exclude=Packages --exclude=Sources --exclude=**/*.new" # the latter two because we only accept gziped files
 MIRROR_OPTIONS="$MIRROR_EXCLUDES $RSYNC_OPTIONS"
 
+export RSYNC_SSL_METHOD=socat
+export RSYNC_SSL_CAPATH=/etc/ssl/ca-debian
+RSYNC="rsync -e /srv/wanna-build/bin/rsync-ssl-tunnel"
+
 # END OF OPTIONS ########################################################
 
 mkdir -p "$TARGET"
@@ -49,18 +53,18 @@ case $1 in
 debian)
 	USER=buildd.debian.org
 	BUILDD_QUEUE_OPTIONS="--exclude=*.bz2 $RSYNC_OPTIONS"
-	rsync --password-file "$PASSWORD_FILE" $MIRROR_OPTIONS $USER@ftp-master.debian.org::debian/dists/ "$TARGET/archive"
-	rsync --password-file "$PASSWORD_BASE/$1-buildd.rsync-password" $BUILDD_QUEUE_OPTIONS $USER@ftp-master.debian.org::debian-buildd-dists/ "$TARGET/debian-buildd-dists/"
+	$RSYNC --password-file "$PASSWORD_FILE" $MIRROR_OPTIONS $USER@ftp-master.debian.org::debian/dists/ "$TARGET/archive"
+	$RSYNC --password-file "$PASSWORD_BASE/$1-buildd.rsync-password" $BUILDD_QUEUE_OPTIONS $USER@ftp-master.debian.org::debian-buildd-dists/ "$TARGET/debian-buildd-dists/"
 	# Also sync the Maintainers and Uploaders files for consumption through the web interface.
-	rsync --password-file "$PASSWORD_FILE" $MIRROR_OPTIONS $USER@ftp-master.debian.org::debian/indices/Maintainers /srv/buildd.debian.org/etc/Maintainers
-	rsync --password-file "$PASSWORD_FILE" $MIRROR_OPTIONS $USER@ftp-master.debian.org::debian/indices/Uploaders /srv/buildd.debian.org/etc/Uploaders
+	$RSYNC --password-file "$PASSWORD_FILE" $MIRROR_OPTIONS $USER@ftp-master.debian.org::debian/indices/Maintainers /srv/buildd.debian.org/etc/Maintainers
+	$RSYNC --password-file "$PASSWORD_FILE" $MIRROR_OPTIONS $USER@ftp-master.debian.org::debian/indices/Uploaders /srv/buildd.debian.org/etc/Uploaders
 	;;
 debian-security)
 	chmod 0700 "$TARGET"
 	USER=buildd.debian.org
 	BUILDD_QUEUE_OPTIONS="--exclude=*.bz2 $RSYNC_OPTIONS"
-	rsync --password-file "$PASSWORD_BASE/$1.rsync-password" $MIRROR_OPTIONS $USER@security-master.debian.org::debian-security/dists/ "$TARGET/archive"
-	rsync --password-file "$PASSWORD_BASE/$1-buildd.rsync-password" $BUILDD_QUEUE_OPTIONS $USER@security-master.debian.org::debian-security-buildd-dists/ "$TARGET/debian-security-buildd-dists/"
+	$RSYNC --password-file "$PASSWORD_BASE/$1.rsync-password" $MIRROR_OPTIONS $USER@security-master.debian.org::debian-security/dists/ "$TARGET/archive"
+	$RSYNC --password-file "$PASSWORD_BASE/$1-buildd.rsync-password" $BUILDD_QUEUE_OPTIONS $USER@security-master.debian.org::debian-security-buildd-dists/ "$TARGET/debian-security-buildd-dists/"
 	;;
 *)
 	echo "Sync target $1 not supported, aborting."
