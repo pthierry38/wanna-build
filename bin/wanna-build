@@ -1890,9 +1890,9 @@ sub call_dose_builddebcheck {
 	print $SOURCES "Version: $pkg->{'version'}\n";
 	my $t = $srcs->{$key}{'dep'} || $srcs->{$key}{'depends'};
 	if ($args->{'arch'} eq 'all') {
-	    $t = $srcs->{$key}{'dep-indep'} || $srcs->{$key}{'depends-indep'};
+	    $t = &merge_deps($t, $srcs->{$key}{'dep-indep'} || $srcs->{$key}{'depends-indep'});
 	} else {
-	    $t = $srcs->{$key}{'dep-arch'} || $srcs->{$key}{'depends-arch'};
+	    $t = &merge_deps($t, $srcs->{$key}{'dep-arch'} || $srcs->{$key}{'depends-arch'});
 	}
 	$t = &merge_deps($t, $pkg->{'extra_depends'});
 	$t = &filterarch($t, $args->{'arch'});
@@ -1900,12 +1900,12 @@ sub call_dose_builddebcheck {
 
 	my $u = $srcs->{$key}{'conf'} || $srcs->{$key}{'conflicts'};
 	if ($args->{'arch'} eq 'all') {
-	    $t = $srcs->{$key}{'conf-indep'} || $srcs->{$key}{'conf-indep'};
+	    $u = &merge_deps($u, $srcs->{$key}{'conf-indep'} || $srcs->{$key}{'conf-indep'});
 	} else {
-	    $t = $srcs->{$key}{'conf-arch'} || $srcs->{$key}{'conf-arch'};
+	    $u = &merge_deps($u, $srcs->{$key}{'conf-arch'} || $srcs->{$key}{'conf-arch'});
 	}
-	$t = &merge_deps($t, $pkg->{'extra_conflicts'});
-	$t = &filterarch($t, $args->{'arch'});
+	$u = &merge_deps($u, $pkg->{'extra_conflicts'});
+	$u = &filterarch($u, $args->{'arch'});
 	print $SOURCES "Build-Conflicts: $u\n" if $u;
 	print $SOURCES "Architecture: all\n";
 	print $SOURCES "\n";
