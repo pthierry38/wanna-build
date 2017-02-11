@@ -44,7 +44,11 @@ sub readsourcebins {
             /^Priority:\s*(\S+)$/mi and $p->{'priority'} = $1;
             /^Section:\s*(\S+)$/mi and $p->{'section'} = $1;
             /^Build-Depends:\s*(.*)$/mi and $p->{'depends'} = $1;
+            /^Build-Depends-Arch:\s*(.*)$/mi and $p->{'depends-arch'} = $1;
+            /^Build-Depends-Indep:\s*(.*)$/mi and $p->{'depends-indep'} = $1;
             /^Build-Conflicts:\s*(.*)$/mi and $p->{'conflicts'} = $1;
+            /^Build-Conflicts-Arch:\s*(.*)$/mi and $p->{'conflicts-arch'} = $1;
+            /^Build-Conflicts-Indep:\s*(.*)$/mi and $p->{'conflicts-indep'} = $1;
 
             next unless $p->{'name'} and $p->{'version'};
             foreach my $tarch (split(/\s+/, $p->{'arch'})) {

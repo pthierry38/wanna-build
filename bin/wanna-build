@@ -1686,6 +1686,10 @@ sub filterarch {
     return $deps->output();
 }
 
+sub merge_deps {
+    return $_[0] ? ($_[1] ? "$_[0], $_[1]" : $_[0]) : $_[1];
+}
+
 sub explain_dose_dependency {
     my $dep = shift;
     my $pkg = uri_unescape($dep->{'package'});
@@ -1884,13 +1888,24 @@ sub call_dose_builddebcheck {
 	# the same source package may be present in both.
 	print $SOURCES "Package: source---$key\n";
 	print $SOURCES "Version: $pkg->{'version'}\n";
-        my $t = &filterarch($srcs->{$key}{'dep'} || $srcs->{$key}{'depends'}, $args->{'arch'});
-        my $tt = &filterarch($pkg->{'extra_depends'}, $args->{'arch'});
-        $t = $t ? ($tt ? "$t, $tt" : $t) : $tt;
+	my $t = $srcs->{$key}{'dep'} || $srcs->{$key}{'depends'};
+	if ($args->{'arch'} eq 'all') {
+	    $t = $srcs->{$key}{'dep-indep'} || $srcs->{$key}{'depends-indep'};
+	} else {
+	    $t = $srcs->{$key}{'dep-arch'} || $srcs->{$key}{'depends-arch'};
+	}
+	$t = &merge_deps($t, $pkg->{'extra_depends'});
+	$t = &filterarch($t, $args->{'arch'});
 	print $SOURCES "Build-Depends: $t\n" if $t;
-        my $u = &filterarch($srcs->{$key}{'conf'} || $srcs->{$key}{'conflicts'}, $args->{'arch'});
-        my $uu = &filterarch($pkg->{'extra_conflicts'}, $args->{'arch'});
-        $u = $u ? ($uu ? "$u, $uu" : $u) : $uu;
+
+	my $u = $srcs->{$key}{'conf'} || $srcs->{$key}{'conflicts'};
+	if ($args->{'arch'} eq 'all') {
+	    $t = $srcs->{$key}{'conf-indep'} || $srcs->{$key}{'conf-indep'};
+	} else {
+	    $t = $srcs->{$key}{'conf-arch'} || $srcs->{$key}{'conf-arch'};
+	}
+	$t = &merge_deps($t, $pkg->{'extra_conflicts'});
+	$t = &filterarch($t, $args->{'arch'});
 	print $SOURCES "Build-Conflicts: $u\n" if $u;
 	print $SOURCES "Architecture: all\n";
 	print $SOURCES "\n";
@@ -2404,7 +2419,11 @@ sub parse_all_v3 {
         $pkg->{'section'} = $pkgs->{'section'};
         $pkg->{'priority'} = $pkgs->{'priority'};
         $pkg->{'dep'} = $pkgs->{'depends'};
+        $pkg->{'dep-arch'} = $pkgs->{'depends-arch'};
+        $pkg->{'dep-indep'} = $pkgs->{'depends-indep'};
         $pkg->{'conf'} = $pkgs->{'conflicts'};
+        $pkg->{'conf-arch'} = $pkgs->{'conflicts-arch'};
+        $pkg->{'conf-indep'} = $pkgs->{'conflicts-indep'};
         delete $pkg->{'builder'};
         delete $pkg->{'binary_nmu_version'} unless $pkgs->{'binnmu'};
         delete $pkg->{'binary_nmu_changelog'} unless $pkgs->{'binnmu'};
