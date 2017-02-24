@@ -70,8 +70,6 @@
     - architecture : mipsel mips64el
 - praetorius:
     - architecture: powerpc
-- poulenc:
-    - architecture: powerpc
 - porpora:
     - architecture: powerpc
 - powerpc-osuosl-01:
