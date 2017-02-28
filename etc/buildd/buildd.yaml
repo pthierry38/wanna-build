@@ -76,10 +76,6 @@
     - architecture: powerpc
 - powerpc-unicamp-01:
     - architecture: powerpc
-- atlantis:
-    - architecture: powerpcspe
-- discovery:
-    - architecture: powerpcspe
 - hasse:
     - architecture: armhf armel
 - hartmann:
@@ -166,6 +162,11 @@
     - architecture: m68k
 - wario:
     - architecture: m68k
+
+- atlantis:
+    - architecture: powerpcspe
+- discovery:
+    - architecture: powerpcspe
 
 - amaterasu:
     - architecture: ppc64
