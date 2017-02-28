@@ -165,6 +165,8 @@
 
 - atlantis:
     - architecture: powerpcspe
+- cb30:
+    - architecture: powerpcspe
 - discovery:
     - architecture: powerpcspe
 
