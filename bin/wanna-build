@@ -313,13 +313,14 @@ $dbh->{pg_server_prepare} = 0;
 
 $dbh->begin_work or die $dbh->errstr;
 
-my $q = 'SELECT distribution, public, auto_dep_wait, build_dep_resolver, suppress_successful_logs, archive, mail_logs FROM distributions';
+my $q = 'SELECT distribution, public, auto_dep_wait, build_dep_resolver, build_dep_alternatives, suppress_successful_logs, archive, mail_logs FROM distributions';
 my $rows = $dbh->selectall_hashref($q, 'distribution');
 foreach my $name (keys %$rows) {
 	$distributions{$name} = {};
 	$distributions{$name}->{'noadw'} = 1 if !($rows->{$name}->{'auto_dep_wait'});
 	$distributions{$name}->{'hidden'} = 1 if !($rows->{$name}->{'public'});
 	$distributions{$name}->{'build_dep_resolver'} = $rows->{$name}->{'build_dep_resolver'} if $rows->{$name}->{'build_dep_resolver'};
+	$distributions{$name}->{'build_dep_alternatives'} = 1 if ($rows->{$name}->{'build_dep_alternatives'});
 	$distributions{$name}->{'suppress_successful_logs'} = $rows->{$name}->{'suppress_successful_logs'} if $rows->{$name}->{'suppress_successful_logs'};
 	$distributions{$name}->{'mail_logs'} = $rows->{$name}->{'mail_logs'} if $rows->{$name}->{'mail_logs'};
 	$distributions{$name}->{'archive'} = $rows->{$name}->{'archive'} if $rows->{$name}->{'archive'};
@@ -1759,9 +1760,10 @@ sub wb_dose_builddebcheck {
 
     my $args = shift;
     my $architecture=$args->{arch};
-    my @doseoptions = qw(--failures --explain --quiet --deb-emulate-sbuild);
+    my @doseoptions = qw(--failures --explain --quiet);
     my $packagefiles = $args->{pkgs};
     my $sourcesfile = $args->{src};
+    my $builddepalt = $args->{bda};
 
     my $packagearch="";
     foreach my $packagefile (@$packagefiles) {
@@ -1792,6 +1794,8 @@ sub wb_dose_builddebcheck {
 	    "but the package file contains architecture $packagearch";
         }
     }
+
+    push @doseoptions, "--deb-emulate-sbuild" unless defined $builddepalt;
     push @doseoptions, "--deb-native-arch=$architecture";
     push @doseoptions, (@$packagefiles, $sourcesfile);
 
@@ -1929,7 +1933,8 @@ sub call_dose_builddebcheck {
     $hostarch = $conf::all_buildd_arch if ($hostarch eq 'all' && $conf::all_buildd_arch);
     my $doseresults = wb_dose_builddebcheck({arch => $hostarch,
                                              pkgs => $args->{pkgs},
-                                             src  => $tmpfile});
+                                             src  => $tmpfile,
+                                             bda  => $distributions{$distribution}{build_dep_alternatives}});
     if (ref($doseresults) eq 'HASH') {
         foreach my $key (grep { $_ =~ /^source---/ } keys %$doseresults) {
 		$key =~ s/^source---//;
