@@ -126,13 +126,7 @@
 - mx3210:
     - architecture: hppa
 
-- akire:
-    - architecture: m68k
 - ara5:
-    - architecture: m68k
-- arrakis:
-    - architecture: m68k
-- crest:
     - architecture: m68k
 - elgar:
     - architecture: m68k
@@ -142,15 +136,9 @@
     - architecture: m68k
 - kirby:
     - architecture: m68k
-- kullervo:
-    - architecture: m68k
 - pacman:
     - architecture: m68k
-- spice:
-    - architecture: m68k
 - pikachu:
-    - architecture: m68k
-- vivaldi:
     - architecture: m68k
 - vs90:
     - architecture: m68k
